@@ -13,23 +13,7 @@
 #define VERMELHO 5
 #define AMARELO 4
 
-void abrir_porta (int *porta)
-{
-	const float RAIO = 1.1, CREMALHEIRA = 4.8, PI = 3.1415;
-	float rotacao;
-
-	if (!porta)
-	{
-		rotacao = (360*CREMALHEIRA)/2*PI*RAIO;
-		RotateMotor(MOTOR_ESQUERDA, 60, rotacao);
-		*porta = 1
-	}
-}
-
 task main ()
 {
-  int porta = 0;
-
-	abrir_porta(&porta);
 
 }
