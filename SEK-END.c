@@ -1,5 +1,6 @@
 #define MOTOR_ESQUERDA OUT_A
 #define MOTOR_DIREITA OUT_C
+#define MOTORES Out_AC
 #define MOTOR_GARRA OUT_B
 #define SENSOR_COR_ESQUERDA IN_1
 #define SENSOR_COR_DIREITA IN_2
@@ -17,8 +18,7 @@
 
 void reto()
 {
-	OnFwd(MOTOR_DIREITA, VELOCIDADE_BAIXA);
-	OnFwd(MOTOR_ESQUERDA, VELOCIDADE_BAIXA);
+	OnFwdSync(MOTORES, VELOCIDADE_BAIXA, 0);
 }
 
 void virar_esquerda()
@@ -35,8 +35,7 @@ void virar_direita()
 
 void re()
 {
-	OnRev(MOTOR_DIREITA, VELOCIDADE_BAIXA);
-	OnRev(MOTOR_ESQUERDA, VELOCIDADE_BAIXA);
+	OnRevSync(MOTORES, VELOCIDADE_BAIXA, 0);
 }
 
 void agarrar()
