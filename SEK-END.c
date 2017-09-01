@@ -2,6 +2,7 @@
 #define MOTOR_DIREITA OUT_C
 #define MOTORES Out_AC
 #define MOTOR_GARRA OUT_B
+#define MOTOR_PORTA OUT_ /*conexão com o outro cérebro*/
 #define SENSOR_COR_ESQUERDA IN_1
 #define SENSOR_COR_DIREITA IN_2
 #define SENSOR_US_ESQUERDA IN_3
@@ -67,6 +68,27 @@ float ultrassom_esquerda_filtrado()
 	return valor;
 }
 
+void abrir_porta ()
+{
+	const float RAIO = 2.3405/2;
+	const float CREMALHEIRA = 5.1;
+	float Rotacao;
+	Rotacao = (360*CREMALHEIRA)/(2*PI*RAIO);
+	while (MotorRotationCount(MOTOR_PORTA) < Rotacao)
+		{
+		OnFwd(MOTOR_PORTA, 50);
+		}
+	Off(MOTOR_PORTA);
+}
+
+void fechar_porta ()
+{
+	while(MotorRotationCount(MOTOR_PORTA) > 0)
+	{
+	OnRev(MOTOR_PORTA, 50);
+	}
+	Off(MOTOR_PORTA);
+}
 
 task main ()
 {
