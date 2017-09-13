@@ -2,12 +2,13 @@
 #define MOTOR_DIREITA OUT_C
 #define MOTORES Out_AC
 #define MOTOR_GARRA OUT_B
-#define MOTOR_PORTA OUT_ /*conexão com o outro cérebro*/
+#define MOTOR_PORTA OUT_B /*conexão com o outro cérebro*/
 #define SENSOR_COR_ESQUERDA IN_1
 #define SENSOR_COR_DIREITA IN_2
 #define SENSOR_US_ESQUERDA IN_3
 #define SENSOR_US_DIREITA IN_4
-#define SENSOR_GYRO IN_
+#define SENSOR_GYRO IN_4 /*teste*/
+#define SENSOR_US_GARRA IN_3 /*teste*/
 #define VELOCIDADE_BAIXA 35
 #define VELOCIDADE_ALTA 65
 #define PRETO 1
@@ -24,6 +25,9 @@ void ligar_sensores()
 	SetSensorHTGyro(SENSOR_GYRO);
 	SetSensorUltrasonic(SENSOR_US_ESQUERDA);
 	SetSensorUltrasonic(SENSOR_US_DIREITA);
+	SetSensorColorFull(SENSOR_COR_DIREITA);
+	SetSensorColorFull(SENSOR_COR_ESQUERDA);
+	SetSensorUltrasonic(SENSOR_US_GARRA);
 }
 
 void reto()
@@ -48,20 +52,56 @@ void re()
 	OnRevSync(MOTORES, VELOCIDADE_BAIXA, 0);
 }
 
+void levantar_garra()
+{
+	int prev_motor = MotorRotationCount(MOTOR_GARRA);
+	OnRev(MOTOR_GARRA, VELOCIDADE_BAIXA);
+	Wait(50);
+	while(prev_motor != MotorRotationCount(MOTOR_GARRA)) /*a garra irá se movimentar até travar na estrutura*/
+	{
+		prev_motor = MotorRotationCount(MOTOR_GARRA);
+		Wait(50);
+	}
+	Off(MOTOR_GARRA);
+}
+
+void abaixar_garra()
+{
+	int prev_motor = MotorRotationCount(MOTOR_GARRA);
+
+	OnFwd(MOTOR_GARRA, VELOCIDADE_BAIXA);
+	Wait(50);
+	while(prev_motor != MotorRotationCount(MOTOR_GARRA)) /*a garra irá se movimentar até travar na estrutura*/
+	{
+		prev_motor = MotorRotationCount(MOTOR_GARRA);
+		Wait(50);
+	}
+	Off(MOTOR_GARRA);
+	prev_motor = MotorRotationCount(MOTOR_GARRA);
+	while(-90 < MotorRotationCount(MOTOR_GARRA) - prev_motor) /*rotação necessária para a garra fechar um pouco e não agarrar no chão*/
+	{
+		OnFwd(MOTOR_GARRA, -VELOCIDADE_BAIXA);
+	}
+	Off(MOTOR_GARRA); /*com essa função a garra fica na posição adequada para pegar o boneco*/
+}
+
 void agarrar()
 {
-	int posicao_inicial = MotorRotationCount(MOTOR_GARRA);
-	while (MotorRotationCount(MOTOR_GARRA) - posicao_inicial < 270) //270 seria 1/4 de volta, suponho que seja o suficiente pra jogar o boneco (falta teste, btw)
-	{
-		OnFwd(MOTOR_GARRA, VELOCIDADE_BAIXA);
-	}
+	int prev_motor;
 
-	int posicao_secundaria = MotorRotationCount(MOTOR_GARRA);
-	while (MotorRotationCount(MOTOR_GARRA) - posicao_secundaria < 270)
+	abaixar_garra();
+	/*aqui cabe uma função para movimentar o robô até que o sensor ultrassônico ache o boneco*/
+	if (SensorUS(SENSOR_US_GARRA) =< 15) /*valor de teste, mas já é uma distância que a garra consegue pegar o boneco*/
 	{
-		OnRev(MOTOR_GARRA, VELOCIDADE_BAIXA);
+		OnFwd(MOTOR_GARRA, -VELOCIDADE_MEDIA);
+		Wait(50);
+		while (MotorRotationCount(MOTOR_GARRA) != prev_motor)
+		{
+			prev_motor = MotorRotationCount(MOTOR_GARRA);
+			Wait(50);
+		}
 	}
-
+	Off(MOTOR_GARRA);
 }
 
 float ultrassom_esquerda_filtrado()
