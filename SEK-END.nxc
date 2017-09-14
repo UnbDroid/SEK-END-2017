@@ -1,6 +1,6 @@
 #define MOTOR_ESQUERDA OUT_A
 #define MOTOR_DIREITA OUT_C
-#define MOTORES Out_AC
+#define MOTORES OUT_AC
 #define MOTOR_GARRA OUT_B
 #define MOTOR_PORTA OUT_B /*conexão com o outro cérebro*/
 #define SENSOR_COR_ESQUERDA IN_1
@@ -10,6 +10,7 @@
 #define SENSOR_GYRO IN_4 /*teste*/
 #define SENSOR_US_GARRA IN_3 /*teste*/
 #define VELOCIDADE_BAIXA 35
+#define VELOCIDADE_MEDIA 50
 #define VELOCIDADE_ALTA 65
 #define PRETO 1
 #define VERDE 3
@@ -30,11 +31,13 @@ void ligar_sensores()
 	SetSensorUltrasonic(SENSOR_US_GARRA);
 }
 
+
 void reto()
 {
 	while(Sensor(SENSOR_COR_ESQUERDA) == BRANCO && Sensor(SENSOR_COR_DIREITA) == BRANCO)
 	{
-		OnFwdSync(MOTORES, -VELOCIDADE_ALTA, 7); /*o último valor da função corrige a diferença entre os motores, que acontece devido a diferença de peso em cada um*/
+		OnFwdSync(MOTORES, -VELOCIDADE_ALTA, 7);
+		// o último valor da função corrige a diferença entre os motores, que acontece devido a diferença de peso em cada um
 	}
 	Off(MOTORES);
 }
@@ -61,7 +64,7 @@ void levantar_garra()
 	int prev_motor = MotorRotationCount(MOTOR_GARRA);
 	OnRev(MOTOR_GARRA, VELOCIDADE_BAIXA);
 	Wait(50);
-	while(prev_motor != MotorRotationCount(MOTOR_GARRA)) /*a garra irá se movimentar até travar na estrutura*/
+	while(prev_motor != MotorRotationCount(MOTOR_GARRA)) // a garra irá se movimentar até travar na estrutura
 	{
 		prev_motor = MotorRotationCount(MOTOR_GARRA);
 		Wait(50);
@@ -75,28 +78,31 @@ void abaixar_garra()
 
 	OnFwd(MOTOR_GARRA, VELOCIDADE_BAIXA);
 	Wait(50);
-	while(prev_motor != MotorRotationCount(MOTOR_GARRA)) /*a garra irá se movimentar até travar na estrutura*/
+	while(prev_motor != MotorRotationCount(MOTOR_GARRA)) // a garra irá se movimentar até travar na estrutura
 	{
 		prev_motor = MotorRotationCount(MOTOR_GARRA);
 		Wait(50);
 	}
 	Off(MOTOR_GARRA);
 	prev_motor = MotorRotationCount(MOTOR_GARRA);
-	while(-90 < MotorRotationCount(MOTOR_GARRA) - prev_motor) /*rotação necessária para a garra fechar um pouco e não agarrar no chão*/
+	while(-90 < MotorRotationCount(MOTOR_GARRA) - prev_motor) // rotação necessária para a garra fechar um pouco e não agarrar no chão
 	{
 		OnFwd(MOTOR_GARRA, -VELOCIDADE_BAIXA);
 	}
-	Off(MOTOR_GARRA); /*com essa função a garra fica na posição adequada para pegar o boneco*/
+	Off(MOTOR_GARRA); // com essa função a garra fica na posição adequada para pegar o boneco 
 }
 
-void agarrar()
+void agarrar() 
 {
 	int prev_motor;
 
 	abaixar_garra();
-	/*aqui cabe uma função para movimentar o robô até que o sensor ultrassônico ache o boneco*/
-	if (SensorUS(SENSOR_US_GARRA) =< 15) /*valor de teste, mas já é uma distância que a garra consegue pegar o boneco*/
+	// aqui cabe uma função para movimentar o robô até que o sensor ultrassônico ache o boneco 
+	// valor de teste, mas já é uma distância que a garra consegue pegar o boneco
+	
+	if (SensorUS(SENSOR_US_GARRA) <= 15)
 	{
+		
 		OnFwd(MOTOR_GARRA, -VELOCIDADE_MEDIA);
 		Wait(50);
 		while (MotorRotationCount(MOTOR_GARRA) != prev_motor)
@@ -104,9 +110,12 @@ void agarrar()
 			prev_motor = MotorRotationCount(MOTOR_GARRA);
 			Wait(50);
 		}
+		
 	}
+	
 	Off(MOTOR_GARRA);
 }
+
 
 float ultrassom_esquerda_filtrado()
 {
@@ -115,7 +124,7 @@ float ultrassom_esquerda_filtrado()
 	float valor = aux;
 	for (int i = 0; i < 5; ++i)
 	{
-		valor = valor * SENSIBILIDADE + SensorUS(SENSOR_US_ESQUERDA)*(1-SENSIBILIDADE); //Algoritimo passado pelo B.Andreguetti da aula de SisMed
+		valor = valor * SENSIBILIDADE + SensorUS(SENSOR_US_ESQUERDA)*(1-SENSIBILIDADE); // Algoritimo passado pelo B.Andreguetti da aula de SisMed
 	}
 
 	return valor;
@@ -133,7 +142,7 @@ float getGyroOffset()
     return gyro_sum/OFFSET_SAMPLES;
 }
 
-void girar(float degrees) /*Algoritimo usado pela sek do ano passado*/
+void girar(float degrees) // Algoritimo usado pela sek do ano passado
 {
 	float angle = 0, gyro = 0;
 	unsigned long time = CurrentTick(), prev_time;
@@ -203,6 +212,7 @@ task main ()
 {
 	ligar_sensores();
 
+	
 	int help = 66;
 
 	while (true)
@@ -212,5 +222,7 @@ task main ()
 		NumOut (0, LCD_LINE3, help);
 		Wait(50);
 	}
+
+	
 
 }
