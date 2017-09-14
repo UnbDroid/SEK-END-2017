@@ -32,7 +32,11 @@ void ligar_sensores()
 
 void reto()
 {
-	OnFwdSync(MOTORES, VELOCIDADE_BAIXA, 0);
+	while(Sensor(SENSOR_COR_ESQUERDA) == BRANCO && Sensor(SENSOR_COR_DIREITA) == BRANCO)
+	{
+		OnFwdSync(MOTORES, -VELOCIDADE_ALTA, 7); /*o último valor da função corrige a diferença entre os motores, que acontece devido a diferença de peso em cada um*/
+	}
+	Off(MOTORES);
 }
 
 void virar_esquerda()
