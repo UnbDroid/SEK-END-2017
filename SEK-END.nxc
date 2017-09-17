@@ -2,7 +2,7 @@
 #define MOTOR_DIREITA OUT_C
 #define MOTORES OUT_AC
 #define MOTOR_GARRA OUT_B
-#define MOTOR_PORTA OUT_B /*conex√£o com o outro c√©rebro*/
+#define MOTOR_PORTA OUT_B /*conex„o com o outro cÈrebro*/
 #define SENSOR_COR_ESQUERDA IN_1
 #define SENSOR_COR_DIREITA IN_2
 #define SENSOR_US_ESQUERDA IN_3
@@ -37,7 +37,7 @@ void reto()
 	while(Sensor(SENSOR_COR_ESQUERDA) == BRANCO && Sensor(SENSOR_COR_DIREITA) == BRANCO)
 	{
 		OnFwdSync(MOTORES, -VELOCIDADE_ALTA, 7);
-		// o √∫ltimo valor da fun√ß√£o corrige a diferen√ßa entre os motores, que acontece devido a diferen√ßa de peso em cada um
+		// o ˙ltimo valor da funÁ„o corrige a diferenÁa entre os motores, que acontece devido a diferenÁa de peso em cada um
 	}
 	Off(MOTORES);
 }
@@ -64,7 +64,7 @@ void levantar_garra()
 	int prev_motor = MotorRotationCount(MOTOR_GARRA);
 	OnRev(MOTOR_GARRA, VELOCIDADE_BAIXA);
 	Wait(50);
-	while(prev_motor != MotorRotationCount(MOTOR_GARRA)) // a garra ir√° se movimentar at√© travar na estrutura
+	while(prev_motor != MotorRotationCount(MOTOR_GARRA)) // a garra ir·° se movimentar atÈ travar na estrutura
 	{
 		prev_motor = MotorRotationCount(MOTOR_GARRA);
 		Wait(50);
@@ -78,31 +78,31 @@ void abaixar_garra()
 
 	OnFwd(MOTOR_GARRA, VELOCIDADE_BAIXA);
 	Wait(50);
-	while(prev_motor != MotorRotationCount(MOTOR_GARRA)) // a garra ir√° se movimentar at√© travar na estrutura
+	while(prev_motor != MotorRotationCount(MOTOR_GARRA)) // a garra ir·° se movimentar atÈ travar na estrutura
 	{
 		prev_motor = MotorRotationCount(MOTOR_GARRA);
 		Wait(50);
 	}
 	Off(MOTOR_GARRA);
 	prev_motor = MotorRotationCount(MOTOR_GARRA);
-	while(-90 < MotorRotationCount(MOTOR_GARRA) - prev_motor) // rota√ß√£o necess√°ria para a garra fechar um pouco e n√£o agarrar no ch√£o
+	while(-90 < MotorRotationCount(MOTOR_GARRA) - prev_motor) // rotaÁ„o necess·ria para a garra fechar um pouco e n„o agarrar no ch„o
 	{
 		OnFwd(MOTOR_GARRA, -VELOCIDADE_BAIXA);
 	}
-	Off(MOTOR_GARRA); // com essa fun√ß√£o a garra fica na posi√ß√£o adequada para pegar o boneco 
+	Off(MOTOR_GARRA); // com essa funÁ„o a garra fica na posiÁ„o adequada para pegar o boneco
 }
 
-void agarrar() 
+void agarrar()
 {
 	int prev_motor;
 
 	abaixar_garra();
-	// aqui cabe uma fun√ß√£o para movimentar o rob√¥ at√© que o sensor ultrass√¥nico ache o boneco 
-	// valor de teste, mas j√° √© uma dist√¢ncia que a garra consegue pegar o boneco
-	
+	// aqui cabe uma funÁ„o para movimentar o robÙ atÈ que o sensor ultrassÙnico ache o boneco
+	// valor de teste, mas j· È uma dist‚ncia que a garra consegue pegar o boneco
+
 	if (SensorUS(SENSOR_US_GARRA) <= 15)
 	{
-		
+
 		OnFwd(MOTOR_GARRA, -VELOCIDADE_MEDIA);
 		Wait(50);
 		while (MotorRotationCount(MOTOR_GARRA) != prev_motor)
@@ -110,9 +110,9 @@ void agarrar()
 			prev_motor = MotorRotationCount(MOTOR_GARRA);
 			Wait(50);
 		}
-		
+
 	}
-	
+
 	Off(MOTOR_GARRA);
 }
 
@@ -125,6 +125,32 @@ float ultrassom_esquerda_filtrado()
 	for (int i = 0; i < 5; ++i)
 	{
 		valor = valor * SENSIBILIDADE + SensorUS(SENSOR_US_ESQUERDA)*(1-SENSIBILIDADE); // Algoritimo passado pelo B.Andreguetti da aula de SisMed
+	}
+
+	return valor;
+}
+
+float ultrassom_direita_filtrado()
+{
+	SetSensorUltrasonic(SENSOR_US_DIREITA);
+	float aux = SensorUS(SENSOR_US_DIREITA);
+	float valor = aux;
+	for (int i = 0; i < 5; ++i)
+	{
+		valor = valor * SENSIBILIDADE + SensorUS(SENSOR_US_DIREITA)*(1-SENSIBILIDADE); // Algoritimo passado pelo B.Andreguetti da aula de SisMed
+	}
+
+	return valor;
+}
+
+float ultrassom_garra_filtrado()
+{
+	SetSensorUltrasonic(SENSOR_US_GARRA);
+	float aux = SensorUS(SENSOR_US_GARRA);
+	float valor = aux;
+	for (int i = 0; i < 5; ++i)
+	{
+		valor = valor * SENSIBILIDADE + SensorUS(SENSOR_US_GARRA)*(1-SENSIBILIDADE); // Algoritimo passado pelo B.Andreguetti da aula de SisMed
 	}
 
 	return valor;
@@ -208,11 +234,27 @@ void fechar_porta ()
 	Off(MOTOR_PORTA);
 }
 
+void pegar_passageiro (int passageiros) /*n„o testado*/
+{
+	if(ultrassom_esquerda_filtrado() < 15 && passageiros < 4){ //Ainda È necess·rio adaptar a funÁ„o agarrar() pra depois de ela agarrar, ela voltar para a
+															   //posoÁ„o que o robÙ estava antes. AlÈm disso, colocar para verificar se pegou o boneco
+		gira(90);
+		agarrar();
+		gira(-90);
+	}
+	else if(ultrassom_direita_filtrado() < 15 && passageiros < 4){
+		gira(-90);
+		agarrar();
+		gira(90);
+	}
+	++passageiros;
+}
+
 task main ()
 {
 	ligar_sensores();
 
-	
+
 	int help = 66;
 
 	while (true)
@@ -223,6 +265,6 @@ task main ()
 		Wait(50);
 	}
 
-	
+
 
 }
