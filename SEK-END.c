@@ -3,12 +3,12 @@
 #define MOTORES OUT_AC
 #define MOTOR_GARRA OUT_B
 #define MOTOR_PORTA OUT_B /*conexão com o outro cérebro*/
-#define SENSOR_COR_ESQUERDA IN_1
-#define SENSOR_COR_DIREITA IN_2
-#define SENSOR_US_ESQUERDA IN_3
-#define SENSOR_US_DIREITA IN_4
+#define SENSOR_COR_ESQUERDA
+#define SENSOR_COR_DIREITA
+#define SENSOR_US_ESQUERDA IN_1
+#define SENSOR_US_DIREITA IN_3
 #define SENSOR_GYRO IN_4 /*teste*/
-#define SENSOR_US_GARRA IN_3 /*teste*/
+#define SENSOR_US_GARRA IN_2 /*teste*/
 #define VELOCIDADE_BAIXA 35
 #define VELOCIDADE_MEDIA 50
 #define VELOCIDADE_ALTA 65
@@ -26,8 +26,8 @@ void ligar_sensores()
 	SetSensorHTGyro(SENSOR_GYRO);
 	SetSensorUltrasonic(SENSOR_US_ESQUERDA);
 	SetSensorUltrasonic(SENSOR_US_DIREITA);
-	SetSensorColorFull(SENSOR_COR_DIREITA);
-	SetSensorColorFull(SENSOR_COR_ESQUERDA);
+	//SetSensorColorFull(SENSOR_COR_DIREITA);
+	//SetSensorColorFull(SENSOR_COR_ESQUERDA);
 	SetSensorUltrasonic(SENSOR_US_GARRA);
 }
 
@@ -78,7 +78,7 @@ void abaixar_garra()
 
 	OnFwd(MOTOR_GARRA, VELOCIDADE_BAIXA);
 	Wait(50);
-	while(prev_motor != MotorRotationCount(MOTOR_GARRA)) // a garra irá¡ se movimentar até travar na estrutura
+	while(prev_motor != MotorRotationCount(MOTOR_GARRA)) // a garra irá se movimentar até travar na estrutura
 	{
 		prev_motor = MotorRotationCount(MOTOR_GARRA);
 		Wait(50);
@@ -89,46 +89,42 @@ void abaixar_garra()
 	{
 		OnFwd(MOTOR_GARRA, -VELOCIDADE_BAIXA);
 	}
-	Off(MOTOR_GARRA); // com essa função a garra fica na posição adequada para pegar o boneco 
+	Off(MOTOR_GARRA); // com essa função a garra fica na posição adequada para pegar o boneco
 }
 
-void agarrar() 
+void agarrar(int passageiros)
 {
 	int prev_motor;
 
 	abaixar_garra();
-	// aqui cabe uma função para movimentar o robô até que o sensor ultrassônico ache o boneco 
+	// aqui cabe uma função para movimentar o robô até que o sensor ultrassônico ache o boneco
 	// valor de teste, mas já é uma distância que a garra consegue pegar o boneco
-	
-	if (SensorUS(SENSOR_US_GARRA) <= 15)
+
+	if (!(SensorUS(SENSOR_US_GARRA) <= 15)) --passageiros;
+	OnFwd(MOTOR_GARRA, -VELOCIDADE_MEDIA);
+	Wait(50);
+	while (MotorRotationCount(MOTOR_GARRA) != prev_motor)
 	{
-		
-		OnFwd(MOTOR_GARRA, -VELOCIDADE_MEDIA);
+		prev_motor = MotorRotationCount(MOTOR_GARRA);
 		Wait(50);
-		while (MotorRotationCount(MOTOR_GARRA) != prev_motor)
-		{
-			prev_motor = MotorRotationCount(MOTOR_GARRA);
-			Wait(50);
-		}
-		
 	}
-	
+
 	Off(MOTOR_GARRA);
 }
 
-
-float ultrassom_esquerda_filtrado()
+float ultrassom_filtrado(int sensor)
 {
-	SetSensorUltrasonic(SENSOR_US_ESQUERDA);
-	float aux = SensorUS(SENSOR_US_ESQUERDA);
-	float valor = aux;
+	float valor = SensorUS(sensor);
+	float aux;
 	for (int i = 0; i < 5; ++i)
 	{
-		valor = valor * SENSIBILIDADE + SensorUS(SENSOR_US_ESQUERDA)*(1-SENSIBILIDADE); // Algoritimo passado pelo B.Andreguetti da aula de SisMed
+		aux = SensorUS(sensor);
+		valor = valor * (1-SENSIBILIDADE) + aux*SENSIBILIDADE; // Algoritimo passado pelo B.Andreguetti da aula de SisMed
 	}
-
 	return valor;
 }
+
+
 
 float getGyroOffset()
 {
@@ -147,7 +143,7 @@ void girar(float degrees) // Algoritimo usado pela sek do ano passado
 	float angle = 0, gyro = 0;
 	unsigned long time = CurrentTick(), prev_time;
 
-  Off(OUT_AC);
+  Off(MOTORES);
 
   degrees = -degrees;
 
@@ -183,7 +179,7 @@ void girar(float degrees) // Algoritimo usado pela sek do ano passado
 	  }
  }
 
-	Off(OUT_AC);
+	Off(MOTORES);
 }
 
 void abrir_porta ()
@@ -208,21 +204,40 @@ void fechar_porta ()
 	Off(MOTOR_PORTA);
 }
 
+void pegar_passageiro (int passageiros) /*não testado*/
+{
+	if(ultrassom_filtrado(SENSOR_US_ESQUERDA) < 15 && passageiros < 4){ //Ainda é necessário adaptar a função agarrar() pra depois de ela agarrar, ela voltar para a
+															   //posoção que o robô estava antes. Além disso, colocar para verificar se pegou o boneco
+		girar(90);
+		agarrar(passageiros);
+		girar(-90);
+	}
+	else if(ultrassom_filtrado(SENSOR_US_DIREITA) < 15 && passageiros < 4){
+		girar(-90);
+		agarrar(passageiros);
+		girar(90);
+	}
+	++passageiros;
+}
+
 task main ()
 {
 	ligar_sensores();
 
-	
-	int help = 66;
+
+	float help;
+	int  passageiros = 0;
 
 	while (true)
 	{
-		help = SensorUS(SENSOR_US_ESQUERDA);
+		help = ultrassom_filtrado(SENSOR_US_ESQUERDA);
 		ClearScreen();
 		NumOut (0, LCD_LINE3, help);
-		Wait(50);
+		Wait(500);
+		OnFwdSync(MOTORES, -VELOCIDADE_ALTA, 0);
+		while(ultrassom_filtrado(SENSOR_US_ESQUERDA) > 10 && ultrassom_filtrado(SENSOR_US_DIREITA) > 10);
+		Off(MOTORES);
+		pegar_passageiro(passageiros);
+		Off(MOTORES);
 	}
-
-	
-
 }
