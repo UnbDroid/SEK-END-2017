@@ -18,7 +18,7 @@
 #define AZUL 2
 #define VERMELHO 5
 #define AMARELO 4
-#define SENSIBILIDADE 0.1
+#define SENSIBILIDADE 0.2
 #define OFFSET_SAMPLES 2000
 
 void ligar_sensores() //testada
@@ -100,7 +100,7 @@ float ultrassom_filtrado(int sensor) //testada
 	for (int i = 0; i < 5; ++i)
 	{
 		aux = SensorUS(sensor);
-		valor = valor * (1-SENSIBILIDADE) + aux*SENSIBILIDADE; // Algoritimo passado pelo B.Andreguetti da aula de SisMed
+		valor = valor * SENSIBILIDADE + aux * (1-SENSIBILIDADE); // Algoritimo passado pelo B.Andreguetti da aula de SisMed
 	}
 	return valor;
 }
@@ -205,19 +205,19 @@ void fechar_porta () //testada
 	Off(MOTOR_PORTA);
 }
 
-void pegar_passageiro (int passageiros) /*não testado*/
+void pegar_passageiro (int passageiros) //testado, mas precisa mudar a função gira para o robô girar no centro dele
 {
 	if(ultrassom_filtrado(SENSOR_US_ESQUERDA) < 15 && passageiros < 4){ //Ainda é necessário adaptar a função agarrar() pra depois de ela agarrar, ela voltar para a
 															   //posição que o robô estava antes. Além disso, colocar para verificar se pegou o boneco
-		girar(90);
+		girar(-90);
 		abaixar_garra();
 		agarrar(passageiros);
-		girar(-90);
+		girar(90);
 	}
 	else if(ultrassom_filtrado(SENSOR_US_DIREITA) < 15 && passageiros < 4){
-		girar(-90);
-		agarrar(passageiros);
 		girar(90);
+		agarrar(passageiros);
+		girar(-90);
 	}
 	++passageiros;
 }
