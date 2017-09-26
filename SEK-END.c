@@ -21,7 +21,7 @@
 #define SENSIBILIDADE 0.1
 #define OFFSET_SAMPLES 2000
 
-void ligar_sensores()
+void ligar_sensores() //testada
 {
 	SetSensorHTGyro(SENSOR_GYRO);
 	SetSensorUltrasonic(SENSOR_US_ESQUERDA);
@@ -32,34 +32,35 @@ void ligar_sensores()
 }
 
 
-void reto()
+void reto() //testada
 {
 	while(Sensor(SENSOR_COR_ESQUERDA) == BRANCO && Sensor(SENSOR_COR_DIREITA) == BRANCO)
 	{
-		OnFwdSync(MOTORES, -VELOCIDADE_ALTA, 7);
+		OnFwdSync(MOTORES, -VELOCIDADE_ALTA, 0);
 		// o último valor da função corrige a diferença entre os motores, que acontece devido a diferença de peso em cada um
+		//o último valor foi modificado para 0, já que os pesos foram ajustados para que não fossem necessária nenhuma compensação
 	}
 	Off(MOTORES);
 }
 
-void virar_esquerda()
+void virar_esquerda() //testada
 {
 	OnFwd(MOTOR_DIREITA, VELOCIDADE_BAIXA);
 	OnRev(MOTOR_ESQUERDA, VELOCIDADE_BAIXA);
 }
 
-void virar_direita()
+void virar_direita() //testada
 {
 	OnFwd(MOTOR_ESQUERDA, VELOCIDADE_BAIXA);
 	OnRev(MOTOR_DIREITA, VELOCIDADE_BAIXA);
 }
 
-void re()
+void re() //testada
 {
 	OnRevSync(MOTORES, VELOCIDADE_BAIXA, 0);
 }
 
-void levantar_garra()
+void levantar_garra() //testada
 {
 	int prev_motor = MotorRotationCount(MOTOR_GARRA);
 	OnRev(MOTOR_GARRA, VELOCIDADE_BAIXA);
@@ -72,7 +73,7 @@ void levantar_garra()
 	Off(MOTOR_GARRA);
 }
 
-void abaixar_garra()
+void abaixar_garra() //testada
 {
 	int prev_motor = MotorRotationCount(MOTOR_GARRA);
 
@@ -92,27 +93,7 @@ void abaixar_garra()
 	Off(MOTOR_GARRA); // com essa função a garra fica na posição adequada para pegar o boneco
 }
 
-void agarrar(int passageiros)
-{
-	int prev_motor;
-
-	abaixar_garra();
-	// aqui cabe uma função para movimentar o robô até que o sensor ultrassônico ache o boneco
-	// valor de teste, mas já é uma distância que a garra consegue pegar o boneco
-
-	if (!(SensorUS(SENSOR_US_GARRA) <= 15)) --passageiros;
-	OnFwd(MOTOR_GARRA, -VELOCIDADE_MEDIA);
-	Wait(50);
-	while (MotorRotationCount(MOTOR_GARRA) != prev_motor)
-	{
-		prev_motor = MotorRotationCount(MOTOR_GARRA);
-		Wait(50);
-	}
-
-	Off(MOTOR_GARRA);
-}
-
-float ultrassom_filtrado(int sensor)
+float ultrassom_filtrado(int sensor) //testada
 {
 	float valor = SensorUS(sensor);
 	float aux;
@@ -124,9 +105,29 @@ float ultrassom_filtrado(int sensor)
 	return valor;
 }
 
+void agarrar(int passageiros)//testada
+{
+	int prev_motor;
+
+	abaixar_garra();
+	// aqui cabe uma função para movimentar o robô até que o sensor ultrassônico ache o boneco
+	// valor de teste, mas já é uma distância que a garra consegue pegar o boneco
+
+	if (!(ultrassom_filtrado(SENSOR_US_GARRA) <= 15)) --passageiros;
+	OnFwd(MOTOR_GARRA, -VELOCIDADE_MEDIA);
+	Wait(50);
+	while (MotorRotationCount(MOTOR_GARRA) != prev_motor)
+	{
+		prev_motor = MotorRotationCount(MOTOR_GARRA);
+		Wait(50);
+	}
+
+	Off(MOTOR_GARRA);
+}
 
 
-float getGyroOffset()
+
+float getGyroOffset() //testada
 {
     float gyro_sum = 0, i;
 
@@ -138,7 +139,7 @@ float getGyroOffset()
     return gyro_sum/OFFSET_SAMPLES;
 }
 
-void girar(float degrees) // Algoritimo usado pela sek do ano passado
+void girar(float degrees) // Algoritimo usado pela sek do ano passado //testada
 {
 	float angle = 0, gyro = 0;
 	unsigned long time = CurrentTick(), prev_time;
@@ -182,7 +183,7 @@ void girar(float degrees) // Algoritimo usado pela sek do ano passado
 	Off(MOTORES);
 }
 
-void abrir_porta ()
+void abrir_porta () //testada
 {
 	const float RAIO = 2.3405/2;
 	const float CREMALHEIRA = 5.1;
@@ -195,7 +196,7 @@ void abrir_porta ()
 	Off(MOTOR_PORTA);
 }
 
-void fechar_porta ()
+void fechar_porta () //testada
 {
 	while(MotorRotationCount(MOTOR_PORTA) > 0)
 	{
@@ -207,8 +208,9 @@ void fechar_porta ()
 void pegar_passageiro (int passageiros) /*não testado*/
 {
 	if(ultrassom_filtrado(SENSOR_US_ESQUERDA) < 15 && passageiros < 4){ //Ainda é necessário adaptar a função agarrar() pra depois de ela agarrar, ela voltar para a
-															   //posoção que o robô estava antes. Além disso, colocar para verificar se pegou o boneco
+															   //posição que o robô estava antes. Além disso, colocar para verificar se pegou o boneco
 		girar(90);
+		abaixar_garra();
 		agarrar(passageiros);
 		girar(-90);
 	}
