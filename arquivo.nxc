@@ -1,0 +1,108 @@
+byte handle = 0; // file handle
+#define FILE_NAME "arquivo.dat"
+// The file size is made small so it will fill up quickly.
+#define FILE_SIZE 32
+
+// Display a return code from a file sytem API call on the NXT screen.
+void rtn_code_out(const unsigned int code)
+{
+   TextOut(0, LCD_LINE2, "code            ");
+   //TextOut(50, LCD_LINE2, FormatNum("%04x", code));
+}
+// Open the data file for writing.
+void abrir_arquivo_escrever()
+{
+   unsigned int file_size = FILE_SIZE;
+   handle = 0;
+   // Start with the assumptions the file doesn't exist and needs to be created.
+   unsigned int rtn_code = CreateFile(FILE_NAME, file_size, handle);
+   // If the file already exists, open it with the intent of adding to the data 
+   // that is already there.
+   if (rtn_code == LDR_FILEEXISTS)
+      rtn_code = OpenFileAppend(FILE_NAME, file_size, handle);
+   // Return code handling   
+   switch (rtn_code)
+   {
+   case LDR_SUCCESS:
+      return;
+   case LDR_FILEISFULL:
+      TextOut(0, LCD_LINE1, "file is full    ");
+      break;
+   default:
+      // Unanticipated exception. 
+      TextOut(0, LCD_LINE1, "write open      ");
+      rtn_code_out(rtn_code);
+      break;
+   }
+}
+// Open the data file for reading.
+void abrir_arquivo_ler()
+{
+   unsigned int file_size = FILE_SIZE;
+   handle = 0;
+   unsigned int rtn_code = OpenFileRead(FILE_NAME, file_size, handle);
+   // Return code handling   
+   if (rtn_code != LDR_SUCCESS)
+   {
+      // Unanticipated exception. 
+      TextOut(0, LCD_LINE1, "read open       ");
+      rtn_code_out(rtn_code);
+   }
+}
+// Write one number to the data file.
+void escrever_arquivo(const int x)
+{
+   NumOut(20,20, x);
+   Wait(2000);
+   unsigned int rtn_code = Write(handle, x);
+   // Return code handling
+   if (rtn_code != LDR_SUCCESS)
+   {
+      switch (rtn_code)
+      {
+      case LDR_EOFEXPECTED:
+         TextOut(0, LCD_LINE1, "no more space   ");
+         break;
+      default:
+         // Unanticipated exception. 
+         TextOut(0, LCD_LINE1, "write failed    ");
+         rtn_code_out(rtn_code);
+         break;
+      }
+   }
+}
+// Read all the numbers from the data file. Display each circle as it is 
+// read.
+void ler_arquivo(int & x)
+{
+   unsigned int rtn_code = Read(handle, x);
+      // rtn_code_out(rtn_code);
+      // Return code handling   
+   switch (rtn_code)
+   {
+   case LDR_SUCCESS:
+         // Record has been read. Display circle described by it.
+      NumOut(10, 10, x);
+      Wait(SEC_2);
+      break;
+   case LDR_ENDOFFILE:
+         // No more data to read.
+      return;
+   default:
+         // Unanticipated exception. 
+      TextOut(0, LCD_LINE1, "read failed     ");
+      rtn_code_out(rtn_code);
+   }
+
+}
+
+task main()
+{
+   int c;
+   abrir_arquivo_escrever();
+   escrever_arquivo(c);
+   CloseFile(handle);
+   open_for_read();
+   read_all(c);
+}
+   
