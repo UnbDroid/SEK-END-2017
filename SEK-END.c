@@ -18,7 +18,7 @@
 #define AZUL 2
 #define VERMELHO 5
 #define AMARELO 4
-#define SENSIBILIDADE 0.2
+#define SENSIBILIDADE 0.9
 #define OFFSET_SAMPLES 2000
 
 void ligar_sensores() //testada
@@ -34,13 +34,13 @@ void ligar_sensores() //testada
 
 void reto() //testada
 {
-	while(Sensor(SENSOR_COR_ESQUERDA) == BRANCO && Sensor(SENSOR_COR_DIREITA) == BRANCO)
-	{
-		OnFwdSync(MOTORES, -VELOCIDADE_ALTA, 0);
-		// o último valor da função corrige a diferença entre os motores, que acontece devido a diferença de peso em cada um
-		//o último valor foi modificado para 0, já que os pesos foram ajustados para que não fossem necessária nenhuma compensação
-	}
-	Off(MOTORES);
+
+	OnFwdSync(MOTORES, -VELOCIDADE_ALTA, 0);
+	//este OnFwdSync ficava dentro de um while, mas é melhor que ele fique de fora para que tenhamos melhor controle dos laços de repetição
+	//ou seja, o laço de repetição deve ficar na main
+	// o último valor da função corrige a diferença entre os motores, que acontece devido a diferença de peso em cada um
+	//o último valor foi modificado para 0, já que os pesos foram ajustados para que não fossem necessária nenhuma compensação
+
 }
 
 void virar_esquerda() //testada
@@ -57,7 +57,7 @@ void virar_direita() //testada
 
 void re() //testada
 {
-	OnRevSync(MOTORES, VELOCIDADE_BAIXA, 0);
+	OnRevSync(MOTORES, -VELOCIDADE_ALTA, 0);
 }
 
 void levantar_garra() //testada
@@ -97,7 +97,7 @@ float ultrassom_filtrado(int sensor) //testada
 {
 	float valor = SensorUS(sensor);
 	float aux;
-	for (int i = 0; i < 5; ++i)
+	for (int i = 0; i < 8; ++i)
 	{
 		aux = SensorUS(sensor);
 		valor = valor * SENSIBILIDADE + aux * (1-SENSIBILIDADE); // Algoritimo passado pelo B.Andreguetti da aula de SisMed
@@ -105,15 +105,13 @@ float ultrassom_filtrado(int sensor) //testada
 	return valor;
 }
 
-void agarrar(int passageiros)//testada
+void agarrar()//testada
 {
 	int prev_motor;
 
-	abaixar_garra();
 	// aqui cabe uma função para movimentar o robô até que o sensor ultrassônico ache o boneco
 	// valor de teste, mas já é uma distância que a garra consegue pegar o boneco
 
-	if (!(ultrassom_filtrado(SENSOR_US_GARRA) <= 15)) --passageiros;
 	OnFwd(MOTOR_GARRA, -VELOCIDADE_MEDIA);
 	Wait(50);
 	while (MotorRotationCount(MOTOR_GARRA) != prev_motor)
@@ -207,16 +205,36 @@ void fechar_porta () //testada
 
 void pegar_passageiro (int passageiros) //testado, mas precisa mudar a função gira para o robô girar no centro dele
 {
-	if(ultrassom_filtrado(SENSOR_US_ESQUERDA) < 15 && passageiros < 4){ //Ainda é necessário adaptar a função agarrar() pra depois de ela agarrar, ela voltar para a
+	if(ultrassom_filtrado(SENSOR_US_ESQUERDA) < 25 && passageiros < 4){ //Ainda é necessário adaptar a função agarrar() pra depois de ela agarrar, ela voltar para a
 															   //posição que o robô estava antes. Além disso, colocar para verificar se pegou o boneco
+		/*re();
+		Wait(300);*/
+		Off(MOTORES);
+		Wait(500);
 		girar(-90);
 		abaixar_garra();
-		agarrar(passageiros);
+		while (ultrassom_filtrado(SENSOR_US_GARRA) >= 21)
+		{
+			reto();
+			Wait(25);
+		}
+		agarrar();
 		girar(90);
 	}
-	else if(ultrassom_filtrado(SENSOR_US_DIREITA) < 15 && passageiros < 4){
+	else if(ultrassom_filtrado(SENSOR_US_DIREITA) < 25 && passageiros < 4){
+
+		/*re();
+		Wait(300);*/
+		Off(MOTORES);
+		Wait(500);
 		girar(90);
-		agarrar(passageiros);
+		abaixar_garra();
+		while (ultrassom_filtrado(SENSOR_US_GARRA) >= 21)
+		{
+			reto();
+			Wait(25);
+		}
+		agarrar();
 		girar(-90);
 	}
 	++passageiros;
@@ -232,12 +250,9 @@ task main ()
 
 	while (true)
 	{
-		help = ultrassom_filtrado(SENSOR_US_ESQUERDA);
-		ClearScreen();
-		NumOut (0, LCD_LINE3, help);
-		Wait(500);
-		OnFwdSync(MOTORES, -VELOCIDADE_ALTA, 0);
-		while(ultrassom_filtrado(SENSOR_US_ESQUERDA) > 10 && ultrassom_filtrado(SENSOR_US_DIREITA) > 10);
+
+		reto();
+		while(ultrassom_filtrado(SENSOR_US_ESQUERDA) > 25 && ultrassom_filtrado(SENSOR_US_DIREITA) > 25);
 		Off(MOTORES);
 		pegar_passageiro(passageiros);
 		Off(MOTORES);
