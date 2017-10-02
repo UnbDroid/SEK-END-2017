@@ -187,7 +187,7 @@ task main () //por enquato a maior parte está só com a lógica, tem que altera
 {
 	int direcoes[6] = {0, 0, 0, 0, 0, 0}; //achei mais prático criar um vetor de 6 posiçoes e usar as constantes como o valor do índice
 	ligar_sensores();
-	while(Sensor(SENSOR_COR_DIREITA) != AZUL && Sensor(SENSOR_COR_ESQUERDA) != AZUL)
+	while(Sensor(SENSOR_COR_DIREITA) == BRANCO || Sensor(SENSOR_COR_ESQUERDA) == BRANCO)
 	{
 		reto(BRANCO);
 	}
@@ -198,7 +198,9 @@ task main () //por enquato a maior parte está só com a lógica, tem que altera
 		{
 			direcoes[AZUL] = testar_caminho(AZUL, direcoes);
 		} else 
-			seguir_direcao(direcoes, AZUL)		
+		{
+			seguir_direcao(direcoes, AZUL);		
+		}
 	}
   
   if (Sensor(SENSOR_COR_DIREITA) == VERMELHO || Sensor(SENSOR_COR_ESQUERDA) == VERMELHO)
@@ -207,7 +209,9 @@ task main () //por enquato a maior parte está só com a lógica, tem que altera
 		{
 			direcoes[VERMELHO] = testar_caminho(VERMELHO, direcoes);
 		} else 
-			seguir_direcao(direcoes, VERMELHO)		
+		{
+			seguir_direcao(direcoes, VERMELHO);		
+		}
 	}
   
   if (Sensor(SENSOR_COR_DIREITA) == VERDE || Sensor(SENSOR_COR_ESQUERDA) == VERDE)
@@ -216,7 +220,8 @@ task main () //por enquato a maior parte está só com a lógica, tem que altera
 		{
 			direcoes[VERDE] = testar_caminho(VERDE, direcoes);
 		} else 
-			seguir_direcao(direcoes, VERDE)		
+		{
+			seguir_direcao(direcoes, VERDE);		
+		}
 	}
-  
 }
