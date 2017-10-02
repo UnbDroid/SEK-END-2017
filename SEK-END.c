@@ -35,7 +35,7 @@ void ligar_sensores() //testada
 void reto() //testada
 {
 
-	OnFwdSync(MOTORES, -VELOCIDADE_ALTA, 0);
+	OnFwdSync(MOTORES, -VELOCIDADE_MEDIA, 0);
 	//este OnFwdSync ficava dentro de um while, mas é melhor que ele fique de fora para que tenhamos melhor controle dos laços de repetição
 	//ou seja, o laço de repetição deve ficar na main
 	// o último valor da função corrige a diferença entre os motores, que acontece devido a diferença de peso em cada um
@@ -59,6 +59,50 @@ void re() //testada
 {
 	OnRevSync(MOTORES, -VELOCIDADE_ALTA, 0);
 }
+
+void distancia_reto(int low_speed, int high_speed, int distancia){
+          int count_A =  MotorRotationCount(MOTOR_ESQUERDA);
+          int count_C =  MotorRotationCount(MOTOR_DIREITA);
+          OnRev(MOTORES, high_speed);
+          do{
+                if (count_A - MotorRotationCount(MOTOR_ESQUERDA) > count_C - MotorRotationCount(MOTOR_DIREITA))
+                {
+                   OnRev(MOTOR_ESQUERDA, low_speed);
+                   until ((count_C - MotorRotationCount(MOTOR_DIREITA)) >  (count_A - MotorRotationCount(MOTOR_ESQUERDA)));
+                   OnRev(MOTOR_ESQUERDA, high_speed);
+
+                }
+                else
+                {
+                     OnRev(MOTOR_DIREITA, low_speed);
+                     until ( (count_A - MotorRotationCount(MOTOR_ESQUERDA)) > (count_C - MotorRotationCount(MOTOR_DIREITA)));
+                     OnRev(MOTOR_DIREITA, high_speed);
+                }
+           }while((count_A - MotorRotationCount(MOTOR_ESQUERDA))*6*PI/360 <= distancia);
+           Off(MOTORES);
+    }
+
+void distancia_re(int low_speed, int high_speed, int distancia){
+          int count_A =  MotorRotationCount(MOTOR_ESQUERDA);
+          int count_C =  MotorRotationCount(MOTOR_DIREITA);
+          OnFwd(MOTORES, high_speed);
+          do{
+                if (MotorRotationCount(MOTOR_ESQUERDA) - count_A > MotorRotationCount(MOTOR_DIREITA) - count_C)
+                {
+                   OnFwd(MOTOR_ESQUERDA, low_speed);
+                   until ((MotorRotationCount(MOTOR_DIREITA) - count_C) >  (MotorRotationCount(MOTOR_ESQUERDA) - count_A));
+                   OnFwd(MOTOR_ESQUERDA, high_speed);
+
+                }
+                else
+                {
+                     OnFwd(MOTOR_DIREITA, low_speed);
+                     until ( (MotorRotationCount(MOTOR_ESQUERDA) - count_A) > (MotorRotationCount(MOTOR_DIREITA) - count_C));
+                     OnFwd(MOTOR_DIREITA, high_speed);
+                }
+           }while((MotorRotationCount(MOTOR_ESQUERDA) - count_A)*6*PI/360 <= distancia);
+           Off(MOTORES);
+    }
 
 void levantar_garra() //testada
 {
@@ -90,7 +134,9 @@ void abaixar_garra() //testada
 	{
 		OnFwd(MOTOR_GARRA, -VELOCIDADE_BAIXA);
 	}
-	Off(MOTOR_GARRA); // com essa função a garra fica na posição adequada para pegar o boneco
+
+	Off(MOTOR_GARRA);
+
 }
 
 float ultrassom_filtrado(int sensor) //testada
@@ -205,37 +251,27 @@ void fechar_porta () //testada
 
 void pegar_passageiro (int passageiros) //testado, mas precisa mudar a função gira para o robô girar no centro dele
 {
-	if(ultrassom_filtrado(SENSOR_US_ESQUERDA) < 25 && passageiros < 4){ //Ainda é necessário adaptar a função agarrar() pra depois de ela agarrar, ela voltar para a
+	if(ultrassom_filtrado(SENSOR_US_ESQUERDA) < 15 && passageiros < 4){ //Ainda é necessário adaptar a função agarrar() pra depois de ela agarrar, ela voltar para a
 															   //posição que o robô estava antes. Além disso, colocar para verificar se pegou o boneco
-		/*re();
-		Wait(300);*/
 		Off(MOTORES);
 		Wait(500);
-		girar(-90);
+		girar(-95);
 		abaixar_garra();
-		while (ultrassom_filtrado(SENSOR_US_GARRA) >= 21)
-		{
-			reto();
-			Wait(25);
-		}
+		distancia_reto(VELOCIDADE_MEDIA, VELOCIDADE_ALTA, 35);
 		agarrar();
-		girar(90);
+		distancia_re(VELOCIDADE_MEDIA, VELOCIDADE_ALTA, 35);
+		girar(95);
 	}
-	else if(ultrassom_filtrado(SENSOR_US_DIREITA) < 25 && passageiros < 4){
+	else if(ultrassom_filtrado(SENSOR_US_DIREITA) < 15 && passageiros < 4){
 
-		/*re();
-		Wait(300);*/
 		Off(MOTORES);
 		Wait(500);
-		girar(90);
+		girar(95);
 		abaixar_garra();
-		while (ultrassom_filtrado(SENSOR_US_GARRA) >= 21)
-		{
-			reto();
-			Wait(25);
-		}
+		distancia_reto(VELOCIDADE_MEDIA, VELOCIDADE_ALTA, 35);
 		agarrar();
-		girar(-90);
+		distancia_re(VELOCIDADE_MEDIA, VELOCIDADE_ALTA, 35);
+		girar(-95);
 	}
 	++passageiros;
 }
@@ -252,7 +288,7 @@ task main ()
 	{
 
 		reto();
-		while(ultrassom_filtrado(SENSOR_US_ESQUERDA) > 25 && ultrassom_filtrado(SENSOR_US_DIREITA) > 25);
+		while(ultrassom_filtrado(SENSOR_US_ESQUERDA) > 15 && ultrassom_filtrado(SENSOR_US_DIREITA) > 15);
 		Off(MOTORES);
 		pegar_passageiro(passageiros);
 		Off(MOTORES);
