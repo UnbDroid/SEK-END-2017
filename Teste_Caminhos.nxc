@@ -36,20 +36,21 @@ void ligar_sensores() //testada
 
 void reto(int cor)
 {
-	while (Sensor(SENSOR_COR_DIREITA) == cor && Sensor(SENSOR_COR_ESQUERDA) == cor)
+	while (Sensor(SENSOR_COR_DIREITA) == cor || Sensor(SENSOR_COR_ESQUERDA) == cor)
 	{
 		OnFwdSync(MOTORES, -VELOCIDADE_ALTA, 5);
+		while(Sensor(SENSOR_COR_ESQUERDA) == PRETO)
+		{
+			OnFwd(MOTOR_ESQUERDA, -VELOCIDADE_ALTA);
+			OnRev(MOTOR_DIREITA, - VELOCIDADE_MEDIA);
+		}
+		while(Sensor(SENSOR_COR_DIREITA) == PRETO)
+		{
+			OnFwd(MOTOR_DIREITA, -VELOCIDADE_ALTA);
+			OnRev(MOTOR_ESQUERDA, - VELOCIDADE_MEDIA);
+		}
 	}
-	while(Sensor(SENSOR_COR_ESQUERDA) != cor)
-	{
-		OnFwd(MOTOR_ESQUERDA, -VELOCIDADE_ALTA);
-		OnRev(MOTOR_DIREITA, - VELOCIDADE_MEDIA);
-	}
-	while(Sensor(SENSOR_COR_DIREITA) != cor)
-	{
-		OnFwd(MOTOR_DIREITA, -VELOCIDADE_ALTA);
-		OnRev(MOTOR_ESQUERDA, - VELOCIDADE_MEDIA);
-	}
+	
 	//este OnFwdSync ficava dentro de um while, mas é melhor que ele fique de fora para que tenhamos melhor controle dos laços de repetição
 	//ou seja, o laço de repetição deve ficar na main
 	// o último valor da função corrige a diferença entre os motores, que acontece devido a diferença de peso em cada um
@@ -115,14 +116,9 @@ void girar(float degrees) // Algoritimo usado pela sek do ano passado //testada
 
 bool verificar_direcao(int cor)
 {
-	while (Sensor(SENSOR_COR_DIREITA) == cor || Sensor(SENSOR_COR_ESQUERDA) == cor)
-	{
-		reto(cor);
-	}
-	while(Sensor(SENSOR_COR_DIREITA) == BRANCO || Sensor(SENSOR_COR_ESQUERDA) == BRANCO)
-	{
-		reto(BRANCO);
-	}
+	reto(cor);
+	reto(BRANCO);
+		
 	if (Sensor(SENSOR_COR_DIREITA) != PRETO && Sensor(SENSOR_COR_ESQUERDA) != PRETO)
 	{
 		return true;
@@ -183,14 +179,12 @@ void seguir_direcao(int vetor_direcao[], int cor)
 	}
 }
 
-task main () //por enquato a maior parte está só com a lógica, tem que alterar as fuções pra ele conseguir andar certinho e girar
+task main () //por enquato a maior parte está só com a lógica, tem que alterar as funções pra ele conseguir andar certinho e girar
 {
 	int direcoes[6] = {0, 0, 0, 0, 0, 0}; //achei mais prático criar um vetor de 6 posiçoes e usar as constantes como o valor do índice
 	ligar_sensores();
-	while(Sensor(SENSOR_COR_DIREITA) == BRANCO || Sensor(SENSOR_COR_ESQUERDA) == BRANCO)
-	{
-		reto(BRANCO);
-	}
+
+	reto(BRANCO);
 	
 	if (Sensor(SENSOR_COR_DIREITA) == AZUL || Sensor(SENSOR_COR_ESQUERDA) == AZUL)
 	{
