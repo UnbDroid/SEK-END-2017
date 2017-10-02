@@ -188,6 +188,7 @@ task main () //por enquato a maior parte está só com a lógica, tem que altera
 	
 	if (Sensor(SENSOR_COR_DIREITA) == AZUL || Sensor(SENSOR_COR_ESQUERDA) == AZUL)
 	{
+		reto(AZUL);
 		if (direcoes [AZUL] == 0)
 		{
 			direcoes[AZUL] = testar_caminho(AZUL, direcoes);
@@ -199,6 +200,7 @@ task main () //por enquato a maior parte está só com a lógica, tem que altera
   
   if (Sensor(SENSOR_COR_DIREITA) == VERMELHO || Sensor(SENSOR_COR_ESQUERDA) == VERMELHO)
 	{
+		reto(VERMELHO);
 		if (direcoes [VERMELHO] == 0)
 		{
 			direcoes[VERMELHO] = testar_caminho(VERMELHO, direcoes);
@@ -210,6 +212,7 @@ task main () //por enquato a maior parte está só com a lógica, tem que altera
   
   if (Sensor(SENSOR_COR_DIREITA) == VERDE || Sensor(SENSOR_COR_ESQUERDA) == VERDE)
 	{
+		reto(VERDE);
 		if (direcoes [VERDE] == 0)
 		{
 			direcoes[VERDE] = testar_caminho(VERDE, direcoes);
