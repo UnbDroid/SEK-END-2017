@@ -9,6 +9,7 @@
 #define SENSOR_US_DIREITA IN_3
 #define SENSOR_GYRO IN_4 /*teste*/
 #define SENSOR_US_GARRA IN_2 /*teste*/
+#define VELOCIDADE_BAIXINHA 15
 #define VELOCIDADE_BAIXA 35
 #define VELOCIDADE_MEDIA 50
 #define VELOCIDADE_ALTA 65
@@ -121,7 +122,7 @@ void abaixar_garra() //testada
 {
 	int prev_motor = MotorRotationCount(MOTOR_GARRA);
 
-	OnFwd(MOTOR_GARRA, VELOCIDADE_BAIXA);
+	/*OnFwd(MOTOR_GARRA, VELOCIDADE_BAIXA);
 	Wait(50);
 	while(prev_motor != MotorRotationCount(MOTOR_GARRA)) // a garra irá se movimentar até travar na estrutura
 	{
@@ -129,10 +130,14 @@ void abaixar_garra() //testada
 		Wait(50);
 	}
 	Off(MOTOR_GARRA);
-	prev_motor = MotorRotationCount(MOTOR_GARRA);
-	while(-90 < MotorRotationCount(MOTOR_GARRA) - prev_motor) // rotação necessária para a garra fechar um pouco e não agarrar no chão
+	prev_motor = MotorRotationCount(MOTOR_GARRA);*/
+	while(225 > abs(MotorRotationCount(MOTOR_GARRA) - prev_motor)) // rotação necessária para a garra fechar um pouco e não agarrar no chão
 	{
-		OnFwd(MOTOR_GARRA, -VELOCIDADE_BAIXA);
+		OnFwd(MOTOR_GARRA, VELOCIDADE_MEDIA);
+		if (prev_motor == MotorRotationCount(MOTOR_GARRA))
+		{
+			Off(MOTOR_GARRA);
+		}
 	}
 
 	Off(MOTOR_GARRA);
@@ -151,14 +156,19 @@ float ultrassom_filtrado(int sensor) //testada
 	return valor;
 }
 
-void agarrar()//testada
+int agarrar()//testada
 {
 	int prev_motor;
+	int prev_motor_segunda_etapa;
+	int inicial_motor;
+	int confirma_que_pegou;
 
 	// aqui cabe uma função para movimentar o robô até que o sensor ultrassônico ache o boneco
 	// valor de teste, mas já é uma distância que a garra consegue pegar o boneco
 
-	OnFwd(MOTOR_GARRA, -VELOCIDADE_MEDIA);
+	inicial_motor = MotorRotationCount(MOTOR_GARRA);
+
+	OnFwd(MOTOR_GARRA, -VELOCIDADE_BAIXINHA);
 	Wait(50);
 	while (MotorRotationCount(MOTOR_GARRA) != prev_motor)
 	{
@@ -167,6 +177,29 @@ void agarrar()//testada
 	}
 
 	Off(MOTOR_GARRA);
+
+	if (abs(prev_motor - inicial_motor) > 60) //quando o motor fecha a garra, o deslocamento angular diminui, ou seja, fica negativo. Portanto essa subtração resultara em um numero negativo
+	{
+		confirma_que_pegou = 0;
+	}
+
+	else
+	{
+		confirma_que_pegou = 1;
+	}
+
+	OnFwd(MOTOR_GARRA, -VELOCIDADE_MEDIA);
+	Wait(50);
+	while (MotorRotationCount(MOTOR_GARRA) != prev_motor_segunda_etapa)
+	{
+		prev_motor_segunda_etapa = MotorRotationCount(MOTOR_GARRA);
+		Wait(50);
+	}
+
+	Off(MOTOR_GARRA);
+	
+
+	return confirma_que_pegou;
 }
 
 
@@ -249,31 +282,44 @@ void fechar_porta () //testada
 	Off(MOTOR_PORTA);
 }
 
-void pegar_passageiro (int passageiros) //testado, mas precisa mudar a função gira para o robô girar no centro dele
+int pegar_passageiro (int passageiros, int lado) //testado, mas precisa mudar a função gira para o robô girar no centro dele
 {
-	if(ultrassom_filtrado(SENSOR_US_ESQUERDA) < 15 && passageiros < 4){ //Ainda é necessário adaptar a função agarrar() pra depois de ela agarrar, ela voltar para a
+
+	int confirma_que_pegou = 0;
+
+	if(lado == 0 && passageiros < 4){ //Ainda é necessário adaptar a função agarrar() pra depois de ela agarrar, ela voltar para a
 															   //posição que o robô estava antes. Além disso, colocar para verificar se pegou o boneco
 		Off(MOTORES);
 		Wait(500);
-		girar(-95);
+		distancia_re(VELOCIDADE_MEDIA, VELOCIDADE_ALTA, 8);
+		girar(-90);
 		abaixar_garra();
 		distancia_reto(VELOCIDADE_MEDIA, VELOCIDADE_ALTA, 35);
-		agarrar();
+		Off(MOTORES);
+		confirma_que_pegou = agarrar();
 		distancia_re(VELOCIDADE_MEDIA, VELOCIDADE_ALTA, 35);
-		girar(95);
+		girar(90);
 	}
-	else if(ultrassom_filtrado(SENSOR_US_DIREITA) < 15 && passageiros < 4){
+	else if(lado == 1 && passageiros < 4){ //variavel lado valendo 0 corresponde a esquerda e valendo 1 corresponde à direta, bjs
 
 		Off(MOTORES);
 		Wait(500);
-		girar(95);
+		distancia_re(VELOCIDADE_MEDIA, VELOCIDADE_ALTA, 8);
+		girar(90);
 		abaixar_garra();
 		distancia_reto(VELOCIDADE_MEDIA, VELOCIDADE_ALTA, 35);
-		agarrar();
+		Off(MOTORES);
+		confirma_que_pegou = agarrar();
 		distancia_re(VELOCIDADE_MEDIA, VELOCIDADE_ALTA, 35);
-		girar(-95);
+		girar(-90);
 	}
-	++passageiros;
+	
+	if (confirma_que_pegou == 1)
+	{
+		++passageiros;
+	}
+
+	return passageiros;
 }
 
 task main ()
@@ -288,9 +334,21 @@ task main ()
 	{
 
 		reto();
-		while(ultrassom_filtrado(SENSOR_US_ESQUERDA) > 15 && ultrassom_filtrado(SENSOR_US_DIREITA) > 15);
-		Off(MOTORES);
-		pegar_passageiro(passageiros);
-		Off(MOTORES);
+		if (passageiros < 4)
+		{
+
+			if (ultrassom_filtrado(SENSOR_US_ESQUERDA) < 15)
+			{
+				Off(MOTORES);
+				passageiros = pegar_passageiro(passageiros, 0);
+				Off(MOTORES);
+			}
+			else if (ultrassom_filtrado(SENSOR_US_DIREITA) < 15)
+			{
+				Off(MOTORES);
+				passageiros = pegar_passageiro(passageiros, 1);
+				Off(MOTORES);
+			}
+		}
 	}
 }
