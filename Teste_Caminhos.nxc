@@ -23,42 +23,26 @@
 #define ESQUERDA 1
 #define DIREITA 2
 #define FRENTE 3
+#define WHITEUP 630
+#define WHITEDOWN 575
+#define BLUEUP 340
+#define	BLUEDOWN 300
+#define	BLACKUP 220
+#define BLACKDOWN 160
+#define	REDUP 575
+#define REDDOWN 545
 
-void ligar_sensores() //testada
+void ligar_sensores()
 {
 	SetSensorHTGyro(SENSOR_GYRO);
 	//SetSensorUltrasonic(SENSOR_US_ESQUERDA);
 	//SetSensorUltrasonic(SENSOR_US_DIREITA);
-	SetSensorColorFull(SENSOR_COR_DIREITA);
-	SetSensorColorFull(SENSOR_COR_ESQUERDA);
+	SetSensorColorRed(SENSOR_COR_DIREITA);
+	SetSensorColorRed(SENSOR_COR_ESQUERDA);
 	SetSensorUltrasonic(SENSOR_US_GARRA);
 }
 
-void reto(int cor)
-{
-	while (Sensor(SENSOR_COR_DIREITA) == cor || Sensor(SENSOR_COR_ESQUERDA) == cor)
-	{
-		OnFwdSync(MOTORES, -VELOCIDADE_ALTA, 5);
-		while(Sensor(SENSOR_COR_ESQUERDA) == PRETO)
-		{
-			OnFwd(MOTOR_ESQUERDA, -VELOCIDADE_ALTA);
-			OnRev(MOTOR_DIREITA, - VELOCIDADE_MEDIA);
-		}
-		while(Sensor(SENSOR_COR_DIREITA) == PRETO)
-		{
-			OnFwd(MOTOR_DIREITA, -VELOCIDADE_ALTA);
-			OnRev(MOTOR_ESQUERDA, - VELOCIDADE_MEDIA);
-		}
-	}
-	
-	//este OnFwdSync ficava dentro de um while, mas é melhor que ele fique de fora para que tenhamos melhor controle dos laços de repetição
-	//ou seja, o laço de repetição deve ficar na main
-	// o último valor da função corrige a diferença entre os motores, que acontece devido a diferença de peso em cada um
-	//o último valor foi modificado para 0, já que os pesos foram ajustados para que não fossem necessária nenhuma compensação
-
-}
-
-float getGyroOffset() //testada
+float getGyroOffset() 
 {
     float gyro_sum = 0, i;
 
@@ -114,33 +98,95 @@ void girar(float degrees) // Algoritimo usado pela sek do ano passado //testada
 	Off(MOTORES);
 }
 
+bool intervalo_cor(int cor, int sensor)
+{
+	if (cor == BRANCO)
+	{
+		if (SensorRaw(sensor) >= WHITEDOWN && SensorRaw(sensor) <= WHITEUP)
+			return true;
+	}
+	if (cor == AZUL)
+	{
+		if (SensorRaw(sensor) >= BLUEDOWN && SensorRaw(sensor) <= BLUEUP)
+			return true;
+	}
+	if (cor == PRETO)
+	{
+		if (SensorRaw(sensor) >= BLACKDOWN && SensorRaw(sensor) <= BLACKUP)
+			return true;
+	}
+	if (cor == VERMELHO)
+	{
+		if (SensorRaw(sensor) >= REDDOWN && SensorRaw(sensor) <= REDUP)
+			return true;
+	}
+	return false;
+}
+
+void reto(int cor)
+{
+	while (intervalo_cor(cor, SENSOR_COR_ESQUERDA) || intervalo_cor(cor, SENSOR_COR_DIREITA))
+	{
+		OnFwdSync(MOTORES, -VELOCIDADE_ALTA, 5);
+		while(!intervalo_cor(cor, SENSOR_COR_ESQUERDA) && intervalo_cor(cor, SENSOR_COR_DIREITA))
+		{
+			OnFwd(MOTOR_ESQUERDA, -VELOCIDADE_ALTA);
+			OnRev(MOTOR_DIREITA, - VELOCIDADE_MEDIA);
+			ClearScreen();
+			TextOut(50,50, "E:P");
+			NumOut(0,0, Sensor(SENSOR_COR_ESQUERDA));
+			NumOut(0,40, Sensor(SENSOR_COR_DIREITA));
+		}
+		while(!intervalo_cor(cor, SENSOR_COR_DIREITA) && intervalo_cor(cor, SENSOR_COR_ESQUERDA))
+		{
+			OnFwd(MOTOR_DIREITA, -VELOCIDADE_ALTA);
+			OnRev(MOTOR_ESQUERDA, - VELOCIDADE_MEDIA);
+			ClearScreen();
+			TextOut(50,50, "D:P");
+			NumOut(0,0, Sensor(SENSOR_COR_ESQUERDA));
+			NumOut(0,40, Sensor(SENSOR_COR_DIREITA));
+		}
+		ClearScreen();
+		NumOut(0,0, Sensor(SENSOR_COR_ESQUERDA));
+		NumOut(0,40, Sensor(SENSOR_COR_DIREITA));
+	}
+	Off(MOTORES);
+	
+	//alterei o laço para dentro da função recenbendo a cor como argumento
+}
+
 bool verificar_direcao(int cor)
 {
 	reto(cor);
 	reto(BRANCO);
-		
-	if (Sensor(SENSOR_COR_DIREITA) != PRETO && Sensor(SENSOR_COR_ESQUERDA) != PRETO)
+
+	if (!intervalo_cor(PRETO, SENSOR_COR_DIREITA) && !intervalo_cor(PRETO, SENSOR_COR_ESQUERDA))
 	{
+		TextOut(10,10, "caminho certo");
+		Wait(2000);
 		return true;
 	}
+	TextOut(10, 10, "Caminho errado");
+	Wait(2000);
 	return false;
 }
 
 void voltar()
 {
 	girar(180);
-	while(Sensor(SENSOR_COR_DIREITA) == BRANCO || Sensor(SENSOR_COR_ESQUERDA) == BRANCO)
-	{
-		reto(BRANCO);
-	}
+	reto(BRANCO);
 }
 
 int testar_caminho(int cor, int vetor_direcao[])
 {
 	if (vetor_direcao[AZUL] != ESQUERDA && vetor_direcao[VERMELHO] != ESQUERDA && vetor_direcao[VERDE] != ESQUERDA)
 	{
+		TextOut(10,10, "teste esquerda");
+		Wait(2000);
+		ClearScreen();
 		girar(90);
-			
+		ClearScreen();
+
 		if (verificar_direcao(cor))
 		{
 			return ESQUERDA;
@@ -173,11 +219,9 @@ void seguir_direcao(int vetor_direcao[], int cor)
 	{
 		girar(-90);
 	}
-	while(Sensor(SENSOR_COR_ESQUERDA) == cor || Sensor(SENSOR_COR_DIREITA) == cor)
-	{
-		reto(cor);
-	}
+	reto(cor);
 }
+
 
 task main () //por enquato a maior parte está só com a lógica, tem que alterar as funções pra ele conseguir andar certinho e girar
 {
@@ -185,9 +229,12 @@ task main () //por enquato a maior parte está só com a lógica, tem que altera
 	ligar_sensores();
 
 	reto(BRANCO);
+	Wait(2000);
 	
-	if (Sensor(SENSOR_COR_DIREITA) == AZUL || Sensor(SENSOR_COR_ESQUERDA) == AZUL)
-	{
+	if (intervalo_cor(AZUL, SENSOR_COR_DIREITA) && intervalo_cor(AZUL, SENSOR_COR_ESQUERDA))
+	{	
+		ClearScreen();
+		TextOut(10,10, "ACHEI AZUL");
 		reto(AZUL);
 		if (direcoes [AZUL] == 0)
 		{
@@ -198,7 +245,7 @@ task main () //por enquato a maior parte está só com a lógica, tem que altera
 		}
 	}
   
-  if (Sensor(SENSOR_COR_DIREITA) == VERMELHO || Sensor(SENSOR_COR_ESQUERDA) == VERMELHO)
+  if (intervalo_cor(VERMELHO, SENSOR_COR_DIREITA) && intervalo_cor(VERMELHO, SENSOR_COR_ESQUERDA))
 	{
 		reto(VERMELHO);
 		if (direcoes [VERMELHO] == 0)
@@ -210,7 +257,7 @@ task main () //por enquato a maior parte está só com a lógica, tem que altera
 		}
 	}
   
-  if (Sensor(SENSOR_COR_DIREITA) == VERDE || Sensor(SENSOR_COR_ESQUERDA) == VERDE)
+  if (intervalo_cor(VERDE, SENSOR_COR_DIREITA) && intervalo_cor(VERDE, SENSOR_COR_ESQUERDA))
 	{
 		reto(VERDE);
 		if (direcoes [VERDE] == 0)
