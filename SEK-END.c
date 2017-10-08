@@ -62,48 +62,48 @@ void re() //testada
 }
 
 void distancia_reto(int low_speed, int high_speed, int distancia){
-          int count_A =  MotorRotationCount(MOTOR_ESQUERDA);
-          int count_C =  MotorRotationCount(MOTOR_DIREITA);
-          OnRev(MOTORES, high_speed);
-          do{
-                if (count_A - MotorRotationCount(MOTOR_ESQUERDA) > count_C - MotorRotationCount(MOTOR_DIREITA))
-                {
-                   OnRev(MOTOR_ESQUERDA, low_speed);
-                   until ((count_C - MotorRotationCount(MOTOR_DIREITA)) >  (count_A - MotorRotationCount(MOTOR_ESQUERDA)));
-                   OnRev(MOTOR_ESQUERDA, high_speed);
+	int count_A =  MotorRotationCount(MOTOR_ESQUERDA);
+	int count_C =  MotorRotationCount(MOTOR_DIREITA);
+	OnRev(MOTORES, high_speed);
+	do{
+		if (count_A - MotorRotationCount(MOTOR_ESQUERDA) > count_C - MotorRotationCount(MOTOR_DIREITA))
+		{
+			OnRev(MOTOR_ESQUERDA, low_speed);
+			until ((count_C - MotorRotationCount(MOTOR_DIREITA)) >  (count_A - MotorRotationCount(MOTOR_ESQUERDA)));
+			OnRev(MOTOR_ESQUERDA, high_speed);
 
-                }
-                else
-                {
-                     OnRev(MOTOR_DIREITA, low_speed);
-                     until ( (count_A - MotorRotationCount(MOTOR_ESQUERDA)) > (count_C - MotorRotationCount(MOTOR_DIREITA)));
-                     OnRev(MOTOR_DIREITA, high_speed);
-                }
-           }while((count_A - MotorRotationCount(MOTOR_ESQUERDA))*6*PI/360 <= distancia);
-           Off(MOTORES);
-    }
+		}
+		else
+		{
+			OnRev(MOTOR_DIREITA, low_speed);
+			until ( (count_A - MotorRotationCount(MOTOR_ESQUERDA)) > (count_C - MotorRotationCount(MOTOR_DIREITA)));
+			OnRev(MOTOR_DIREITA, high_speed);
+		}
+	}while((count_A - MotorRotationCount(MOTOR_ESQUERDA))*6*PI/360 <= distancia);
+	Off(MOTORES);
+}
 
 void distancia_re(int low_speed, int high_speed, int distancia){
-          int count_A =  MotorRotationCount(MOTOR_ESQUERDA);
-          int count_C =  MotorRotationCount(MOTOR_DIREITA);
-          OnFwd(MOTORES, high_speed);
-          do{
-                if (MotorRotationCount(MOTOR_ESQUERDA) - count_A > MotorRotationCount(MOTOR_DIREITA) - count_C)
-                {
-                   OnFwd(MOTOR_ESQUERDA, low_speed);
-                   until ((MotorRotationCount(MOTOR_DIREITA) - count_C) >  (MotorRotationCount(MOTOR_ESQUERDA) - count_A));
-                   OnFwd(MOTOR_ESQUERDA, high_speed);
+	int count_A =  MotorRotationCount(MOTOR_ESQUERDA);
+	int count_C =  MotorRotationCount(MOTOR_DIREITA);
+	OnFwd(MOTORES, high_speed);
+	do{
+		if (MotorRotationCount(MOTOR_ESQUERDA) - count_A > MotorRotationCount(MOTOR_DIREITA) - count_C)
+		{
+			OnFwd(MOTOR_ESQUERDA, low_speed);
+			until ((MotorRotationCount(MOTOR_DIREITA) - count_C) >  (MotorRotationCount(MOTOR_ESQUERDA) - count_A));
+			OnFwd(MOTOR_ESQUERDA, high_speed);
 
-                }
-                else
-                {
-                     OnFwd(MOTOR_DIREITA, low_speed);
-                     until ( (MotorRotationCount(MOTOR_ESQUERDA) - count_A) > (MotorRotationCount(MOTOR_DIREITA) - count_C));
-                     OnFwd(MOTOR_DIREITA, high_speed);
-                }
-           }while((MotorRotationCount(MOTOR_ESQUERDA) - count_A)*6*PI/360 <= distancia);
-           Off(MOTORES);
-    }
+		}
+		else
+		{
+			OnFwd(MOTOR_DIREITA, low_speed);
+			until ( (MotorRotationCount(MOTOR_ESQUERDA) - count_A) > (MotorRotationCount(MOTOR_DIREITA) - count_C));
+			OnFwd(MOTOR_DIREITA, high_speed);
+		}
+	}while((MotorRotationCount(MOTOR_ESQUERDA) - count_A)*6*PI/360 <= distancia);
+	Off(MOTORES);
+}
 
 void levantar_garra() //testada
 {
@@ -206,14 +206,14 @@ int agarrar()//testada
 
 float getGyroOffset() //testada
 {
-    float gyro_sum = 0, i;
+	float gyro_sum = 0, i;
 
-    for(i = 0; i < OFFSET_SAMPLES; ++i)
-    {
-       gyro_sum += SensorHTGyro(SENSOR_GYRO);
-    }
+	for(i = 0; i < OFFSET_SAMPLES; ++i)
+	{
+		gyro_sum += SensorHTGyro(SENSOR_GYRO);
+	}
 
-    return gyro_sum/OFFSET_SAMPLES;
+	return gyro_sum/OFFSET_SAMPLES;
 }
 
 void girar(float degrees) // Algoritimo usado pela sek do ano passado //testada
@@ -221,41 +221,41 @@ void girar(float degrees) // Algoritimo usado pela sek do ano passado //testada
 	float angle = 0, gyro = 0;
 	unsigned long time = CurrentTick(), prev_time;
 
-  Off(MOTORES);
+	Off(MOTORES);
 
-  degrees = -degrees;
+	degrees = -degrees;
 
 	float offset = getGyroOffset();
 
 	if(degrees > 0) {
-	  OnFwd(MOTOR_ESQUERDA, -VELOCIDADE_ALTA);
-	  OnRev(MOTOR_DIREITA, -VELOCIDADE_ALTA);
-	  while(angle < degrees)
-	  {
-	  	 prev_time = time;
-       time = CurrentTick();
-       gyro = SensorHTGyro(SENSOR_GYRO);
-       angle += (gyro - offset) * (time - prev_time)/1000.0;
-       ClearLine(LCD_LINE1);
-       TextOut(0, LCD_LINE1, "ANGLE:");
-       NumOut(48, LCD_LINE1, angle);
+		OnFwd(MOTOR_ESQUERDA, -VELOCIDADE_ALTA);
+		OnRev(MOTOR_DIREITA, -VELOCIDADE_ALTA);
+		while(angle < degrees)
+		{
+			prev_time = time;
+			time = CurrentTick();
+			gyro = SensorHTGyro(SENSOR_GYRO);
+			angle += (gyro - offset) * (time - prev_time)/1000.0;
+			ClearLine(LCD_LINE1);
+			TextOut(0, LCD_LINE1, "ANGLE:");
+			NumOut(48, LCD_LINE1, angle);
 
 
-	  }
+		}
 	} else {
-	  OnFwd(MOTOR_DIREITA, -VELOCIDADE_ALTA);
-	  OnRev(MOTOR_ESQUERDA, -VELOCIDADE_ALTA);
-	  while(angle > degrees)
-	  {
-	  	 prev_time = time;
-       time = CurrentTick();
-       gyro = SensorHTGyro(SENSOR_GYRO);
-       angle += (gyro - offset) * (time - prev_time)/1000.0;
-       ClearLine(LCD_LINE1);
-       TextOut(0, LCD_LINE1, "ANGLE:");
-       NumOut(48, LCD_LINE1, angle);
-	  }
- }
+		OnFwd(MOTOR_DIREITA, -VELOCIDADE_ALTA);
+		OnRev(MOTOR_ESQUERDA, -VELOCIDADE_ALTA);
+		while(angle > degrees)
+		{
+			prev_time = time;
+			time = CurrentTick();
+			gyro = SensorHTGyro(SENSOR_GYRO);
+			angle += (gyro - offset) * (time - prev_time)/1000.0;
+			ClearLine(LCD_LINE1);
+			TextOut(0, LCD_LINE1, "ANGLE:");
+			NumOut(48, LCD_LINE1, angle);
+		}
+	}
 
 	Off(MOTORES);
 }
@@ -267,9 +267,9 @@ void abrir_porta () //testada
 	float Rotacao;
 	Rotacao = (360*CREMALHEIRA)/(2*PI*RAIO);
 	while (MotorRotationCount(MOTOR_PORTA) < Rotacao)
-		{
+	{
 		OnFwd(MOTOR_PORTA, 50);
-		}
+	}
 	Off(MOTOR_PORTA);
 }
 
@@ -277,7 +277,7 @@ void fechar_porta () //testada
 {
 	while(MotorRotationCount(MOTOR_PORTA) > 0)
 	{
-	OnRev(MOTOR_PORTA, 50);
+		OnRev(MOTOR_PORTA, 50);
 	}
 	Off(MOTOR_PORTA);
 }
