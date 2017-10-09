@@ -1,7 +1,6 @@
 #define MOTOR_GARRA OUT_B
 #define MOTOR_DIREITO OUT_A
 #define MOTOR_ESQUERDO OUT_C
-#define SENSOR_LATERAL IN_1
 #define SENSOR_FRONTAL IN_2
 #define AMBOS_MOTORES OUT_AC
 
@@ -22,9 +21,8 @@ void levantar_garra()
 
 task main ()
 {
-	OnRev(AMBOS_MOTORES, 30);
 	SetSensorUltrasonic(SENSOR_LATERAL);
-	SetSensorUltrasonic(SENSOR_FRONTAL);
+	OnRev(AMBOS_MOTORES, 30);
 	while(SensorUS(SENSOR_LATERAL) > 20)
 	{
 		Wait(50);
