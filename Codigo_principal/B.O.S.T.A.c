@@ -8,11 +8,12 @@
 #define SENSOR_US_ESQUERDA IN_1
 #define SENSOR_US_DIREITA IN_3
 #define SENSOR_GYRO IN_4 /*teste*/
-#define SENSOR_US_GARRA IN_2 /*teste*/
+
 #define VELOCIDADE_BAIXINHA 15
 #define VELOCIDADE_BAIXA 35
 #define VELOCIDADE_MEDIA 50
 #define VELOCIDADE_ALTA 65
+
 #define PRETO 1
 #define VERDE 3
 #define BRANCO 6
@@ -22,15 +23,10 @@
 #define SENSIBILIDADE 0.9
 #define OFFSET_SAMPLES 2000
 
-void ligar_sensores() //testada
-{
-	SetSensorHTGyro(SENSOR_GYRO);
-	SetSensorUltrasonic(SENSOR_US_ESQUERDA);
-	SetSensorUltrasonic(SENSOR_US_DIREITA);
-	//SetSensorColorFull(SENSOR_COR_DIREITA);
-	//SetSensorColorFull(SENSOR_COR_ESQUERDA);
-	SetSensorUltrasonic(SENSOR_US_GARRA);
-}
+#include "Funcoes_testadas/sensores_e_motores.h"
+/*
+void ligar_sensores();
+*/
 
 
 void reto() //testada

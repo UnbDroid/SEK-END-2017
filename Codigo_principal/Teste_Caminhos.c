@@ -1,85 +1,30 @@
 
-#define MOTOR_GARRA OUT_B
-#define MOTOR_PORTA OUT_B /*conexão com o outro cérebro*/
-#define SENSOR_US_ESQUERDA IN_3
-#define SENSOR_US_DIREITA IN_4
-#define SENSOR_GYRO IN_4 /*teste*/
-#define SENSOR_US_GARRA IN_3 /*teste*/
-
-#define SENSIBILIDADE 0.1
-#define OFFSET_SAMPLES 2000
-
-void ligar_sensores()
-{
-	SetSensorHTGyro(SENSOR_GYRO);
-	//SetSensorUltrasonic(SENSOR_US_ESQUERDA);
-	//SetSensorUltrasonic(SENSOR_US_DIREITA);
-	SetSensorColorRed(SENSOR_COR_DIREITA);
-	SetSensorColorRed(SENSOR_COR_ESQUERDA);
-	SetSensorUltrasonic(SENSOR_US_GARRA);
-}
-
-float getGyroOffset() 
-{
-    float gyro_sum = 0, i;
-
-    for(i = 0; i < OFFSET_SAMPLES; ++i)
-    {
-       gyro_sum += SensorHTGyro(SENSOR_GYRO);
-    }
-
-    return gyro_sum/OFFSET_SAMPLES;
-}
-
-void girar(float degrees) // Algoritimo usado pela sek do ano passado //testada
-{
-	float angle = 0, gyro = 0;
-	unsigned long time = CurrentTick(), prev_time;
-
-  Off(MOTORES);
-
-  degrees = -degrees;
-
-	float offset = getGyroOffset();
-
-	if(degrees > 0) {
-	  OnFwd(MOTOR_ESQUERDA, -VELOCIDADE_ALTA);
-	  OnRev(MOTOR_DIREITA, -VELOCIDADE_ALTA);
-	  while(angle < degrees)
-	  {
-	  	 prev_time = time;
-       time = CurrentTick();
-       gyro = SensorHTGyro(SENSOR_GYRO);
-       angle += (gyro - offset) * (time - prev_time)/1000.0;
-       ClearLine(LCD_LINE1);
-       TextOut(0, LCD_LINE1, "ANGLE:");
-       NumOut(48, LCD_LINE1, angle);
 
 
-	  }
-	} else {
-	  OnFwd(MOTOR_DIREITA, -VELOCIDADE_ALTA);
-	  OnRev(MOTOR_ESQUERDA, -VELOCIDADE_ALTA);
-	  while(angle > degrees)
-	  {
-	  	 prev_time = time;
-       time = CurrentTick();
-       gyro = SensorHTGyro(SENSOR_GYRO);
-       angle += (gyro - offset) * (time - prev_time)/1000.0;
-       ClearLine(LCD_LINE1);
-       TextOut(0, LCD_LINE1, "ANGLE:");
-       NumOut(48, LCD_LINE1, angle);
-	  }
- }
+/* #define SENSIBILIDADE 0.1 */ /* Nao necessario */
 
-	Off(MOTORES);
-}
+#include "Funcoes_testadas/sensores_e_motores.h"
+/*
+void ligar_sensores();
+*/
+
+#include "Funcoes_testadas/giro.h"
+/*
+float getGyroOffset();
+void girar(float degrees);
+*/
 
 #include "Funcoes_testadas/cores.h"
-
+/*
 bool intervalo_cor(int cor, int sensor);
 void reto(int cor);
 bool verificar_direcao(int cor);
+*/
+
+#define ESQUERDA 1
+#define DIREITA 2
+#define FRENTE 3
+
 void voltar()
 {
 	girar(180);

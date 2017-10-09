@@ -16,6 +16,10 @@
 #define VERMELHO 5
 #define BRANCO 6
 
+#define ESQUERDA 1
+#define DIREITA 2
+#define FRENTE 3
+
 #define WHITEUP 630
 #define WHITEDOWN 575
 #define BLUEUP 340

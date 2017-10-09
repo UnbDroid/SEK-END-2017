@@ -1,7 +1,7 @@
 '''
 
-Como o nxc não aceita bibliotecas, esse programa copia os codigos das bibliotecas para um arquivo temporário e executa esse arquivo
-temporário.
+Como o nxc não aceita bibliotecas, esse programa copia os codigos das bibliotecas para um novo arquivo.
+Por exemplo,
 
 '''
 
@@ -25,15 +25,18 @@ def le_arquivo(nome):
 	return linhas
 
 def leia_do_arquivo(nome):
-	defines = []
-	codigo  = []
+	defines = ["/* " + nome + " */"]
+	codigo  = ["/* " + nome + " */"]
 	linhas = le_arquivo(nome)
+	nos_defines = True
 	for linha in linhas:
 		if "#define" in linha:
 			defines.append(linha)
 		elif "#include" in linha:
 			novo_arquivo = linha.split('"')[1]
 			new_defines, new_codigos = leia_do_arquivo(novo_arquivo)
+			defines.append(" ")
+			codigo.append(" ")
 			for defi in new_defines:
 				if not defi in defines:
 					defines.append(defi)
@@ -41,13 +44,15 @@ def leia_do_arquivo(nome):
 				codigo.append(code)
 		else:
 			codigo.append(linha)
+	defines.append(" ")
+	codigo.append(" ")
 	return defines, codigo
 
 
 
 if __name__ == "__main__":
-	#arquivo = "Codigo_principal/B.O.S.T.A.nxc"
-	arquivo = "Teste_Caminhos"
+	#arquivo = "Codigo_principal/B.O.S.T.A"
+	arquivo = "Codigo_principal/Teste_Caminhos"
 	defines, codigo = leia_do_arquivo(arquivo + ".c")
 	new_arq = open(arquivo + ".nxc", "w")
 	for defin in defines:
