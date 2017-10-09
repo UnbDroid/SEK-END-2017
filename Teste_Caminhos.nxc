@@ -31,6 +31,8 @@
 #define BLACKDOWN 160
 #define	REDUP 575
 #define REDDOWN 545
+#define GREENUP
+#define GREENDOWN
 
 void ligar_sensores()
 {
@@ -118,6 +120,11 @@ bool intervalo_cor(int cor, int sensor)
 	if (cor == VERMELHO)
 	{
 		if (SensorRaw(sensor) >= REDDOWN && SensorRaw(sensor) <= REDUP)
+			return true;
+	}
+	if (cor == VERDE)
+	{
+		if (SensorRaw(sensor) >= GREENDOWN && SensorRaw(sensor) <= GREENDUP)
 			return true;
 	}
 	return false;
