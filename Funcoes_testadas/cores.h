@@ -100,9 +100,3 @@ bool verificar_direcao(int cor)
 	return false;
 }
 
-
-task main ()
-{
-	
-	
-}
