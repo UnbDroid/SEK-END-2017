@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 '''
 
 Como o nxc não aceita bibliotecas, esse programa copia os codigos das bibliotecas para um novo arquivo.
@@ -51,10 +52,13 @@ def leia_do_arquivo(nome):
 
 
 if __name__ == "__main__":
-	#arquivo = "Codigo_principal/B.O.S.T.A"
-	arquivo = "Codigo_principal/Teste_Caminhos"
-	defines, codigo = leia_do_arquivo(arquivo + ".c")
-	new_arq = open(arquivo + ".nxc", "w")
+	arqui	= "Funcoes_nao_testadas/mover_para_frente" 
+	#arqui	= "Funcoes_nao_testadas/mostra_na_tela"
+	#arqui	= "Codigo_principal/B.O.S.T.A"
+	#arqui	= "Codigo_principal/Teste_Caminhos"
+
+	defines, codigo = leia_do_arquivo(arqui + ".c")
+	new_arq = open(arqui + ".nxc", "w")
 	for defin in defines:
 		new_arq.write(defin + "\n")
 	new_arq.write("\n\n")
