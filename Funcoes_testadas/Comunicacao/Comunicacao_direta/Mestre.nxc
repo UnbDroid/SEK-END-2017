@@ -1,8 +1,9 @@
-/* 
+/* 	
 
 	Codigo do Bruno Andreguetti para ler valores utilizando o sensor vermelho.
 
-*/
+ */
+
 sub BTCheck(int conn){
 	 if (!BluetoothStatus(conn)==NO_ERR){
      ClearScreen();
