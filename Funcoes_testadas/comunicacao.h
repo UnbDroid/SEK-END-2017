@@ -1,4 +1,4 @@
-#define BT_CONN 1 // Numero da porta BlueTooth
+#define CONEXAO 1 // Numero da porta BlueTooth
 
 #define MOTOR_PORTA OUT_B
 #define COR_ESQUERDA IN_4
@@ -28,13 +28,13 @@ sub BTCheck(int conn){
 void set_sensor_color(char porta, char color)
 {
      if(color == VERMELHO){
-          RemoteSetInputMode(BT_CONN, porta, SENSOR_TYPE_COLORRED, SENSOR_MODE_RAW);
+          RemoteSetInputMode(CONEXAO, porta, SENSOR_TYPE_COLORRED, SENSOR_MODE_RAW);
      }else if(color == VERDE){
-          RemoteSetInputMode(BT_CONN, porta, SENSOR_TYPE_COLORGREEN, SENSOR_MODE_RAW);
+          RemoteSetInputMode(CONEXAO, porta, SENSOR_TYPE_COLORGREEN, SENSOR_MODE_RAW);
      }else if(color == AZUL){
-          RemoteSetInputMode(BT_CONN, porta, SENSOR_TYPE_COLORBLUE, SENSOR_MODE_RAW);
+          RemoteSetInputMode(CONEXAO, porta, SENSOR_TYPE_COLORBLUE, SENSOR_MODE_RAW);
      }else if(color == BRANCO){
-          RemoteSetInputMode(BT_CONN, porta, SENSOR_TYPE_COLORFULL, SENSOR_MODE_RAW);
+          RemoteSetInputMode(CONEXAO, porta, SENSOR_TYPE_COLORFULL, SENSOR_MODE_RAW);
      }
 }
 
@@ -43,7 +43,7 @@ int get_value_color(char porta)
      InputValuesType params;
 
      params.Port = porta;
-     RemoteGetInputValues(BT_CONN, params);
+     RemoteGetInputValues(CONEXAO, params);
 
      return params.RawValue;
 }
