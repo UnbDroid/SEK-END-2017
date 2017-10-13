@@ -1,17 +1,17 @@
 #define MOTOR_ESQUERDA OUT_A
 #define MOTOR_DIREITA OUT_C
 #define MOTORES OUT_AC
-#define MOTOR_GARRA OUT_B
-#define MOTOR_PORTA OUT_B /*conexão com o outro cérebro*/
-#define SENSOR_COR_ESQUERDA IN_1
-#define SENSOR_COR_DIREITA IN_2
-#define SENSOR_US_ESQUERDA IN_3
-#define SENSOR_US_DIREITA IN_4
-#define SENSOR_GYRO IN_4 /*teste*/
-#define SENSOR_US_GARRA IN_3 /*teste*/
+//#define MOTOR_GARRA OUT_B
+#define MOTOR_PORTA OUT_B /*conexÃ£o com o outro cÃ©rebro*/
+#define SENSOR_COR_ESQUERDA IN_2
+#define SENSOR_COR_DIREITA IN_3
+//#define SENSOR_US_ESQUERDA IN_3
+//#define SENSOR_US_DIREITA IN_4
+#define SENSOR_GYRO IN_1 /*teste*/
+#define SENSOR_US_GARRA IN_4 /*teste*/
 #define VELOCIDADE_BAIXA 35
 #define VELOCIDADE_MEDIA 50
-#define VELOCIDADE_ALTA 65
+#define VELOCIDADE_ALTA 85
 #define PRETO 1
 #define VERDE 3
 #define BRANCO 6
@@ -37,8 +37,6 @@
 void ligar_sensores()
 {
 	SetSensorHTGyro(SENSOR_GYRO);
-	//SetSensorUltrasonic(SENSOR_US_ESQUERDA);
-	//SetSensorUltrasonic(SENSOR_US_DIREITA);
 	SetSensorColorRed(SENSOR_COR_DIREITA);
 	SetSensorColorRed(SENSOR_COR_ESQUERDA);
 	SetSensorUltrasonic(SENSOR_US_GARRA);
@@ -146,45 +144,67 @@ void distancia_re(int low_speed, int high_speed, int distancia)
 	Off(MOTORES);
 }
 
+bool intervalo_cor(int cor, int sensor)
+{
+	if (cor == BRANCO)
+	{
+		if (SensorRaw(sensor) >= WHITEDOWN && SensorRaw(sensor) <= WHITEUP)
+			return true;
+	}
+	if (cor == AZUL)
+	{
+		if (SensorRaw(sensor) >= BLUEDOWN && SensorRaw(sensor) <= BLUEUP)
+			return true;
+	}
+	if (cor == PRETO)
+	{
+		if (SensorRaw(sensor) >= BLACKDOWN && SensorRaw(sensor) <= BLACKUP)
+			return true;
+	}
+	if (cor == VERMELHO)
+	{
+		if (SensorRaw(sensor) >= REDDOWN && SensorRaw(sensor) <= REDUP)
+			return true;
+	}
+	return false;
+}
+
 void modo_plaza ()
 {
-	int aux, prev_motor1, prev_motor2;
+	int aux, prev_motor;
 
 	ResetRotationCount(MOTOR_DIREITA);
 	ResetRotationCount(MOTOR_ESQUERDA);
 	OnFwdSync(MOTORES, -VELOCIDADE_ALTA, 0);
-	while(intervalo_cor(BRANCO, SENSOR_COR_ESQUERDA) || intervalo_cor(BRANCO, SENSOR_COR_DIREITA))
+	while(!intervalo_cor(PRETO, SENSOR_COR_ESQUERDA) && !intervalo_cor(PRETO, SENSOR_COR_DIREITA));
 	Off(MOTORES);
-	aux = MotorRotationCount(MOTOR_DIREITA);
+	aux = abs(MotorRotationCount(MOTOR_DIREITA));
 
 	girar(180);
-	distancia_re(VELOCIDADE_BAIXA, VELOCIDADE_ALTA, 30);
-	OnFwd(MOTOR_PORTA, -VELOCIDADE_BAIXA);
-	Wait(50);
-	while (MotorRotationCount(MOTOR_PORTA) != prev_motor1)
-	{
-		prev_motor1 = MotorRotationCount(MOTOR_PORTA);
-		Wait(50);
-	}
+	distancia_re(VELOCIDADE_BAIXA, VELOCIDADE_ALTA, 20);
+	OnFwd(MOTOR_PORTA, VELOCIDADE_BAIXA);
+	Wait(900);
 	Off(MOTOR_PORTA);
 	distancia_reto(VELOCIDADE_BAIXA, VELOCIDADE_ALTA, 30);
-	OnRev(MOTOR_PORTA, -VELOCIDADE_BAIXA);
-	Wait(50);
-	while (MotorRotationCount(MOTOR_PORTA) != prev_motor2)
-	{
-		prev_motor2 = MotorRotationCount(MOTOR_PORTA);
-		Wait(50);
-	}
+	OnRev(MOTOR_PORTA, VELOCIDADE_BAIXA);
+	Wait(900);
 	Off(MOTOR_PORTA);
 
 	ResetRotationCount(MOTOR_DIREITA);
-	OnFwdSync(MOTORES, -VELOCIDADE_ALTA, 0);
-	while(MotorRotationCount(MOTOR_DIREITA) < aux);
+	while(prev_motor < aux)
+	{
+		SetSensorColorFull(SENSOR_COR_DIREITA);
+		SetSensorColorRed(SENSOR_COR_DIREITA);
+		OnFwdSync(MOTORES, -VELOCIDADE_ALTA, 0);
+		Wait(50);
+		prev_motor = abs(MotorRotationCount(MOTOR_DIREITA));
+	}
 	Off(MOTORES);
 }
 
 
 task main ()
 {
-
+ 	ligar_sensores();
+	modo_plaza();
 }
