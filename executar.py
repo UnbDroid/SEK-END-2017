@@ -52,16 +52,18 @@ def leia_do_arquivo(nome):
 
 
 if __name__ == "__main__":
-	arqui	= "Funcoes_nao_testadas/mover_para_frente" 
+	#arqui	= "Funcoes_nao_testadas/mover_para_frente" 
 	#arqui	= "Funcoes_nao_testadas/mostra_na_tela"
 	#arqui	= "Codigo_principal/B.O.S.T.A"
 	#arqui	= "Codigo_principal/Teste_Caminhos"
-
+	arqui	= "Funcoes_nao_testadas/Modo_plaza"
+	
 	defines, codigo = leia_do_arquivo(arqui + ".c")
-	new_arq = open(arqui + ".nxc", "w")
+	new_arq = open(arqui.split('/')[-1] + ".nxc", "w")
 	for defin in defines:
 		new_arq.write(defin + "\n")
 	new_arq.write("\n\n")
 	for line in codigo:
 		new_arq.write(line + "\n")
 	new_arq.close()
+

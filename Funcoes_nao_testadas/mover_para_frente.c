@@ -10,7 +10,7 @@
 #define SENSOR_GYRO IN_4 /*teste*/
 
 #define VELOCIDADE_BAIXINHA 15
-#define VELOCIDADE_BAIXA 35
+#define VELOCIDADE_BAIXA 60
 #define VELOCIDADE_MEDIA 50
 #define VELOCIDADE_ALTA 65
 
@@ -45,13 +45,7 @@ void re() //testada
 task main()
 {
 	reto();
-	Wait(2000);
-	virar_esquerda();
-	Wait(2000);
-	virar_direita();
-	Wait(2000);
-	re();
-	Wait(2000);
+	Wait(20000);
 	Off(MOTORES);
 
 }
