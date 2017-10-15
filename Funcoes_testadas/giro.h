@@ -26,7 +26,9 @@ float getGyroOffset()
 
 void girar(float degrees) // Algoritimo usado pela sek do ano passado //testada
 {
+
 	SetSensorHTGyro(SENSOR_GYRO);
+
 	float angle = 0, gyro = 0;
 	unsigned long time = CurrentTick(), prev_time;
 
@@ -37,10 +39,11 @@ void girar(float degrees) // Algoritimo usado pela sek do ano passado //testada
 	float offset = getGyroOffset();
 
 	if(degrees > 0) {
-		OnFwd(MOTOR_ESQUERDA, -VELOCIDADE_ALTA);
-		OnRev(MOTOR_DIREITA, -VELOCIDADE_ALTA);
+
 		while(angle < degrees)
 		{
+			OnFwd(MOTOR_ESQUERDA, -VELOCIDADE_ALTA);
+			OnRev(MOTOR_DIREITA, -VELOCIDADE_ALTA);
 			prev_time = time;
 			time = CurrentTick();
 			gyro = SensorHTGyro(SENSOR_GYRO);
@@ -48,12 +51,19 @@ void girar(float degrees) // Algoritimo usado pela sek do ano passado //testada
 			ClearLine(LCD_LINE1);
 			TextOut(0, LCD_LINE1, "ANGLE:");
 			NumOut(48, LCD_LINE1, angle);
+			Wait(175); //MUDAR OS VALORES DOS WAITS PARA ALTERAR AS POSIÇÕES DAS RODAS
+			Off(MOTORES);
+			OnRev(MOTOR_ESQUERDA, -VELOCIDADE_ALTA);
+			OnRev(MOTOR_DIREITA, -VELOCIDADE_ALTA);
+			Wait(50); //USANDO 175 E 50 AS RODAS E AS CASTER BALLS ESTÃO FICANDO DENTRO DO QUADRADO, SWEET, DUDE !
+			Off(MOTORES);
 		}
 	} else {
-		OnFwd(MOTOR_DIREITA, -VELOCIDADE_ALTA);
-		OnRev(MOTOR_ESQUERDA, -VELOCIDADE_ALTA);
+
 		while(angle > degrees)
 		{
+			OnFwd(MOTOR_DIREITA, -VELOCIDADE_ALTA);
+			OnRev(MOTOR_ESQUERDA, -VELOCIDADE_ALTA);
 			prev_time = time;
 			time = CurrentTick();
 			gyro = SensorHTGyro(SENSOR_GYRO);
@@ -61,6 +71,12 @@ void girar(float degrees) // Algoritimo usado pela sek do ano passado //testada
 			ClearLine(LCD_LINE1);
 			TextOut(0, LCD_LINE1, "ANGLE:");
 			NumOut(48, LCD_LINE1, angle);
+      		Wait(175);
+			Off(MOTORES);
+			OnFwd(MOTOR_ESQUERDA, -VELOCIDADE_ALTA);
+			OnFwd(MOTOR_DIREITA, -VELOCIDADE_ALTA);
+      		Wait(50);
+			Off(MOTORES);
 		}
 	}
 
