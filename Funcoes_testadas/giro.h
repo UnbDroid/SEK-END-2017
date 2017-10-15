@@ -13,6 +13,7 @@
 
 float getGyroOffset() 
 {
+	SetSensorHTGyro(SENSOR_GYRO);
 	float gyro_sum = 0, i;
 
 	for(i = 0; i < OFFSET_SAMPLES; ++i)
@@ -25,6 +26,7 @@ float getGyroOffset()
 
 void girar(float degrees) // Algoritimo usado pela sek do ano passado //testada
 {
+	SetSensorHTGyro(SENSOR_GYRO);
 	float angle = 0, gyro = 0;
 	unsigned long time = CurrentTick(), prev_time;
 
