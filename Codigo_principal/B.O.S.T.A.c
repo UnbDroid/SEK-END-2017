@@ -8,6 +8,7 @@
 #define SENSOR_US_ESQUERDA IN_1
 #define SENSOR_US_DIREITA IN_3
 #define SENSOR_GYRO IN_4 /*teste*/
+#define AMBOS_MOTORES OUT_AC
 
 #define VELOCIDADE_BAIXINHA 15
 #define VELOCIDADE_BAIXA 35
@@ -23,7 +24,7 @@
 #define SENSIBILIDADE 0.9
 #define OFFSET_SAMPLES 2000
 
-#include "Funcoes_testadas/sensores_e_motores.h"
+//#include "Funcoes_testadas/sensores_e_motores.h"
 /*
 void ligar_sensores();
 */
@@ -57,7 +58,7 @@ void re() //testada
 	OnRevSync(MOTORES, -VELOCIDADE_ALTA, 0);
 }
 
-void distancia_reto(int low_speed, int high_speed, int distancia){
+void distancia_reto(int low_speed, int high_speed, float distancia){
 	int count_A =  MotorRotationCount(MOTOR_ESQUERDA);
 	int count_C =  MotorRotationCount(MOTOR_DIREITA);
 	OnRev(MOTORES, high_speed);
@@ -75,11 +76,11 @@ void distancia_reto(int low_speed, int high_speed, int distancia){
 			until ( (count_A - MotorRotationCount(MOTOR_ESQUERDA)) > (count_C - MotorRotationCount(MOTOR_DIREITA)));
 			OnRev(MOTOR_DIREITA, high_speed);
 		}
-	}while((count_A - MotorRotationCount(MOTOR_ESQUERDA))*6*PI/360 <= distancia);
+	}while((count_A - MotorRotationCount(MOTOR_ESQUERDA))*5*PI/360 <= distancia);
 	Off(MOTORES);
 }
 
-void distancia_re(int low_speed, int high_speed, int distancia){
+void distancia_re(int low_speed, int high_speed, float distancia){
 	int count_A =  MotorRotationCount(MOTOR_ESQUERDA);
 	int count_C =  MotorRotationCount(MOTOR_DIREITA);
 	OnFwd(MOTORES, high_speed);
@@ -97,7 +98,7 @@ void distancia_re(int low_speed, int high_speed, int distancia){
 			until ( (MotorRotationCount(MOTOR_ESQUERDA) - count_A) > (MotorRotationCount(MOTOR_DIREITA) - count_C));
 			OnFwd(MOTOR_DIREITA, high_speed);
 		}
-	}while((MotorRotationCount(MOTOR_ESQUERDA) - count_A)*6*PI/360 <= distancia);
+	}while((MotorRotationCount(MOTOR_ESQUERDA) - count_A)*5*PI/360 <= distancia);
 	Off(MOTORES);
 }
 
@@ -193,15 +194,18 @@ int agarrar()//testada
 	}
 
 	Off(MOTOR_GARRA);
-	
+
 
 	return confirma_que_pegou;
 }
 
 
 
-float getGyroOffset() //testada
+float getGyroOffset()
 {
+
+	SetSensorHTGyro(SENSOR_GYRO);
+
 	float gyro_sum = 0, i;
 
 	for(i = 0; i < OFFSET_SAMPLES; ++i)
@@ -214,20 +218,27 @@ float getGyroOffset() //testada
 
 void girar(float degrees) // Algoritimo usado pela sek do ano passado //testada
 {
+
+	SetSensorHTGyro(SENSOR_GYRO);
+
 	float angle = 0, gyro = 0;
 	unsigned long time = CurrentTick(), prev_time;
 
-	Off(MOTORES);
+	Off(AMBOS_MOTORES);
 
 	degrees = -degrees;
 
 	float offset = getGyroOffset();
 
+	distancia_re(VELOCIDADE_MEDIA, VELOCIDADE_ALTA, 3.5);
+
 	if(degrees > 0) {
-		OnFwd(MOTOR_ESQUERDA, -VELOCIDADE_ALTA);
-		OnRev(MOTOR_DIREITA, -VELOCIDADE_ALTA);
+
+
 		while(angle < degrees)
 		{
+			OnFwd(MOTOR_ESQUERDA, -VELOCIDADE_ALTA);
+			OnRev(MOTOR_DIREITA, -VELOCIDADE_ALTA);
 			prev_time = time;
 			time = CurrentTick();
 			gyro = SensorHTGyro(SENSOR_GYRO);
@@ -235,14 +246,20 @@ void girar(float degrees) // Algoritimo usado pela sek do ano passado //testada
 			ClearLine(LCD_LINE1);
 			TextOut(0, LCD_LINE1, "ANGLE:");
 			NumOut(48, LCD_LINE1, angle);
-
-
+			Wait(100); //MUDAR OS VALORES DOS WAITS PARA ALTERAR AS POSIÇÕES DAS RODAS
+			Off(MOTORES);
+			OnRev(MOTOR_ESQUERDA, -VELOCIDADE_ALTA);
+			OnRev(MOTOR_DIREITA, -VELOCIDADE_ALTA);
+			Wait(20); //USANDO 100 E 20 AS RODAS E AS CASTER BALLS ESTÃO FICANDO DENTRO DO QUADRADO, SWEET, DUDE !
+			Off(MOTORES);
 		}
 	} else {
-		OnFwd(MOTOR_DIREITA, -VELOCIDADE_ALTA);
-		OnRev(MOTOR_ESQUERDA, -VELOCIDADE_ALTA);
+
+
 		while(angle > degrees)
 		{
+			OnFwd(MOTOR_DIREITA, -VELOCIDADE_ALTA);
+			OnRev(MOTOR_ESQUERDA, -VELOCIDADE_ALTA);
 			prev_time = time;
 			time = CurrentTick();
 			gyro = SensorHTGyro(SENSOR_GYRO);
@@ -250,10 +267,16 @@ void girar(float degrees) // Algoritimo usado pela sek do ano passado //testada
 			ClearLine(LCD_LINE1);
 			TextOut(0, LCD_LINE1, "ANGLE:");
 			NumOut(48, LCD_LINE1, angle);
+		  	Wait(100);
+			Off(MOTORES);
+			OnFwd(MOTOR_ESQUERDA, -VELOCIDADE_ALTA);
+			OnFwd(MOTOR_DIREITA, -VELOCIDADE_ALTA);
+		  	Wait(20);
+			Off(MOTORES);
 		}
 	}
 
-	Off(MOTORES);
+	Off(AMBOS_MOTORES);
 }
 
 void abrir_porta () //testada
@@ -309,7 +332,7 @@ int pegar_passageiro (int passageiros, int lado) //testado, mas precisa mudar a 
 		distancia_re(VELOCIDADE_MEDIA, VELOCIDADE_ALTA, 35);
 		girar(-90);
 	}
-	
+
 	if (confirma_que_pegou == 1)
 	{
 		++passageiros;
@@ -320,31 +343,7 @@ int pegar_passageiro (int passageiros, int lado) //testado, mas precisa mudar a 
 
 task main ()
 {
-	ligar_sensores();
 
-
-	float help;
-	int  passageiros = 0;
-
-	while (true)
-	{
-
-		reto();
-		if (passageiros < 4)
-		{
-
-			if (ultrassom_filtrado(SENSOR_US_ESQUERDA) < 15)
-			{
-				Off(MOTORES);
-				passageiros = pegar_passageiro(passageiros, 0);
-				Off(MOTORES);
-			}
-			else if (ultrassom_filtrado(SENSOR_US_DIREITA) < 15)
-			{
-				Off(MOTORES);
-				passageiros = pegar_passageiro(passageiros, 1);
-				Off(MOTORES);
-			}
-		}
-	}
+	girar(90);
+	Wait(100000000);
 }
