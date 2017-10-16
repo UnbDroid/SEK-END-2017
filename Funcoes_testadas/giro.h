@@ -38,7 +38,10 @@ void girar(float degrees) // Algoritimo usado pela sek do ano passado //testada
 
 	float offset = getGyroOffset();
 
+	distancia_re(VELOCIDADE_MEDIA, VELOCIDADE_ALTA, 3.5);
+
 	if(degrees > 0) {
+
 
 		while(angle < degrees)
 		{
@@ -51,14 +54,15 @@ void girar(float degrees) // Algoritimo usado pela sek do ano passado //testada
 			ClearLine(LCD_LINE1);
 			TextOut(0, LCD_LINE1, "ANGLE:");
 			NumOut(48, LCD_LINE1, angle);
-			Wait(175); //MUDAR OS VALORES DOS WAITS PARA ALTERAR AS POSIÇÕES DAS RODAS
+			Wait(100); //MUDAR OS VALORES DOS WAITS PARA ALTERAR AS POSIÇÕES DAS RODAS
 			Off(MOTORES);
 			OnRev(MOTOR_ESQUERDA, -VELOCIDADE_ALTA);
 			OnRev(MOTOR_DIREITA, -VELOCIDADE_ALTA);
-			Wait(50); //USANDO 175 E 50 AS RODAS E AS CASTER BALLS ESTÃO FICANDO DENTRO DO QUADRADO, SWEET, DUDE !
+			Wait(20); //USANDO 100 E 20 AS RODAS E AS CASTER BALLS ESTÃO FICANDO DENTRO DO QUADRADO, SWEET, DUDE !
 			Off(MOTORES);
 		}
 	} else {
+
 
 		while(angle > degrees)
 		{
@@ -71,11 +75,11 @@ void girar(float degrees) // Algoritimo usado pela sek do ano passado //testada
 			ClearLine(LCD_LINE1);
 			TextOut(0, LCD_LINE1, "ANGLE:");
 			NumOut(48, LCD_LINE1, angle);
-      		Wait(175);
+		  	Wait(100);
 			Off(MOTORES);
 			OnFwd(MOTOR_ESQUERDA, -VELOCIDADE_ALTA);
 			OnFwd(MOTOR_DIREITA, -VELOCIDADE_ALTA);
-      		Wait(50);
+		  	Wait(20);
 			Off(MOTORES);
 		}
 	}
