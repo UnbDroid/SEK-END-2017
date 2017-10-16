@@ -1,13 +1,13 @@
-#define MOTOR_ESQUERDA OUT_C
-#define MOTOR_DIREITA OUT_A
+#define MOTOR_ESQUERDA OUT_A
+#define MOTOR_DIREITA OUT_C
 #define MOTORES OUT_AC
 #define MOTOR_GARRA OUT_B
 #define MOTOR_PORTA OUT_B /*conexão com o outro cérebro*/
-#define SENSOR_COR_ESQUERDA IN_2
-#define SENSOR_COR_DIREITA IN_3
+#define SENSOR_COR_ESQUERDA IN_1
+#define SENSOR_COR_DIREITA IN_2
 #define SENSOR_US_ESQUERDA IN_3
 #define SENSOR_US_DIREITA IN_4
-#define SENSOR_GYRO IN_1 /*teste*/
+#define SENSOR_GYRO IN_4 /*teste*/
 #define SENSOR_US_GARRA IN_3 /*teste*/
 #define VELOCIDADE_BAIXA 35
 #define VELOCIDADE_MEDIA 50
@@ -23,23 +23,110 @@
 #define ESQUERDA 1
 #define DIREITA 2
 #define FRENTE 3
-#define WHITEUP 650
-#define WHITEDOWN 575
-#define BLUEUP 340
-#define	BLUEDOWN 300
-#define	BLACKUP 220
-#define BLACKDOWN 160
-#define	REDUP 575
-#define REDDOWN 500
-#define FORA 300
+#define WHITEUP_B 170
+#define WHITEDOWN_B 100
+#define BLUEUP_B 130
+#define	BLUEDOWN_B 85
+#define	BLACKUP_B 85
+#define BLACKDOWN_B 30
+#define	REDUP_B 50
+#define REDDOWN_B 20
+#define GREENUP_B 110
+#define GREENDOWN_B 60
+#define WHITEUP_G 220
+#define WHITEDOWN_G 120
+#define BLUEUP_G 115
+#define	BLUEDOWN_G 70
+#define	BLACKUP_G 100
+#define BLACKDOWN_G 50
+#define	REDUP_G 60
+#define REDDOWN_G 20
+#define GREENUP_G 160
+#define GREENDOWN_G 115
+#define WHITEUP_R 220
+#define WHITEDOWN_R 120
+#define BLUEUP_R 105
+#define	BLUEDOWN_R 50
+#define	BLACKUP_R 100
+#define BLACKDOWN_R 50
+#define	REDUP_R 180
+#define REDDOWN_R 110
+#define GREENUP_R 120
+#define GREENDOWN_R 65
+#define OFFSET_COLOR 1/3.0
 
-void ligar_sensores()
+void ligar_sensores() //testada
 {
 	SetSensorHTGyro(SENSOR_GYRO);
 	//SetSensorUltrasonic(SENSOR_US_ESQUERDA);
 	//SetSensorUltrasonic(SENSOR_US_DIREITA);
-	SetSensorColorRed(SENSOR_COR_DIREITA);
-	SetSensorColorRed(SENSOR_COR_ESQUERDA);
+	SetSensorColorFull(SENSOR_COR_DIREITA);
+	SetSensorColorFull(SENSOR_COR_ESQUERDA);
+	
+}
+int sensor_cor(int sensor) //funcao estilo colorfull 
+{
+	int red = 0, green = 0, blue = 0, i;
+	for(i = 0; i < 3; i++)
+	{
+		red += ColorSensorValue(sensor, INPUT_RED)*OFFSET_COLOR;
+	}
+	for(i = 0; i < 3; i++)
+	{
+		green += ColorSensorValue(sensor, INPUT_GREEN)*OFFSET_COLOR;
+	}
+	for(i = 0; i < 3; i++)
+	{
+		blue += ColorSensorValue(sensor, INPUT_BLUE)*OFFSET_COLOR;
+	}
+	if(red >= REDDOWN_R && red <= REDUP_R && green >= REDDOWN_G && green <= REDUP_G && blue >= REDDOWN_B && blue <= REDUP_B)
+		return VERMELHO;
+
+	if(red >= GREENDOWN_R && red <= GREENUP_R && green >= GREENDOWN_G && green <= GREENUP_G && blue >= GREENDOWN_B && blue <= GREENUP_B)
+		return VERDE;
+	
+	if(red >= BLUEDOWN_R && red <= BLUEUP_R && green >= BLUEDOWN_G && green <= BLUEUP_G && blue >= BLUEDOWN_B && blue <= BLUEUP_B)
+		return AZUL;
+	
+	if(red >= BLACKDOWN_R && red <= BLACKUP_R && green >= BLACKDOWN_G && green <= BLACKUP_G && blue >= BLACKDOWN_B && blue <= BLACKUP_B)
+		return PRETO;
+	
+	if(red >= WHITEDOWN_R && green >= WHITEDOWN_G && blue >= WHITEDOWN_B)
+		return BRANCO;
+
+	return PRETO;
+}
+
+void reto(int cor)
+{
+	while (sensor_cor(SENSOR_COR_DIREITA) == cor || sensor_cor(SENSOR_COR_ESQUERDA) == cor)
+	{
+		OnFwdSync(MOTORES, -VELOCIDADE_MEDIA, 0);
+		while(sensor_cor(SENSOR_COR_ESQUERDA) == PRETO && sensor_cor(SENSOR_COR_DIREITA) == cor)
+		{
+			OnFwd(MOTOR_ESQUERDA, -VELOCIDADE_MEDIA);
+			OnRev(MOTOR_DIREITA, - VELOCIDADE_BAIXA);
+			ClearScreen();
+			TextOut(50,50, "E:P");
+			NumOut(0,0, sensor_cor(SENSOR_COR_ESQUERDA));
+			NumOut(0,40, sensor_cor(SENSOR_COR_DIREITA));
+		}
+		while(sensor_cor(SENSOR_COR_DIREITA) == PRETO && sensor_cor(SENSOR_COR_ESQUERDA) == cor)
+		{
+			OnFwd(MOTOR_DIREITA, -VELOCIDADE_MEDIA);
+			OnRev(MOTOR_ESQUERDA, - VELOCIDADE_BAIXA);
+			ClearScreen();
+			TextOut(50,50, "D:P");
+			NumOut(0,0, sensor_cor(SENSOR_COR_ESQUERDA));
+			NumOut(0,40, sensor_cor(SENSOR_COR_DIREITA));
+		}
+		ClearScreen();
+		NumOut(0,0, sensor_cor(SENSOR_COR_ESQUERDA));
+		NumOut(0,40, sensor_cor(SENSOR_COR_DIREITA));
+	}
+	Off(MOTORES);
+	
+	//alterei o laço para dentro da função recenbendo a cor como argumento
 
 }
 
@@ -55,7 +142,7 @@ float getGyroOffset()
     return gyro_sum/OFFSET_SAMPLES;
 }
 
-void girar(float degrees) // Algoritimo usado pela sek do ano passado //testada
+void girar(float degrees) // Algoritimo passado, falta alterar pra função que o kaynã fez
 {
 	float angle = 0, gyro = 0;
 	unsigned long time = CurrentTick(), prev_time;
@@ -99,76 +186,12 @@ void girar(float degrees) // Algoritimo usado pela sek do ano passado //testada
 	Off(MOTORES);
 }
 
-bool intervalo_cor(int cor, int sensor)
-{
-	if (cor == BRANCO)
-	{
-		if (SensorRaw(sensor) >= WHITEDOWN && SensorRaw(sensor) <= WHITEUP)
-			return true;
-	}
-	if (cor == AZUL)
-	{
-		if (SensorRaw(sensor) >= BLUEDOWN && SensorRaw(sensor) <= BLUEUP)
-			return true;
-	}
-	if (cor == PRETO)
-	{
-		if (SensorRaw(sensor) >= BLACKDOWN && SensorRaw(sensor) <= BLACKUP)
-			return true;
-	}
-	if (cor == VERMELHO)
-	{
-		if (SensorRaw(sensor) >= REDDOWN && SensorRaw(sensor) <= REDUP)
-			return true;
-	}
-	if (cor == FORA)
-	{
-		if(SensorRaw(sensor) < FORA)
-			return true;
-	}
-	return false;
-}
-
-void reto(int cor)
-{
-	while (intervalo_cor(cor, SENSOR_COR_ESQUERDA) || intervalo_cor(cor, SENSOR_COR_DIREITA))
-	{
-		OnFwdSync(MOTORES, -VELOCIDADE_ALTA, 9);
-		while(intervalo_cor(FORA, SENSOR_COR_ESQUERDA) && intervalo_cor(cor, SENSOR_COR_DIREITA))
-		{
-			OnFwd(MOTOR_DIREITA, -VELOCIDADE_ALTA);
-			OnRev(MOTOR_ESQUERDA, - VELOCIDADE_MEDIA);
-			
-			ClearScreen();
-			TextOut(50,50, "E:P");
-			NumOut(0,0, SensorRaw(SENSOR_COR_ESQUERDA));
-			NumOut(0,40, SensorRaw(SENSOR_COR_DIREITA));
-		}
-		while(intervalo_cor(FORA, SENSOR_COR_DIREITA) && intervalo_cor(cor, SENSOR_COR_ESQUERDA))
-		{
-			OnFwd(MOTOR_ESQUERDA, -VELOCIDADE_ALTA);
-			OnRev(MOTOR_DIREITA, - VELOCIDADE_MEDIA);
-			
-			ClearScreen();
-			TextOut(50,50, "D:P");
-			NumOut(0,0, SensorRaw(SENSOR_COR_ESQUERDA));
-			NumOut(0,40, SensorRaw(SENSOR_COR_DIREITA));
-		}
-		ClearScreen();
-		NumOut(0,0, SensorRaw(SENSOR_COR_ESQUERDA));
-		NumOut(0,40, SensorRaw(SENSOR_COR_DIREITA));
-	}
-	Off(MOTORES);
-	
-	//alterei o laço para dentro da função recenbendo a cor como argumento
-}
-
 bool verificar_direcao(int cor)
 {
 	reto(cor);
 	reto(BRANCO);
 
-	if (!intervalo_cor(PRETO, SENSOR_COR_DIREITA) && !intervalo_cor(PRETO, SENSOR_COR_ESQUERDA))
+	if (sensor_cor(SENSOR_COR_DIREITA) != PRETO && sensor_cor(SENSOR_COR_ESQUERDA) != PRETO)
 	{
 		TextOut(10,10, "caminho certo");
 		Wait(2000);
@@ -227,21 +250,21 @@ void seguir_direcao(int vetor_direcao[], int cor)
 	{
 		girar(-90);
 	}
-	reto(cor);
+	while(sensor_cor(SENSOR_COR_ESQUERDA) == cor || sensor_cor(SENSOR_COR_DIREITA) == cor)
+	{
+		reto(cor);
+	}
 }
 
-
-task main () //por enquato a maior parte está só com a lógica, tem que alterar as funções pra ele conseguir andar certinho e girar
+task main () //precisa de melhorias, mas ta razoavel
 {
 	int direcoes[6] = {0, 0, 0, 0, 0, 0}; //achei mais prático criar um vetor de 6 posiçoes e usar as constantes como o valor do índice
 	ligar_sensores();
-
-girar(90); 
-Wait(300000);
+	while (true){
 	reto(BRANCO);
 	Wait(2000);
 	
-	if (intervalo_cor(AZUL, SENSOR_COR_DIREITA) || intervalo_cor(AZUL, SENSOR_COR_ESQUERDA))
+	if (sensor_cor(SENSOR_COR_DIREITA) == AZUL || sensor_cor(SENSOR_COR_ESQUERDA) == AZUL)
 	{	
 		ClearScreen();
 		TextOut(10,10, "ACHEI AZUL");
@@ -255,7 +278,7 @@ Wait(300000);
 		}
 	}
   
-  if (intervalo_cor(VERMELHO, SENSOR_COR_DIREITA) || intervalo_cor(VERMELHO, SENSOR_COR_ESQUERDA))
+  if (sensor_cor(SENSOR_COR_DIREITA) == VERMELHO || sensor_cor(SENSOR_COR_ESQUERDA) == VERMELHO)
 	{
 		reto(VERMELHO);
 		if (direcoes [VERMELHO] == 0)
@@ -267,7 +290,7 @@ Wait(300000);
 		}
 	}
   
-  if (intervalo_cor(VERDE, SENSOR_COR_DIREITA) || intervalo_cor(VERDE, SENSOR_COR_ESQUERDA))
+  if (sensor_cor(SENSOR_COR_DIREITA) == VERDE || sensor_cor(SENSOR_COR_ESQUERDA) == VERDE)
 	{
 		reto(VERDE);
 		if (direcoes [VERDE] == 0)
@@ -278,4 +301,5 @@ Wait(300000);
 			seguir_direcao(direcoes, VERDE);		
 		}
 	}
+}
 }
