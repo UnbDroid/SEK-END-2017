@@ -21,8 +21,8 @@
 #define SENSIBILIDADE 0.1
 #define OFFSET_SAMPLES 2000
 #define ESQUERDA 1
-#define DIREITA 2
-#define FRENTE 3
+#define DIREITA (-1)
+#define FRENTE 0
 #define WHITEUP_B 170
 #define WHITEDOWN_B 100
 #define BLUEUP_B 130
@@ -124,7 +124,7 @@ float getGyroOffset()
 	return gyro_sum/OFFSET_SAMPLES;
 }
 
-void girar(float degrees) // Algoritimo usado pela sek do ano passado //testada
+void giro(float degrees) // Algoritimo usado pela sek do ano passado //testada
 {
 
 	SetSensorHTGyro(SENSOR_GYRO);
@@ -137,8 +137,6 @@ void girar(float degrees) // Algoritimo usado pela sek do ano passado //testada
 	degrees = -degrees;
 
 	float offset = getGyroOffset();
-
-	distancia_re(VELOCIDADE_MEDIA, VELOCIDADE_ALTA, 3.5);
 
 	if(degrees > 0) {
 
@@ -155,11 +153,11 @@ void girar(float degrees) // Algoritimo usado pela sek do ano passado //testada
 			TextOut(0, LCD_LINE1, "ANGLE:");
 			NumOut(48, LCD_LINE1, angle);
 			Wait(100); //MUDAR OS VALORES DOS WAITS PARA ALTERAR AS POSIÇÕES DAS RODAS
-			Off(AMBOS_MOTORES);
+			Off(MOTORES);
 			OnRev(MOTOR_ESQUERDA, -VELOCIDADE_ALTA);
 			OnRev(MOTOR_DIREITA, -VELOCIDADE_ALTA);
 			Wait(20); //USANDO 100 E 20 AS RODAS E AS CASTER BALLS ESTÃO FICANDO DENTRO DO QUADRADO, SWEET, DUDE !
-			Off(AMBOS_MOTORES);
+			Off(MOTORES);
 		}
 	} else {
 
@@ -176,15 +174,34 @@ void girar(float degrees) // Algoritimo usado pela sek do ano passado //testada
 			TextOut(0, LCD_LINE1, "ANGLE:");
 			NumOut(48, LCD_LINE1, angle);
 		  	Wait(100);
-			Off(AMBOS_MOTORES);
+			Off(MOTORES);
 			OnFwd(MOTOR_ESQUERDA, -VELOCIDADE_ALTA);
 			OnFwd(MOTOR_DIREITA, -VELOCIDADE_ALTA);
 		  	Wait(20);
-			Off(AMBOS_MOTORES);
+			Off(MOTORES);
 		}
 	}
 
-	Off(AMBOS_MOTORES);
+	Off(MOTORES);
+}
+
+void girar(float degrees) //função para mover o robo de acordo com o giro e girar, valores de acordo com testes
+{
+	if (degrees == 90 || degrees == -90)
+	{
+		distancia_re(VELOCIDADE_MEDIA, VELOCIDADE_ALTA, 15.5);
+		giro(degrees);
+	}
+	if (degrees == 180)
+	{
+		giro(90);
+		Wait(2000);
+		distancia_re(VELOCIDADE_MEDIA, VELOCIDADE_ALTA, 3.5);
+		giro(90);		
+	}
+	if (degrees != 90 && degrees != -90 && degrees != 180)
+		giro(degrees);
+	
 }
 
 
@@ -227,13 +244,14 @@ void modo_plaza ()
 
 	ResetRotationCount(MOTOR_DIREITA);
 	ResetRotationCount(MOTOR_ESQUERDA);
-	OnFwdSync(AMBOS_MOTORES, -VELOCIDADE_ALTA, 0);
-	while(sensor_cor(SENSOR_COR_ESQUERDA != PRETO) && sensor_cor(SENSOR_COR_DIREITA) != PRETO);
+	OnRevSync(AMBOS_MOTORES, -VELOCIDADE_ALTA, 0);
+	while(sensor_cor(SENSOR_COR_ESQUERDA) != PRETO && sensor_cor(SENSOR_COR_DIREITA) != PRETO);
 	Off(AMBOS_MOTORES);
+	PlayTone(880, 500);
 	aux = abs(MotorRotationCount(MOTOR_DIREITA));
 
-	girar(180);
-	distancia_re(VELOCIDADE_BAIXA, VELOCIDADE_ALTA, 20);
+	//girar(180);
+	distancia_re(VELOCIDADE_BAIXA, VELOCIDADE_ALTA, 15);
 	OnFwd(MOTOR_PORTA, VELOCIDADE_BAIXA);
 	Wait(900);
 	Off(MOTOR_PORTA);
@@ -256,12 +274,14 @@ void modo_plaza ()
 
 task main ()
 {
+ 	int direcoes[6] = {2, 2, 2, 2, 2, 2};//1: Preto
+
  	ligar_sensores();
 
- 	while(1){
+ 	/*while(1){
 		OnFwdSync(AMBOS_MOTORES, -VELOCIDADE_ALTA, 0);
-		while(sensor_cor(SENSOR_COR_ESQUERDA == BRANCO) && sensor_cor(SENSOR_COR_DIREITA) == BRANCO);
-		if (sensor_cor(SENSOR_COR_ESQUERDA == VERMELHO) && sensor_cor(SENSOR_COR_DIREITA) == VERMELHO)
+		while(sensor_cor(SENSOR_COR_ESQUERDA) == BRANCO && sensor_cor(SENSOR_COR_DIREITA) == BRANCO);
+		if (sensor_cor(SENSOR_COR_ESQUERDA) == VERMELHO && sensor_cor(SENSOR_COR_DIREITA) == VERMELHO)
 		{
 			Wait(210);//testar esse tempo
 			if (sensor_cor(SENSOR_COR_ESQUERDA == AZUL) && sensor_cor(SENSOR_COR_DIREITA) == AZUL)
@@ -270,5 +290,18 @@ task main ()
 				break;
 			}
 		}
+	}*/
+	while(1){
+		OnFwdSync(AMBOS_MOTORES, -VELOCIDADE_ALTA, 0);
+		while(sensor_cor(SENSOR_COR_ESQUERDA) == BRANCO && sensor_cor(SENSOR_COR_DIREITA) == BRANCO);
+		if (sensor_cor(SENSOR_COR_ESQUERDA) == PRETO && sensor_cor(SENSOR_COR_DIREITA) == PRETO)
+		{
+			if (direcoes[AZUL] != 2 && direcoes[VERDE] != 2 && direcoes[VERMELHO] != 2)
+			{
+				girar(180);
+
+			}
+		}
 	}
+
 }
