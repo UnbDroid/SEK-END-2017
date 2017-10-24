@@ -16,8 +16,8 @@
 #define VERMELHO 5
 #define BRANCO 6
 
-sub BTCheck(int conn){
-     if (!BluetoothStatus(conn)==NO_ERR){
+sub BTCheck(){
+     if (!BluetoothStatus(CONEXAO)==NO_ERR){
           ClearScreen();
           TextOut(5,LCD_LINE2,"Erro");
           Wait(1000);

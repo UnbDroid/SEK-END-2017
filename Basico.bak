@@ -30,12 +30,11 @@ void ligar_sensores() //Funcoes_testadas
 	//SetSensorColorFull(SENSOR_COR_DIREITA);
 	//SetSensorColorFull(SENSOR_COR_ESQUERDA);
 	set_sensor_color(COR_ESQUERDA, VERMELHO);
-	Wait(50);
 	set_sensor_color(COR_DIREITA,  VERMELHO);
 
-	
+
 }
-/* Funcao do rodrigo que funciona para quando os sensores de cor estao no principal 
+/* Funcao do rodrigo que funciona para quando os sensores de cor estao no principal
 int sensor_cor(int sensor)
 {
 	unsigned int rawData[];
@@ -50,7 +49,7 @@ int sensor_cor(int sensor)
 	{
 		return AZUL;
 	}
-	
+
 	if(rawData[red] < GREENUP_R && rawData[red] > GREENDOWN_R && rawData[green] < GREENUP_G && rawData[green] > GREENDOWN_G && rawData[blue] < GREENUP_B && rawData[blue] > GREENDOWN_B && rawData[none] < GREENUP_N && rawData[none] > GREENDOWN_N)
 	{
 		if (Sensor(sensor) == VERDE)
@@ -58,7 +57,7 @@ int sensor_cor(int sensor)
 				return VERDE;
 		}
 	}
-	
+
 	if(rawData[red] < WHITEUP_R && rawData[red] > WHITEDOWN_R && rawData[green] < WHITEUP_G && rawData[green] > WHITEDOWN_G && rawData[blue] < WHITEUP_B && rawData[blue] > WHITEDOWN_B && rawData[none] < WHITEUP_N && rawData[none] > WHITEDOWN_N)
 	{
 		return BRANCO;
@@ -120,7 +119,7 @@ int reto(int passageiros)
 		else /* Entra aqui caso nao esteja no caminho certo ou ache alguma esquina */
 		{
 			contador += 1;
-			/* 	Aqui esta o caso em que algum dos sensores nao ve branco 
+			/* 	Aqui esta o caso em que algum dos sensores nao ve branco
 				Entao temos duas possibilidades: Quando esta saindo fora da pista e quando esta no quadrado preto
 				1) Para o caso de quando esta fora da pista, os dois sensores nao vao reconhecer preto, mas somente um
 				2) Para o caso do quadrado preto, entao os dois sensores veem preto.
@@ -139,15 +138,15 @@ int reto(int passageiros)
 				Off(AMBOS_MOTORES);
 				return PRETO; /* Codigo do preto */
 			}
-			if(cor_left == PRETO && cor_right != PRETO)  
+			if(cor_left == PRETO && cor_right != PRETO)
 			{
 				OnRev(MOTOR_ESQUERDA, VELOCIDADE_MEDIA);
-				OnRev(MOTOR_DIREITA,  VELOCIDADE_BAIXA);
+				OnRev(MOTOR_DIREITA,  0);
 			}
 			else if(cor_left != PRETO && cor_right == PRETO)
 			{
 				OnRev(MOTOR_ESQUERDA, VELOCIDADE_BAIXA);
-				OnRev(MOTOR_DIREITA,  VELOCIDADE_MEDIA);
+				OnRev(MOTOR_DIREITA,  0);
 			}
 		}
 		Wait(100);
@@ -167,7 +166,7 @@ task main()
 	{
 		/* Codigo para pegar do arquivo e gravar nas direcoes */
 	}
-	
+
 	while(1)
 	{
 		reto(passageiros); // Essa funcao recebe o passageiros para saber se deve parar caso ache boneco ou nao
@@ -183,4 +182,4 @@ task main()
 			TextOut(10, 10, "None!");*/
 		Wait(2000);
 	}
-}	
+}
