@@ -6,7 +6,7 @@ Por exemplo,
 
 '''
 
-
+from os import system
 
 def existe_arquivo(nome):
 	try:
@@ -56,14 +56,19 @@ if __name__ == "__main__":
 	#arqui	= "Funcoes_nao_testadas/mostra_na_tela"
 	#arqui	= "Codigo_principal/B.O.S.T.A"
 	#arqui	= "Codigo_principal/Teste_Caminhos"
-	arqui	= "Funcoes_nao_testadas/Modo_plaza"
-	
+	#arqui	= "Funcoes_nao_testadas/Modo_plaza"
+	#arqui 	= "Funcoes_nao_testadas/Navegacao"
+	arqui 	= "Funcoes_nao_testadas/Basico"
+
+	new_cam = arqui.split('/')[-1]
 	defines, codigo = leia_do_arquivo(arqui + ".c")
-	new_arq = open(arqui.split('/')[-1] + ".nxc", "w")
+	new_arq = open(new_cam + ".nxc", "w")
 	for defin in defines:
 		new_arq.write(defin + "\n")
 	new_arq.write("\n\n")
 	for line in codigo:
 		new_arq.write(line + "\n")
 	new_arq.close()
+
+	system("nbc -d -S=usb " + new_cam + ".nxc")
 
