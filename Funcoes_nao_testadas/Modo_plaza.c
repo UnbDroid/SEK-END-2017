@@ -1,17 +1,19 @@
+#define CONEXAO 1 // Numero da porta BlueTooth
+
 #define MOTOR_ESQUERDA OUT_A
 #define MOTOR_DIREITA OUT_C
 #define AMBOS_MOTORES OUT_AC
 //#define MOTOR_GARRA OUT_B
 #define MOTOR_PORTA OUT_B /*conexÃ£o com o outro cÃ©rebro*/
-#define SENSOR_COR_ESQUERDA IN_2
-#define SENSOR_COR_DIREITA IN_3
+#define SENSOR_COR_ESQUERDA IN_4
+#define SENSOR_COR_DIREITA IN_1
 //#define SENSOR_US_ESQUERDA IN_3
 //#define SENSOR_US_DIREITA IN_4
 #define SENSOR_GYRO IN_1 /*teste*/
 #define SENSOR_US_GARRA IN_4 /*teste*/
 #define VELOCIDADE_BAIXA 35
 #define VELOCIDADE_MEDIA 50
-#define VELOCIDADE_ALTA 50
+#define VELOCIDADE_ALTA 85
 #define PRETO 1
 #define VERDE 3
 #define BRANCO 6
@@ -43,26 +45,59 @@
 #define REDDOWN_G 20
 #define GREENUP_G 160
 #define GREENDOWN_G 115
-#define WHITEUP_R 220
-#define WHITEDOWN_R 120
-#define BLUEUP_R 105
-#define	BLUEDOWN_R 50
-#define	BLACKUP_R 100
-#define BLACKDOWN_R 50
-#define	REDUP_R 180
-#define REDDOWN_R 110
-#define GREENUP_R 120
-#define GREENDOWN_R 65
+
+#define WHITEUP_R 580
+#define WHITEDOWN_R 550
+#define BLUEUP_R 235
+#define	BLUEDOWN_R 220
+#define	BLACKUP_R 200
+#define BLACKDOWN_R 190
+#define	REDUP_R 530
+#define REDDOWN_R 500
+#define GREENUP_R 320
+#define GREENDOWN_R 290
 #define OFFSET_COLOR 1/3.0
 
 #define OFFSET_SAMPLES 2000
 
+sub BTCheck(){
+     if (!BluetoothStatus(CONEXAO)==NO_ERR){
+          ClearScreen();
+          TextOut(5,LCD_LINE2,"Erro");
+          Wait(1000);
+          Stop(true);
+      }
+}
+
+void set_sensor_color(char porta, char color)
+{
+     if(color == VERMELHO){
+          RemoteSetInputMode(CONEXAO, porta, SENSOR_TYPE_COLORRED, SENSOR_MODE_RAW);
+     }else if(color == VERDE){
+          RemoteSetInputMode(CONEXAO, porta, SENSOR_TYPE_COLORGREEN, SENSOR_MODE_RAW);
+     }else if(color == AZUL){
+          RemoteSetInputMode(CONEXAO, porta, SENSOR_TYPE_COLORBLUE, SENSOR_MODE_RAW);
+     }else if(color == BRANCO){
+          RemoteSetInputMode(CONEXAO, porta, SENSOR_TYPE_COLORFULL, SENSOR_MODE_RAW);
+     }
+}
+
+int get_value_color(char porta)
+{
+     InputValuesType params;
+
+     params.Port = porta;
+     RemoteGetInputValues(CONEXAO, params);
+
+     return params.RawValue;
+}
+
 void ligar_sensores()
 {
 	SetSensorHTGyro(SENSOR_GYRO);
-	SetSensorColorFull(SENSOR_COR_DIREITA);
-	SetSensorColorFull(SENSOR_COR_ESQUERDA);
-	SetSensorUltrasonic(SENSOR_US_GARRA);
+	set_sensor_color(SENSOR_COR_ESQUERDA, VERMELHO);
+	Wait(50);
+	set_sensor_color(SENSOR_COR_DIREITA, VERMELHO);
 }
 
 void distancia_reto(int low_speed, int high_speed, float distancia)
@@ -111,7 +146,7 @@ void distancia_re(int low_speed, int high_speed, float distancia)
 	Off(AMBOS_MOTORES);
 }
 
-float getGyroOffset() 
+float getGyroOffset()
 {
 	SetSensorHTGyro(SENSOR_GYRO);
 	float gyro_sum = 0, i;
@@ -124,7 +159,7 @@ float getGyroOffset()
 	return gyro_sum/OFFSET_SAMPLES;
 }
 
-void giro(float degrees) // Algoritimo usado pela sek do ano passado //testada
+void girar(float degrees) // Algoritimo usado pela sek do ano passado //testada
 {
 
 	SetSensorHTGyro(SENSOR_GYRO);
@@ -137,6 +172,8 @@ void giro(float degrees) // Algoritimo usado pela sek do ano passado //testada
 	degrees = -degrees;
 
 	float offset = getGyroOffset();
+
+	distancia_re(VELOCIDADE_MEDIA, VELOCIDADE_ALTA, 3.5);
 
 	if(degrees > 0) {
 
@@ -153,11 +190,11 @@ void giro(float degrees) // Algoritimo usado pela sek do ano passado //testada
 			TextOut(0, LCD_LINE1, "ANGLE:");
 			NumOut(48, LCD_LINE1, angle);
 			Wait(100); //MUDAR OS VALORES DOS WAITS PARA ALTERAR AS POSIÇÕES DAS RODAS
-			Off(MOTORES);
+			Off(AMBOS_MOTORES);
 			OnRev(MOTOR_ESQUERDA, -VELOCIDADE_ALTA);
 			OnRev(MOTOR_DIREITA, -VELOCIDADE_ALTA);
 			Wait(20); //USANDO 100 E 20 AS RODAS E AS CASTER BALLS ESTÃO FICANDO DENTRO DO QUADRADO, SWEET, DUDE !
-			Off(MOTORES);
+			Off(AMBOS_MOTORES);
 		}
 	} else {
 
@@ -174,65 +211,38 @@ void giro(float degrees) // Algoritimo usado pela sek do ano passado //testada
 			TextOut(0, LCD_LINE1, "ANGLE:");
 			NumOut(48, LCD_LINE1, angle);
 		  	Wait(100);
-			Off(MOTORES);
+			Off(AMBOS_MOTORES);
 			OnFwd(MOTOR_ESQUERDA, -VELOCIDADE_ALTA);
 			OnFwd(MOTOR_DIREITA, -VELOCIDADE_ALTA);
 		  	Wait(20);
-			Off(MOTORES);
+			Off(AMBOS_MOTORES);
 		}
 	}
 
-	Off(MOTORES);
-}
-
-void girar(float degrees) //função para mover o robo de acordo com o giro e girar, valores de acordo com testes
-{
-	if (degrees == 90 || degrees == -90)
-	{
-		distancia_re(VELOCIDADE_MEDIA, VELOCIDADE_ALTA, 15.5);
-		giro(degrees);
-	}
-	if (degrees == 180)
-	{
-		giro(90);
-		Wait(2000);
-		distancia_re(VELOCIDADE_MEDIA, VELOCIDADE_ALTA, 3.5);
-		giro(90);		
-	}
-	if (degrees != 90 && degrees != -90 && degrees != 180)
-		giro(degrees);
-	
+	Off(AMBOS_MOTORES);
 }
 
 
 int sensor_cor(int sensor) //funcao estilo colorfull
 {
-	int red = 0, green = 0, blue = 0, i;
+	int value = 0, i;
 	for(i = 0; i < 3; i++)
 	{
-		red += ColorSensorValue(sensor, INPUT_RED)*OFFSET_COLOR;
+		value += get_value_color(sensor)*OFFSET_COLOR;
 	}
-	for(i = 0; i < 3; i++)
-	{
-		green += ColorSensorValue(sensor, INPUT_GREEN)*OFFSET_COLOR;
-	}
-	for(i = 0; i < 3; i++)
-	{
-		blue += ColorSensorValue(sensor, INPUT_BLUE)*OFFSET_COLOR;
-	}
-	if(red >= REDDOWN_R && red <= REDUP_R && green >= REDDOWN_G && green <= REDUP_G && blue >= REDDOWN_B && blue <= REDUP_B)
+	if(value >= REDDOWN_R && value <= REDUP_R)
 		return VERMELHO;
 
-	if(red >= GREENDOWN_R && red <= GREENUP_R && green >= GREENDOWN_G && green <= GREENUP_G && blue >= GREENDOWN_B && blue <= GREENUP_B)
+	if(value >= GREENDOWN_R && value <= GREENUP_R)
 		return VERDE;
-	
-	if(red >= BLUEDOWN_R && red <= BLUEUP_R && green >= BLUEDOWN_G && green <= BLUEUP_G && blue >= BLUEDOWN_B && blue <= BLUEUP_B)
+
+	if(value >= BLUEDOWN_R && value <= BLUEUP_R)
 		return AZUL;
-	
-	if(red >= BLACKDOWN_R && red <= BLACKUP_R && green >= BLACKDOWN_G && green <= BLACKUP_G && blue >= BLACKDOWN_B && blue <= BLACKUP_B)
+
+	if(value >= BLACKDOWN_R && value <= BLACKUP_R)
 		return PRETO;
-	
-	if(red >= WHITEDOWN_R && green >= WHITEDOWN_G && blue >= WHITEDOWN_B)
+
+	if(value >= WHITEDOWN_R)
 		return BRANCO;
 
 	return PRETO;
@@ -246,16 +256,20 @@ void modo_plaza ()
 	ResetRotationCount(MOTOR_ESQUERDA);
 	OnRevSync(AMBOS_MOTORES, -VELOCIDADE_ALTA, 0);
 	while(sensor_cor(SENSOR_COR_ESQUERDA) != PRETO && sensor_cor(SENSOR_COR_DIREITA) != PRETO);
+	Wait(2000);
+	Off(AMBOS_MOTORES);
+	OnRevSync(AMBOS_MOTORES, -VELOCIDADE_ALTA, 0);
+	while(sensor_cor(SENSOR_COR_ESQUERDA) != PRETO && sensor_cor(SENSOR_COR_DIREITA) != PRETO);
 	Off(AMBOS_MOTORES);
 	PlayTone(880, 500);
 	aux = abs(MotorRotationCount(MOTOR_DIREITA));
 
 	//girar(180);
-	distancia_re(VELOCIDADE_BAIXA, VELOCIDADE_ALTA, 15);
+	distancia_re(VELOCIDADE_MEDIA, VELOCIDADE_ALTA, 15);
 	OnFwd(MOTOR_PORTA, VELOCIDADE_BAIXA);
 	Wait(900);
 	Off(MOTOR_PORTA);
-	distancia_reto(VELOCIDADE_BAIXA, VELOCIDADE_ALTA, 30);
+	distancia_reto(VELOCIDADE_MEDIA, VELOCIDADE_ALTA, 30);
 	OnRev(MOTOR_PORTA, VELOCIDADE_BAIXA);
 	Wait(900);
 	Off(MOTOR_PORTA);
@@ -264,7 +278,8 @@ void modo_plaza ()
 	Wait(50);
 	while(prev_motor < aux)
 	{
-		OnFwdSync(AMBOS_MOTORES, -VELOCIDADE_ALTA, 0);
+    PlayTone(880, 500);
+    OnFwdSync(AMBOS_MOTORES, -VELOCIDADE_ALTA, 0);
 		Wait(50);
 		prev_motor = abs(MotorRotationCount(MOTOR_DIREITA));
 	}
@@ -274,7 +289,8 @@ void modo_plaza ()
 
 task main ()
 {
- 	int direcoes[6] = {2, 2, 2, 2, 2, 2};//1: Preto
+	BTCheck();
+ 	int direcoes[6] = {1, 1, 1, 1, 1, 1};
 
  	ligar_sensores();
 
@@ -291,17 +307,22 @@ task main ()
 			}
 		}
 	}*/
-	while(1){
+	/*while(1){
 		OnFwdSync(AMBOS_MOTORES, -VELOCIDADE_ALTA, 0);
-		while(sensor_cor(SENSOR_COR_ESQUERDA) == BRANCO && sensor_cor(SENSOR_COR_DIREITA) == BRANCO);
-		if (sensor_cor(SENSOR_COR_ESQUERDA) == PRETO && sensor_cor(SENSOR_COR_DIREITA) == PRETO)
+		Wait(1000);
+		Off(AMBOS_MOTORES);
+		if (direcoes[AZUL] != 2 && direcoes[VERDE] != 2 && direcoes[VERMELHO] != 2)
 		{
-			if (direcoes[AZUL] != 2 && direcoes[VERDE] != 2 && direcoes[VERMELHO] != 2)
-			{
-				girar(180);
+			distancia_re(VELOCIDADE_BAIXA, VELOCIDADE_ALTA, 5);
+			girar(180);
+			modo_plaza();
 
-			}
 		}
-	}
+	}*/
+	OnRevSync(AMBOS_MOTORES, -VELOCIDADE_ALTA, 1.3);
+	while(sensor_cor(SENSOR_COR_ESQUERDA) != VERMELHO || sensor_cor(SENSOR_COR_DIREITA) != VERMELHO);
+	Off(AMBOS_MOTORES);
+	PlayTone(880, 500);
+	modo_plaza();
 
 }
