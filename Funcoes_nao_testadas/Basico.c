@@ -93,15 +93,10 @@ int trata_cor(int color)
 int identifica_cor()
 {
 	// Assumimos aqui que o robô ja esta em cima de uma esquina
-	const int DELAY = 30;
+	const int DELAY = 30, max = 10;
 	int CORES[3] = {VERMELHO, VERDE, AZUL};
 	int cor_left[7], cor_right[7];
-	int i, re_left, re_right;
-	/* 
-	int VERMELHO[7][2] = {{0, 0}, {200, 230}, {240, 310}, {350, 420}, {380, 420}, {520, 550}, {555, 620}};
-	int VERDE[7][2] = {{0, 0}, {130, 180}, {220, 310}, {370, 460}, {340, 390}, {320, 400}, {490, 560}};
-	int AZUL[7][2] = {{0, 0}, {120, 210}, {260, 340}, {300, 410}, {310, 380}, {310, 400}, {470, 550}}; */
-	
+	int i, j, re_left, re_right, sum;
 	int RED[7][2] = {
 		{0,   0}, 	// NONE
 		{200, 230}, // PRETO
@@ -129,49 +124,25 @@ int identifica_cor()
 		{310, 400}, // VERMELHO
 		{470, 550}, // BRANCO
 	};
-	/*
-	char [7][2];
-	VERMELHO[1][0] = 200;
-	VERMELHO[1][1] = 230;
-	VERMELHO[2][0] = 240;
-	VERMELHO[2][1] = 310;
-	VERMELHO[3][0] = 350;
-	VERMELHO[3][1] = 420;
-	VERMELHO[4][0] = 380;
-	VERMELHO[4][1] = 420;
-	VERMELHO[5][0] = 520;
-	VERMELHO[5][1] = 550;
-	VERMELHO[6][0] = 555;
-	VERMELHO[6][1] = 620;
-	int VERDE[7][2] = {
-		{0,   0}, 	// NONE
-		{130, 180}, // PRETO
-		{220, 310}, // AZUL
-		{370, 460}, // VERDE
-		{340, 390}, // FORA
-		{320, 400}, // VERMELHO
-		{490, 560}, // BRANCO
-	};
-	int AZUL[7][2] = {
-		{0,   0}, 	// NONE
-		{120, 210}, // PRETO
-		{260, 340}, // AZUL
-		{300, 410}, // VERDE
-		{310, 380}, // FORA
-		{310, 400}, // VERMELHO
-		{470, 550}, // BRANCO
-	};*/
 	while(1)
 	{
 		for(i = 0; i < 3; i++) // Esse for percorre vermelho, verde e azul.
 		{
 			set_sensor_color(COR_ESQUERDA, CORES[i]);
-			cor_left[CORES[i]] 	= get_value_color(COR_ESQUERDA);;
+			sum = 0;
+			for(j = 0; j < max; j++)
+				sum += get_value_color(COR_ESQUERDA);
+			cor_left[CORES[i]] 	= sum/max;
 			Wait(DELAY);
 			set_sensor_color(COR_DIREITA,  CORES[i]);
-			cor_right[CORES[i]] = get_value_color(COR_DIREITA);;
+			sum = 0;
+			for(j = 0; j < max; j++)
+				sum += get_value_color(COR_DIREITA);
+			cor_right[CORES[i]] = sum/max;
 			Wait(DELAY);	
 		}
+		re_left		= AMARELO; // valor lixo
+		re_right	= AMARELO;
 		for(i = 0; i < 3; i++)
 		{
 			if(RED[CORES[i]][0]  <= cor_left[CORES[i]] && cor_left[CORES[i]] <= RED[CORES[i]][1])
@@ -190,7 +161,7 @@ int identifica_cor()
 				{
 					if(GREEN[CORES[i]][0]  <= cor_right[CORES[i]] && cor_right[CORES[i]] <= GREEN[CORES[i]][1])
 					{
-						re_left = CORES[i];
+						re_right = CORES[i];
 					}
 				}
 			}
@@ -257,7 +228,7 @@ int reto(int passageiros) // Essa funcao e executada ate retornar preto
 						Wait(100);
 						contador += 1;
 					}
-					Off(AMBOS_MOTORES);
+					Off(MOTOR_ESQUERDA);
 					OnRev(MOTOR_DIREITA,  (-1)*VELOCIDADE_BAIXA);
 					contador = 0;
 					while(trata_cor(get_value_color(COR_DIREITA)) == PRETO && contador < 3)
@@ -269,6 +240,7 @@ int reto(int passageiros) // Essa funcao e executada ate retornar preto
 					{
 						OnRevSync(AMBOS_MOTORES, VELOCIDADE_MEDIA, 0);
 						Wait(300);
+						Off(AMBOS_MOTORES);
 						return PRETO;
 					}
 				}
@@ -318,6 +290,6 @@ task main()
 			TextOut(10, 10, "Verde");
 		else
 			TextOut(10, 10, "None!");
-		Wait(2000);
+		Wait(10000);
 	}
 }	

@@ -58,17 +58,18 @@ if __name__ == "__main__":
 	#arqui	= "Codigo_principal/Teste_Caminhos"
 	#arqui	= "Funcoes_nao_testadas/Modo_plaza"
 	#arqui 	= "Funcoes_nao_testadas/Navegacao"
-	arqui 	= "Funcoes_nao_testadas/Basico"
+	#arqui 	= "Funcoes_nao_testadas/Basico"
+        arqui   = "Funcoes_nao_testadas/Calibracao"
+        
+        new_cam = arqui.split('/')[-1]
+        defines, codigo = leia_do_arquivo(arqui + ".c")
+        new_arq = open(new_cam + ".nxc", "w")
+        for defin in defines:
+                new_arq.write(defin + "\n")
+        new_arq.write("\n\n")
+        for line in codigo:
+                new_arq.write(line + "\n")
+        new_arq.close()
 
-	new_cam = arqui.split('/')[-1]
-	defines, codigo = leia_do_arquivo(arqui + ".c")
-	new_arq = open(new_cam + ".nxc", "w")
-	for defin in defines:
-		new_arq.write(defin + "\n")
-	new_arq.write("\n\n")
-	for line in codigo:
-		new_arq.write(line + "\n")
-	new_arq.close()
-
-	system("nbc -d -S=usb " + new_cam + ".nxc")
+        system("nbc -d -S=usb " + new_cam + ".nxc")
 
