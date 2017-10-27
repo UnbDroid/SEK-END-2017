@@ -387,13 +387,13 @@ void modo_plaza ()
 		TextOut(0, LCD_LINE2, "ANGLE:");
 		NumOut(55, LCD_LINE2, angle);
 
-		if (angle - angle_inicial > 0)
+		if (angle - angle_inicial > 0.01)
 		{
-			girar_sem_re(1);
+			girar_sem_re(0.5);
 		}
-		else if (angle - angle_inicial < 0)
+		else if (angle - angle_inicial < 0.01)
 		{
-			girar_sem_re(-1);
+			girar_sem_re(-0.5);
 		}
 		else
 		{

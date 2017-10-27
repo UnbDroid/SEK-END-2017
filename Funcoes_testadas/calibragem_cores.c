@@ -104,35 +104,6 @@ void ligar_sensores()
 	set_sensor_color(SENSOR_COR_ESQUERDA, VERMELHO);
 }
 
-/*int sensor_cor(int sensor)
-{
-	int leitura_r = 0;
-
-	for(int i = 0; i < 1/OFFSET_COLOR; i++)
-	{
-		leitura += get_value_color(sensor)*OFFSET_COLOR;
-	}
-
-	if (sensor == SENSOR_COR_ESQUERDA)
-		NumOut(0,0, leitura);
-	if(sensor == SENSOR_COR_DIREITA)
-		NumOut(0,40, leitura);
-
-	if(leitura >= WHITEDOWN_R){
-		return BRANCO;
-	}
-	else if (leitura >= REDDOWN_R){
-		return VERMELHO;
-	} else if (leitura <= BLACKUP_R){
-		return PRETO;
-	} else if (leitura >= BLUEDOWN_R && leitura <= BLUEUP_R){
-		return AZUL;
-	} else 	if (leitura <= FORAUP_R && leitura >= FORADOWN_R){
-		return FORA;
-	}
-	return FORA;
-}*/
-
 int teste_cor(int sensor)
 {
 	int leitura_r = 0, leitura_g = 0, leitura_b = 0, leitura = 0;
