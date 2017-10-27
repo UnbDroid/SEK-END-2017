@@ -203,7 +203,35 @@ void reto(int cor) //robo move ate que os dois sensores parem de ver a cor
 
 }
 
+void dist(int low_speed, int high_speed, int distancia)
+{
+	int count_A =  MotorRotationCount(MOTOR_ESQUERDA);
+	int count_C =  MotorRotationCount(MOTOR_DIREITA);
+	int sinal = 1;
+	if(distancia < 0)
+		sinal = -1;
+	OnRev(AMBOS_MOTORES, sinal*high_speed);
+	do{
+		if ( sinal*(count_A - MotorRotationCount(MOTOR_ESQUERDA)) > sinal*(count_C - MotorRotationCount(MOTOR_DIREITA)))
+		{
+			OnRev(MOTOR_ESQUERDA, sinal*low_speed);
+			until (sinal*(count_C - MotorRotationCount(MOTOR_DIREITA)) >  sinal*(count_A - MotorRotationCount(MOTOR_ESQUERDA)));
+			OnRev(MOTOR_ESQUERDA, sinal*high_speed);
+		}
+		else
+		{
+			OnRev(MOTOR_DIREITA, sinal*low_speed);
+			until ( sinal*(count_A - MotorRotationCount(MOTOR_ESQUERDA)) > sinal*(count_C - MotorRotationCount(MOTOR_DIREITA)));
+			OnRev(MOTOR_DIREITA, sinal*high_speed);
+		}
+	}while(sinal*(count_A - MotorRotationCount(MOTOR_ESQUERDA))*6*PI/360 <= distancia);
+	Off(AMBOS_MOTORES);
+	
+}
+
 void distancia_reto(int low_speed, int high_speed, int distancia){//função do kaynã
+	dist(low_speed, high_speed, distancia);
+	/*
 	int count_A =  MotorRotationCount(MOTOR_ESQUERDA);
 	int count_C =  MotorRotationCount(MOTOR_DIREITA);
 	OnRev(AMBOS_MOTORES, high_speed);
@@ -223,10 +251,13 @@ void distancia_reto(int low_speed, int high_speed, int distancia){//função do 
 		}
 	}while((count_A - MotorRotationCount(MOTOR_ESQUERDA))*6*PI/360 <= distancia);
 	Off(AMBOS_MOTORES);
+	*/
 }
 
 
 void distancia_re(int low_speed, int high_speed, int distancia){//função do Kaynã
+	dist(low_speed, high_speed, (-1)*distancia);
+	/*
 	int count_A =  MotorRotationCount(MOTOR_ESQUERDA);
 	int count_C =  MotorRotationCount(MOTOR_DIREITA);
 	OnFwd(AMBOS_MOTORES, high_speed);
@@ -246,6 +277,7 @@ void distancia_re(int low_speed, int high_speed, int distancia){//função do Ka
 		}
 	}while((MotorRotationCount(MOTOR_ESQUERDA) - count_A)*6*PI/360 <= distancia);
 	Off(AMBOS_MOTORES);
+	*/
 }
 
 void ajeitar(int cor) //arruma o robo pra ficar alinhado no quadrado da cor que recebe
@@ -499,6 +531,8 @@ task main () //por enquato a maior parte está só com a lógica, tem que altera
 {
 	int direcoes[6] = {0, 0, 0, 0, 0, 0}; //achei mais prático criar um vetor de 6 posiçoes e usar as constantes como o valor do índice
 	int cor_e, cor_d;
+	int CORES[3] = {AZUL, VERMELHO, VERDE};
+	int i;
 	BTCheck(BT_CONN);
 	ligar_sensores();
 
@@ -509,51 +543,30 @@ while (true){
 	distancia_reto(VELOCIDADE_MEDIA, VELOCIDADE_ALTA, 5);
 	cor_e = teste_cor(SENSOR_COR_ESQUERDA);
 	cor_d = teste_cor(SENSOR_COR_DIREITA);
-
-	if (cor_e == AZUL || cor_d == AZUL)
-	{	
-		PlayTone(440, 200);
-		ClearScreen();
-		TextOut(10,10, "ACHEI AZUL");
-		reto(AZUL);
-		ajeitar(AZUL);
-		if (direcoes [AZUL] == 0)
-		{
-			direcoes[AZUL] = testar_caminho(AZUL, direcoes);
-		} else 
-		{
-			seguir_direcao(direcoes, AZUL);		
-		}
-	} else if (cor_e == VERMELHO || cor_d == VERMELHO)
+	for(i = 0; i < 3; i++)
 	{
-		PlayTone(440, 200);
-		Wait(300);
-		PlayTone(440, 200);
-		reto(VERMELHO);
-		Wait(2000);
-		ajeitar(VERMELHO);
-		if (direcoes [VERMELHO] == 0)
+		if(cor_e == CORES[i] || cor_d == CORES[i])
 		{
-			direcoes[VERMELHO] = testar_caminho(VERMELHO, direcoes);
-		} else 
-		{
-			seguir_direcao(direcoes, VERMELHO);		
-		}
-	} else if (cor_e == VERDE || cor_d == VERDE)
-	{
-		PlayTone(440, 200);
-		Wait(300);
-		PlayTone(440, 200);
-		Wait(300);
-		PlayTone(440, 200);
-		reto(VERDE);
-		ajeitar(VERDE);
-		if (direcoes [VERDE] == 0)
-		{
-			direcoes[VERDE] = testar_caminho(VERDE, direcoes);
-		} else 
-		{
-			seguir_direcao(direcoes, VERDE);		
+			switch(i)
+			{
+				case 2:
+					PlayTone(440, 200);
+					Wait(300);
+				case 1:
+					PlayTone(440, 200);
+					Wait(300);
+				case 0:
+					PlayTone(440, 200);		
+			}
+			reto(CORES[i]);
+			ajeitar(CORES[i]);
+			if (direcoes [CORES[i]] == 0)
+			{
+				direcoes[CORES[i]] = testar_caminho(CORES[i], direcoes);
+			} else 
+			{
+				seguir_direcao(direcoes, CORES[i]);		
+			}		
 		}
 	}
 }
