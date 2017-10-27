@@ -94,7 +94,7 @@ int identifica_cor()
 {
 	// Assumimos aqui que o robô ja esta em cima de uma esquina
 	const int DELAY = 30, max = 10;
-	int CORES[3] = {VERMELHO, VERDE, AZUL};
+	int CORES[6] = {VERMELHO, VERDE, AZUL, BRANCO, PRETO, FORA};
 	int cor_left[7], cor_right[7];
 	int i, j, re_left, re_right, sum;
 	int RED[7][2] = {
@@ -141,9 +141,9 @@ int identifica_cor()
 			cor_right[CORES[i]] = sum/max;
 			Wait(DELAY);	
 		}
-		re_left		= AMARELO; // valor lixo
-		re_right	= AMARELO;
-		for(i = 0; i < 3; i++)
+		re_left		= -1; // valor lixo
+		re_right	= -1;
+		for(i = 0; i < 6; i++)
 		{
 			if(RED[CORES[i]][0]  <= cor_left[CORES[i]] && cor_left[CORES[i]] <= RED[CORES[i]][1])
 			{
@@ -167,7 +167,13 @@ int identifica_cor()
 			}
 		}
 		if(re_left == re_right)
+		{
+			if(re_left == )
+			{
+				PlayTone(880, 500);
+			}
 			return re_left;	
+		}
 	}
 
 }
@@ -278,18 +284,14 @@ task main()
 	{
 		reto(passageiros);
 		cor_achada = identifica_cor();
-		if(cor_achada == PRETO)
-			TextOut(10, 10, "Preto");
-		else if(cor_achada == AZUL)
-			TextOut(10, 10, "Azul");
-		else if(cor_achada == BRANCO)
-			TextOut(10, 10, "Branco");
-		else if(cor_achada == VERMELHO)
-			TextOut(10, 10, "Vermelho");
-		else if(cor_achada == VERDE)
-			TextOut(10, 10, "Verde");
+		if(direcao[cor_achada] != NADA)
+		{3
+
+		}
 		else
-			TextOut(10, 10, "None!");
+		{
+			/* Aqui vai chutar o caminho */
+		}
 		Wait(10000);
 	}
 }	

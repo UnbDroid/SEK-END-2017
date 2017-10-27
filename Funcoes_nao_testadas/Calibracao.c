@@ -60,14 +60,14 @@ task main()
 	
 	ligar_sensores();
 
-	BTCheck(BT_CONN); // Checa a conexao
+	BTCheck(); // Checa a conexao
 
 	SetSensorTouch(TOUCH); // Liga o sensor touch
 
 	Wait(100);
-	RemoteSetInputMode(BT_CONN, COR_ESQUERDA, SENSOR_TYPE_COLORRED, SENSOR_MODE_RAW); // Liga o sensor esquerdo de cor
+	set_sensor_color(COR_ESQUERDA, cores[i]);
 	Wait(25);
-	RemoteSetInputMode(BT_CONN, COR_DIREITA, SENSOR_TYPE_COLORRED, SENSOR_MODE_RAW);  // Liga o sensor direito de cor
+	set_sensor_color(COR_DIREITA, cores[i]);
 	while(true)
 	{
 		if(Sensor(TOUCH) == 1)
@@ -88,8 +88,8 @@ task main()
 		right_var = 0;
 		for(i = 0; i < max; i++)
 		{
-			left   = get_value_color(COR_ESQUERDA);
-			right  = get_value_color(COR_DIREITA);
+			left       = get_value_color(COR_ESQUERDA);
+			right      = get_value_color(COR_DIREITA);
 			left_med  += left;
 			right_med += right;
 			left_var  += left*left;

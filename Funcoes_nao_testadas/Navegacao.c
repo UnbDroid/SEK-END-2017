@@ -203,7 +203,35 @@ void reto(int cor) //robo move ate que os dois sensores parem de ver a cor
 
 }
 
+void dist(int low_speed, int high_speed, int distancia)
+{
+	int count_A =  MotorRotationCount(MOTOR_ESQUERDA);
+	int count_C =  MotorRotationCount(MOTOR_DIREITA);
+	int sinal = 1;
+	if(distancia < 0)
+		sinal = -1;
+	OnRev(AMBOS_MOTORES, sinal*high_speed);
+	do{
+		if ( sinal*(count_A - MotorRotationCount(MOTOR_ESQUERDA)) > sinal*(count_C - MotorRotationCount(MOTOR_DIREITA)))
+		{
+			OnRev(MOTOR_ESQUERDA, sinal*low_speed);
+			until (sinal*(count_C - MotorRotationCount(MOTOR_DIREITA)) >  sinal*(count_A - MotorRotationCount(MOTOR_ESQUERDA)));
+			OnRev(MOTOR_ESQUERDA, sinal*high_speed);
+		}
+		else
+		{
+			OnRev(MOTOR_DIREITA, sinal*low_speed);
+			until ( sinal*(count_A - MotorRotationCount(MOTOR_ESQUERDA)) > sinal*(count_C - MotorRotationCount(MOTOR_DIREITA)));
+			OnRev(MOTOR_DIREITA, sinal*high_speed);
+		}
+	}while(sinal*(count_A - MotorRotationCount(MOTOR_ESQUERDA))*6*PI/360 <= distancia);
+	Off(AMBOS_MOTORES);
+	
+}
+
 void distancia_reto(int low_speed, int high_speed, int distancia){//função do kaynã
+	dist(low_speed, high_speed, distancia);
+	/*
 	int count_A =  MotorRotationCount(MOTOR_ESQUERDA);
 	int count_C =  MotorRotationCount(MOTOR_DIREITA);
 	OnRev(AMBOS_MOTORES, high_speed);
@@ -223,10 +251,13 @@ void distancia_reto(int low_speed, int high_speed, int distancia){//função do 
 		}
 	}while((count_A - MotorRotationCount(MOTOR_ESQUERDA))*6*PI/360 <= distancia);
 	Off(AMBOS_MOTORES);
+	*/
 }
 
 
 void distancia_re(int low_speed, int high_speed, int distancia){//função do Kaynã
+	dist(low_speed, high_speed, (-1)*distancia);
+	/*
 	int count_A =  MotorRotationCount(MOTOR_ESQUERDA);
 	int count_C =  MotorRotationCount(MOTOR_DIREITA);
 	OnFwd(AMBOS_MOTORES, high_speed);
@@ -246,6 +277,7 @@ void distancia_re(int low_speed, int high_speed, int distancia){//função do Ka
 		}
 	}while((MotorRotationCount(MOTOR_ESQUERDA) - count_A)*6*PI/360 <= distancia);
 	Off(AMBOS_MOTORES);
+	*/
 }
 
 void ajeitar(int cor) //arruma o robo pra ficar alinhado no quadrado da cor que recebe
