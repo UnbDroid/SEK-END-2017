@@ -105,7 +105,7 @@ void ligar_sensores() //testada
 	set_sensor_color(SENSOR_COR_ESQUERDA, VERMELHO);
 	Wait(100);
 	set_sensor_color(SENSOR_COR_DIREITA, VERMELHO);
-	Wait(25);
+	Wait(100);
 		
 }
 
@@ -203,35 +203,7 @@ void reto(int cor) //robo move ate que os dois sensores parem de ver a cor
 
 }
 
-void dist(int low_speed, int high_speed, int distancia)
-{
-	int count_A =  MotorRotationCount(MOTOR_ESQUERDA);
-	int count_C =  MotorRotationCount(MOTOR_DIREITA);
-	int sinal = 1;
-	if(distancia < 0)
-		sinal = -1;
-	OnRev(AMBOS_MOTORES, sinal*high_speed);
-	do{
-		if ( sinal*(count_A - MotorRotationCount(MOTOR_ESQUERDA)) > sinal*(count_C - MotorRotationCount(MOTOR_DIREITA)))
-		{
-			OnRev(MOTOR_ESQUERDA, sinal*low_speed);
-			until (sinal*(count_C - MotorRotationCount(MOTOR_DIREITA)) >  sinal*(count_A - MotorRotationCount(MOTOR_ESQUERDA)));
-			OnRev(MOTOR_ESQUERDA, sinal*high_speed);
-		}
-		else
-		{
-			OnRev(MOTOR_DIREITA, sinal*low_speed);
-			until ( sinal*(count_A - MotorRotationCount(MOTOR_ESQUERDA)) > sinal*(count_C - MotorRotationCount(MOTOR_DIREITA)));
-			OnRev(MOTOR_DIREITA, sinal*high_speed);
-		}
-	}while(sinal*(count_A - MotorRotationCount(MOTOR_ESQUERDA))*6*PI/360 <= distancia);
-	Off(AMBOS_MOTORES);
-	
-}
-
 void distancia_reto(int low_speed, int high_speed, int distancia){//função do kaynã
-	dist(low_speed, high_speed, distancia);
-	/*
 	int count_A =  MotorRotationCount(MOTOR_ESQUERDA);
 	int count_C =  MotorRotationCount(MOTOR_DIREITA);
 	OnRev(AMBOS_MOTORES, high_speed);
@@ -251,13 +223,10 @@ void distancia_reto(int low_speed, int high_speed, int distancia){//função do 
 		}
 	}while((count_A - MotorRotationCount(MOTOR_ESQUERDA))*6*PI/360 <= distancia);
 	Off(AMBOS_MOTORES);
-	*/
 }
 
 
 void distancia_re(int low_speed, int high_speed, int distancia){//função do Kaynã
-	dist(low_speed, high_speed, (-1)*distancia);
-	/*
 	int count_A =  MotorRotationCount(MOTOR_ESQUERDA);
 	int count_C =  MotorRotationCount(MOTOR_DIREITA);
 	OnFwd(AMBOS_MOTORES, high_speed);
@@ -277,7 +246,6 @@ void distancia_re(int low_speed, int high_speed, int distancia){//função do Ka
 		}
 	}while((MotorRotationCount(MOTOR_ESQUERDA) - count_A)*6*PI/360 <= distancia);
 	Off(AMBOS_MOTORES);
-	*/
 }
 
 void ajeitar(int cor) //arruma o robo pra ficar alinhado no quadrado da cor que recebe
@@ -304,7 +272,7 @@ void ajeitar(int cor) //arruma o robo pra ficar alinhado no quadrado da cor que 
 		contador = 0;
 		while(sensor_cor(SENSOR_COR_DIREITA) != cor && contador < 3)
 		{ // Ajusta a roda esquerda para ficar em cima da linha.
-			Wait(7);
+			Wait(75);
 			contador += 1;
 		}
 	}
@@ -448,7 +416,7 @@ bool verificar_direcao(int cor)
 	return false;
 }
 
-void voltar(int cor)//voltar para o quadrado de origem visto que errou co caminho
+void voltar(int cor)//voltar para o quadrado de origem visto que errou o caminho
 {	
 	ajeitar(BRANCO);
 	girar(180);
@@ -456,6 +424,7 @@ void voltar(int cor)//voltar para o quadrado de origem visto que errou co caminh
 	PlayTone(880, 500);
 	distancia_reto(VELOCIDADE_MEDIA, VELOCIDADE_ALTA, 1.5);
 	reto(cor);
+	ajeitar(cor);
 }
 
 int testar_caminho(int cor, int vetor_direcao[])//testa as direções verificando se ja há alguma cor com a direção
@@ -473,22 +442,38 @@ int testar_caminho(int cor, int vetor_direcao[])//testa as direções verificand
 			return ESQUERDA;
 		}
 		voltar(cor);
-		ajeitar(cor);
-		girar(90); 
+
+		if (vetor_direcao[AZUL] != FRENTE && vetor_direcao[VERMELHO] != FRENTE && vetor_direcao[VERDE] != FRENTE)
+		{
+			girar(90); 
+	
+			if (verificar_direcao(cor))
+			{
+				return FRENTE;
+			}
+			voltar(cor);
+			girar(90);
+			verificar_direcao(cor);
+			return DIREITA;	
+		} else 
+		{
+			verificar_direcao(cor);
+			return DIREITA;
+		}
+	}
 	if (vetor_direcao[AZUL] != FRENTE && vetor_direcao[VERMELHO] != FRENTE && vetor_direcao[VERDE] != FRENTE)
 	{
 		if (verificar_direcao(cor))
 		{
-		return FRENTE;
+			return FRENTE;
 		}
 		voltar(cor);
-		ajeitar(cor);
-		girar(180);	
+		girar(90);
+		verificar_direcao(cor);
+		return DIREITA;
 	}
-	girar(-90);	
 	verificar_direcao(cor);
-	return DIREITA;
-	}
+	return DIREITA; 
 }	
 
 
@@ -513,20 +498,19 @@ void seguir_direcao(int vetor_direcao[], int cor)//função que sera usada quand
 task main () //por enquato a maior parte está só com a lógica, tem que alterar as funções pra ele conseguir andar certinho e girar
 {
 	int direcoes[6] = {0, 0, 0, 0, 0, 0}; //achei mais prático criar um vetor de 6 posiçoes e usar as constantes como o valor do índice
-	int cor_e, cor_d, teste = false;
+	int cor_e, cor_d;
 	BTCheck(BT_CONN);
 	ligar_sensores();
 
 	
 while (true){
-	teste = 0;
 	reto(BRANCO);
 	ajeitar(BRANCO);
 	distancia_reto(VELOCIDADE_MEDIA, VELOCIDADE_ALTA, 5);
 	cor_e = teste_cor(SENSOR_COR_ESQUERDA);
 	cor_d = teste_cor(SENSOR_COR_DIREITA);
 
-	if ((cor_e == AZUL || cor_d == AZUL) && teste == false)
+	if (cor_e == AZUL || cor_d == AZUL)
 	{	
 		PlayTone(440, 200);
 		ClearScreen();
@@ -540,10 +524,7 @@ while (true){
 		{
 			seguir_direcao(direcoes, AZUL);		
 		}
-		teste = true;
-	}
-  
-  if ((cor_e == VERMELHO || cor_d == VERMELHO) && teste == false)
+	} else if (cor_e == VERMELHO || cor_d == VERMELHO)
 	{
 		PlayTone(440, 200);
 		Wait(300);
@@ -558,10 +539,7 @@ while (true){
 		{
 			seguir_direcao(direcoes, VERMELHO);		
 		}
-		teste = true;
-	}
-  
-  if ((cor_e == VERDE || cor_d == VERDE) && teste == false)
+	} else if (cor_e == VERDE || cor_d == VERDE)
 	{
 		PlayTone(440, 200);
 		Wait(300);
@@ -577,7 +555,6 @@ while (true){
 		{
 			seguir_direcao(direcoes, VERDE);		
 		}
-		teste = true;
 	}
 }
 }
