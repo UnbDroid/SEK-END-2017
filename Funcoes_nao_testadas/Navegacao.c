@@ -54,25 +54,25 @@
 #define GREENDOWN_R 350
 
 //defines secundarios
-#define BLUEUP_B 310
+#define BLUEUP_B 320
 #define	BLACKUP_B 200
-#define	REDUP_B 330
-#define GREENUP_B 370
-#define BLUEUP_G 270
-#define	BLACKUP_G 180
-#define	REDUP_G 320
-#define GREENUP_G 420
-#define	REDUP_R 530
-#define GREENUP_R 385
+#define	REDUP_B 250
+#define GREENUP_B 350
+#define BLUEUP_G 300
+#define	BLACKUP_G 220
+#define	REDUP_G 290
+#define GREENUP_G 450
+#define	REDUP_R 590
+#define GREENUP_R 390
 
 //defines mais importantes, separados pra facilitar quando tiver de mudar
-#define WHITEDOWN_R 550
-#define REDDOWN_R 480
-#define BLACKUP_R 230
-#define BLUEDOWN_R 220
-#define BLUEUP_R 285
-#define FORAUP_R 400
-#define FORADOWN_R 300
+#define WHITEDOWN_R 590
+#define REDDOWN_R 550
+#define BLACKUP_R 280
+#define BLUEDOWN_R 250
+#define BLUEUP_R 310
+#define FORAUP_R 450
+#define FORADOWN_R 350
 #define DESVIO 20
 
 sub BTCheck(int conn){
@@ -137,11 +137,11 @@ int sensor_cor(int sensor)
 	if(leitura >= WHITEDOWN_R){
 		return BRANCO;
 	}
-	else if (leitura >= REDDOWN_R){
+	else if (leitura >= REDDOWN_R - DESVIO){
 		return VERMELHO;
 	} else if (leitura <= BLACKUP_R){
 		return PRETO;
-	} else if (leitura >= BLUEDOWN_R && leitura <= BLUEUP_R){
+	} else if (leitura >= (BLUEDOWN_R - DESVIO) && leitura <= (BLUEUP_R + DESVIO)){
 		return AZUL;
 	} else 	if (leitura <= FORAUP_R && leitura >= FORADOWN_R){
 		return FORA;
@@ -153,21 +153,24 @@ int teste_cor(int sensor)
 {
 	int leitura_r, leitura_g, leitura_b;
 	leitura_r = get_value_color(sensor);
+	Wait(50);
 	set_sensor_color(sensor, VERDE);
-	Wait(75);
+	Wait(100);
 	leitura_g = get_value_color(sensor);
+	Wait(50);
 	set_sensor_color(sensor, AZUL);
-	Wait(75); 
+	Wait(100); 
 	leitura_b = get_value_color(sensor);
+	Wait(50);
 	set_sensor_color(sensor, VERMELHO);
-	Wait(75);
-	if (leitura_r <= BLACKUP_R + DESVIO && (leitura_g <= BLACKUP_G + DESVIO || leitura_b <= BLACKUP_B + DESVIO))
+	Wait(100);
+	if (leitura_r <= (BLACKUP_R + DESVIO) && (leitura_g <= (BLACKUP_G + DESVIO) || leitura_b <= (BLACKUP_B + DESVIO)))
 		return PRETO;
-	if (leitura_r <= BLUEUP_R + DESVIO && (leitura_g <= BLUEUP_G + DESVIO || leitura_b <= BLUEUP_B + DESVIO))
+	if (leitura_r <= (BLUEUP_R + DESVIO) && (leitura_g <= (BLUEUP_G + DESVIO) || leitura_b <= (BLUEUP_B + DESVIO)))
 		return AZUL;
-	if (leitura_r  <= GREENUP_R + DESVIO && (leitura_g <= GREENUP_G + DESVIO || leitura_b <= GREENUP_B + DESVIO))
+	if (leitura_r  <= (GREENUP_R + DESVIO) && (leitura_g <= (GREENUP_G + DESVIO) || leitura_b <= (GREENUP_B + DESVIO)))
 		return VERDE;
-	if (leitura_r <= REDUP_R + DESVIO && (leitura_g <= REDUP_G + DESVIO || leitura_b <= REDUP_B + DESVIO))
+	if (leitura_r <= (REDUP_R + DESVIO) && (leitura_g <= (REDUP_G + DESVIO) || leitura_b <= (REDUP_B + DESVIO)))
 		return VERMELHO;
 
 	return FORA;
@@ -361,8 +364,30 @@ void girar(float degrees) //função para mover o robo de acordo com o giro e gi
 	{
 		giro(90);
 		Wait(2000);
-		distancia_re(VELOCIDADE_MEDIA, VELOCIDADE_ALTA, 2.5);
-		giro(90);		
+		while(sensor_cor(SENSOR_COR_ESQUERDA) != FORA && sensor_cor(SENSOR_COR_DIREITA) != FORA)
+			OnFwdSync(MOTORES, -VELOCIDADE_MEDIA, 0);
+		Off(MOTORES);
+
+		while(sensor_cor(SENSOR_COR_DIREITA) == FORA){
+			OnFwd(MOTOR_DIREITA, VELOCIDADE_MEDIA);
+		}
+		Off(MOTOR_DIREITA);
+
+		while(sensor_cor(SENSOR_COR_ESQUERDA) == FORA)
+		{
+			OnFwd(MOTOR_ESQUERDA, VELOCIDADE_MEDIA);
+		}
+		Off(MOTOR_ESQUERDA); 
+/*
+		OnRev(MOTOR_DIREITA, -VELOCIDADE_MEDIA);
+		Wait(200);
+		Off(MOTORES);
+		OnRev(MOTOR_ESQUERDA, -VELOCIDADE_MEDIA);
+		Wait(150);
+		Off(MOTORES);*/
+
+		distancia_re(VELOCIDADE_MEDIA, VELOCIDADE_ALTA, 13);
+		giro(90);	
 	}
 	if (degrees != 90 && degrees != -90 && degrees != 180)
 		giro(degrees);
@@ -373,8 +398,9 @@ bool verificar_direcao(int cor)
 {
 	int cor_d, cor_e;
 	reto(cor);
-	PlayTone(440, 100);
+	distancia_reto(VELOCIDADE_MEDIA, VELOCIDADE_ALTA, 1.5);
 	reto(BRANCO);
+	distancia_reto(VELOCIDADE_MEDIA, VELOCIDADE_ALTA, 2);
 
 	cor_d = teste_cor(SENSOR_COR_DIREITA);
 	cor_e = teste_cor(SENSOR_COR_ESQUERDA);
@@ -458,13 +484,11 @@ task main () //por enquato a maior parte está só com a lógica, tem que altera
 	int cor_e, cor_d, teste = false;
 	BTCheck(BT_CONN);
 	ligar_sensores();
-	
 
 	
 while (true){
 	teste = 0;
 	reto(BRANCO);
-	PlayTone(440, 500);
 	ajeitar(BRANCO);
 	distancia_reto(VELOCIDADE_MEDIA, VELOCIDADE_ALTA, 5);
 	cor_e = teste_cor(SENSOR_COR_ESQUERDA);
@@ -472,6 +496,7 @@ while (true){
 
 	if ((cor_e == AZUL || cor_d == AZUL) && teste == false)
 	{	
+		PlayTone(440, 200);
 		ClearScreen();
 		TextOut(10,10, "ACHEI AZUL");
 		reto(AZUL);
@@ -488,6 +513,9 @@ while (true){
   
   if ((cor_e == VERMELHO || cor_d == VERMELHO) && teste == false)
 	{
+		PlayTone(440, 200);
+		Wait(300);
+		PlayTone(440, 200);
 		reto(VERMELHO);
 		Wait(2000);
 		ajeitar(VERMELHO);
@@ -503,6 +531,11 @@ while (true){
   
   if ((cor_e == VERDE || cor_d == VERDE) && teste == false)
 	{
+		PlayTone(440, 200);
+		Wait(300);
+		PlayTone(440, 200);
+		Wait(300);
+		PlayTone(440, 200);
 		reto(VERDE);
 		ajeitar(VERDE);
 		if (direcoes [VERDE] == 0)
