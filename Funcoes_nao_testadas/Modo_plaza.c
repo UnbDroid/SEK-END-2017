@@ -20,43 +20,56 @@
 #define AZUL 2
 #define VERMELHO 5
 #define AMARELO 4
+#define FORA 7
+
 #define SENSIBILIDADE 0.1
 #define OFFSET_SAMPLES 2000
 #define ESQUERDA 1
 #define DIREITA (-1)
 #define FRENTE 0
-#define WHITEUP_B 170
-#define WHITEDOWN_B 100
-#define BLUEUP_B 130
-#define	BLUEDOWN_B 85
-#define	BLACKUP_B 85
-#define BLACKDOWN_B 30
-#define	REDUP_B 50
-#define REDDOWN_B 20
-#define GREENUP_B 110
-#define GREENDOWN_B 60
-#define WHITEUP_G 220
-#define WHITEDOWN_G 120
-#define BLUEUP_G 115
-#define	BLUEDOWN_G 70
-#define	BLACKUP_G 100
-#define BLACKDOWN_G 50
-#define	REDUP_G 60
-#define REDDOWN_G 20
-#define GREENUP_G 160
-#define GREENDOWN_G 115
 
-#define WHITEUP_R 580
-#define WHITEDOWN_R 550
-#define BLUEUP_R 235
-#define	BLUEDOWN_R 220
-#define	BLACKUP_R 200
+#define WHITEUP_B 550
+#define WHITEDOWN_B 470
+#define	BLUEDOWN_B 260
+#define BLACKDOWN_B 120
+#define FORAUP_B 380
+#define FORADOWN_B 310
+#define REDDOWN_B 310
+#define GREENDOWN_B 300
+#define WHITEUP_G 560
+#define WHITEDOWN_G 490
+#define	BLUEDOWN_G 220
+#define BLACKDOWN_G 130
+#define REDDOWN_G 320
+#define GREENDOWN_G 370
+#define FORAUP_G 390
+#define FORADOWN_G 340
+#define WHITEUP_R 620
 #define BLACKDOWN_R 190
-#define	REDUP_R 530
-#define REDDOWN_R 500
-#define GREENUP_R 320
-#define GREENDOWN_R 290
-#define OFFSET_COLOR 1/3.0
+#define GREENDOWN_R 350
+
+//defines secundarios
+#define BLUEUP_B 310
+#define	BLACKUP_B 200
+#define	REDUP_B 220
+#define GREENUP_B 310
+#define BLUEUP_G 280
+#define	BLACKUP_G 210
+#define	REDUP_G 240
+#define GREENUP_G 435
+#define	REDUP_R 590
+#define GREENUP_R 385
+
+//defines mais importantes, separados pra facilitar quando tiver de mudar
+#define WHITEDOWN_R 590
+#define REDDOWN_R 550
+#define BLACKUP_R 270
+#define BLUEDOWN_R 220
+#define BLUEUP_R 310
+#define FORAUP_R 450
+#define FORADOWN_R 350
+#define DESVIO 20
+#define OFFSET_COLOR 1/9.0
 
 #define OFFSET_SAMPLES 2000
 
@@ -223,29 +236,60 @@ void girar(float degrees) // Algoritimo usado pela sek do ano passado //testada
 }
 
 
-int sensor_cor(int sensor) //funcao estilo colorfull
+int sensor_cor(int sensor)
 {
-	int value = 0, i;
-	for(i = 0; i < 3; i++)
+	int leitura = 0;
+
+	for(int i = 0; i < 1/OFFSET_COLOR; i++)
 	{
-		value += get_value_color(sensor)*OFFSET_COLOR;
+		leitura += get_value_color(sensor)*OFFSET_COLOR;
 	}
-	if(value >= REDDOWN_R && value <= REDUP_R)
+
+	if (sensor == SENSOR_COR_ESQUERDA)
+		NumOut(0,0, leitura);
+	if(sensor == SENSOR_COR_DIREITA)
+		NumOut(0,40, leitura);
+
+	if(leitura >= WHITEDOWN_R){
+		return BRANCO;
+	}
+	else if (leitura >= REDDOWN_R){
+		return VERMELHO;
+	} else if (leitura <= BLACKUP_R){
+		return PRETO;
+	} else if (leitura >= BLUEDOWN_R && leitura <= BLUEUP_R){
+		return AZUL;
+	} else 	if (leitura <= FORAUP_R && leitura >= FORADOWN_R){
+		return FORA;
+	}
+	return FORA;
+}
+
+int teste_cor(int sensor)
+{
+	int leitura_r, leitura_g, leitura_b;
+	leitura_r = get_value_color(sensor);
+	Wait(50);
+	set_sensor_color(sensor, VERDE);
+	Wait(100);
+	leitura_g = get_value_color(sensor);
+	Wait(50);
+	set_sensor_color(sensor, AZUL);
+	Wait(100);
+	leitura_b = get_value_color(sensor);
+	Wait(50);
+	set_sensor_color(sensor, VERMELHO);
+	Wait(100);
+	if (leitura_r <= BLACKUP_R + DESVIO && (leitura_g <= BLACKUP_G + DESVIO || leitura_b <= BLACKUP_B + DESVIO))
+		return PRETO;
+	if (leitura_r <= BLUEUP_R + DESVIO && (leitura_g <= BLUEUP_G + DESVIO || leitura_b <= BLUEUP_B + DESVIO))
+		return AZUL;
+	if (leitura_r  <= GREENUP_R + DESVIO && (leitura_g <= GREENUP_G + DESVIO || leitura_b <= GREENUP_B + DESVIO))
+		return VERDE;
+	if (leitura_r <= REDUP_R + DESVIO && (leitura_g <= REDUP_G + DESVIO || leitura_b <= REDUP_B + DESVIO))
 		return VERMELHO;
 
-	if(value >= GREENDOWN_R && value <= GREENUP_R)
-		return VERDE;
-
-	if(value >= BLUEDOWN_R && value <= BLUEUP_R)
-		return AZUL;
-
-	if(value >= BLACKDOWN_R && value <= BLACKUP_R)
-		return PRETO;
-
-	if(value >= WHITEDOWN_R)
-		return BRANCO;
-
-	return PRETO;
+	return FORA;
 }
 
 void modo_plaza ()
@@ -264,7 +308,6 @@ void modo_plaza ()
 	PlayTone(880, 500);
 	aux = abs(MotorRotationCount(MOTOR_DIREITA));
 
-	//girar(180);
 	distancia_re(VELOCIDADE_MEDIA, VELOCIDADE_ALTA, 15);
 	OnFwd(MOTOR_PORTA, VELOCIDADE_BAIXA);
 	Wait(900);
@@ -293,36 +336,19 @@ task main ()
  	int direcoes[6] = {1, 1, 1, 1, 1, 1};
 
  	ligar_sensores();
-
- 	/*while(1){
-		OnFwdSync(AMBOS_MOTORES, -VELOCIDADE_ALTA, 0);
-		while(sensor_cor(SENSOR_COR_ESQUERDA) == BRANCO && sensor_cor(SENSOR_COR_DIREITA) == BRANCO);
-		if (sensor_cor(SENSOR_COR_ESQUERDA) == VERMELHO && sensor_cor(SENSOR_COR_DIREITA) == VERMELHO)
-		{
-			Wait(210);//testar esse tempo
-			if (sensor_cor(SENSOR_COR_ESQUERDA == AZUL) && sensor_cor(SENSOR_COR_DIREITA) == AZUL)
-			{
-				modo_plaza();
-				break;
-			}
-		}
-	}*/
-	/*while(1){
-		OnFwdSync(AMBOS_MOTORES, -VELOCIDADE_ALTA, 0);
-		Wait(1000);
-		Off(AMBOS_MOTORES);
-		if (direcoes[AZUL] != 2 && direcoes[VERDE] != 2 && direcoes[VERMELHO] != 2)
-		{
-			distancia_re(VELOCIDADE_BAIXA, VELOCIDADE_ALTA, 5);
-			girar(180);
-			modo_plaza();
-
-		}
-	}*/
-	OnRevSync(AMBOS_MOTORES, -VELOCIDADE_ALTA, 1.3);
-	while(sensor_cor(SENSOR_COR_ESQUERDA) != VERMELHO || sensor_cor(SENSOR_COR_DIREITA) != VERMELHO);
+ 	
+	OnFwdSync(AMBOS_MOTORES, -VELOCIDADE_MEDIA, 0);
+	while(sensor_cor(SENSOR_COR_ESQUERDA) != FORA && sensor_cor(SENSOR_COR_DIREITA) != FORA);
 	Off(AMBOS_MOTORES);
-	PlayTone(880, 500);
-	modo_plaza();
+	distancia_re(VELOCIDADE_BAIXA, VELOCIDADE_ALTA, 10);
+	if(direcoes[AZUL] != 2 && direcoes[VERDE] != 2 && direcoes[VERMELHO] != 2)
+	{
+		girar(180);
+		OnRevSync(AMBOS_MOTORES, -VELOCIDADE_ALTA, 1.3);
+		while(sensor_cor(SENSOR_COR_ESQUERDA) != FORA && sensor_cor(SENSOR_COR_DIREITA) != FORA);
+		Off(AMBOS_MOTORES);
+		PlayTone(880, 500);
+		modo_plaza();
+	}
 
 }
