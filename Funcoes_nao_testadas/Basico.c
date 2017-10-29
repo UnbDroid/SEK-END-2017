@@ -36,7 +36,7 @@ void ligar_sensores() //Funcoes_testadas
 
 	
 }
-/* Funcao do rodrigo que funciona para quando os sensores de cor estao no principal 
+/* Funcao do rodrigo que funciona para quando os sensores de cor estao no cérebro principal 
 int sensor_cor(int sensor)
 {
 	unsigned int rawData[];
@@ -285,7 +285,7 @@ task main()
 		reto(passageiros);
 		cor_achada = identifica_cor();
 		if(direcao[cor_achada] != NADA)
-		{3
+		{
 
 		}
 		else

@@ -1,100 +1,102 @@
-#define BT_CONN 1
+#define CONEXAO 1	// Numero da porta do bluetooth
 
-#define MOTOR_ESQUERDA OUT_A
-#define MOTOR_DIREITA OUT_C
-#define MOTORES OUT_AC
-#define AMBOS_MOTORES OUT_AC
-#define MOTOR_GARRA OUT_B
-#define MOTOR_PORTA OUT_B /*conexão com o outro cérebro*/
+#define MOTOR_ESQUERDA 	OUT_A
+#define MOTOR_DIREITA 	OUT_C
+#define MOTORES 		OUT_AC
+#define AMBOS_MOTORES 	OUT_AC
+#define MOTOR_GARRA 	OUT_B
+#define MOTOR_PORTA 	OUT_B /*conexão com o outro cérebro*/
 
 #define SENSOR_COR_ESQUERDA IN_4
-#define SENSOR_COR_DIREITA IN_1
-#define SENSOR_US_ESQUERDA IN_3
-#define SENSOR_US_DIREITA IN_4
-#define SENSOR_GYRO IN_1 /*teste*/
-#define SENSOR_US_GARRA IN_3 /*teste*/
+#define SENSOR_COR_DIREITA 	IN_1
+#define SENSOR_US_ESQUERDA 	IN_3
+#define SENSOR_US_DIREITA 	IN_4
+#define SENSOR_GYRO 		IN_1 /*teste*/
+#define SENSOR_US_GARRA 	IN_3 /*teste*/
 
 #define VELOCIDADE_BAIXINHA 15
-#define VELOCIDADE_BAIXA 35
-#define VELOCIDADE_MEDIA 45
-#define VELOCIDADE_ALTA 65
+#define VELOCIDADE_BAIXA 	35
+#define VELOCIDADE_MEDIA 	45
+#define VELOCIDADE_ALTA 	65
 
-#define PRETO 1
-#define VERDE 3
-#define BRANCO 6
-#define AZUL 2
+#define PRETO 	 1
+#define VERDE 	 3
+#define BRANCO	 6
+#define AZUL 	 2
 #define VERMELHO 5
-#define AMARELO 4
-#define FORA 7
+#define AMARELO  4
+#define FORA 	 7
 
-#define SENSIBILIDADE 0.9
+#define SENSIBILIDADE  0.9
 #define OFFSET_SAMPLES 2000
 
 #define ESQUERDA 1
-#define DIREITA 2
-#define FRENTE 3
+#define DIREITA -1
+#define FRENTE 	 0
+#define NADA 	 2
 
-#define WHITEUP_B 550
+#define WHITEUP_B 	550
 #define WHITEDOWN_B 470
-#define	BLUEDOWN_B 260
+#define	BLUEDOWN_B 	260
 #define BLACKDOWN_B 120
-#define FORAUP_B 380
-#define FORADOWN_B 310
-#define REDDOWN_B 310
+#define FORAUP_B 	380
+#define FORADOWN_B 	310
+#define REDDOWN_B 	310
 #define GREENDOWN_B 300
-#define WHITEUP_G 560
+#define WHITEUP_G 	560
 #define WHITEDOWN_G 490
-#define	BLUEDOWN_G 220
+#define	BLUEDOWN_G 	220
 #define BLACKDOWN_G 130
-#define REDDOWN_G 320
+#define REDDOWN_G 	320
 #define GREENDOWN_G 370
-#define FORAUP_G 390
-#define FORADOWN_G 340
-#define WHITEUP_R 620
+#define FORAUP_G 	390
+#define FORADOWN_G 	340
+#define WHITEUP_R 	620
 #define BLACKDOWN_R 190
 #define GREENDOWN_R 350
 
 //defines secundarios
-#define BLUEUP_B 320
+#define BLUEUP_B  320
 #define	BLACKUP_B 200
-#define	REDUP_B 250
+#define	REDUP_B   250
 #define GREENUP_B 350
-#define BLUEUP_G 300
+#define BLUEUP_G  300
 #define	BLACKUP_G 220
-#define	REDUP_G 290
+#define	REDUP_G   290
 #define GREENUP_G 450
-#define	REDUP_R 590
+#define	REDUP_R   590
 #define GREENUP_R 390
 
 //defines mais importantes, separados pra facilitar quando tiver de mudar
 #define WHITEDOWN_R 590 //629
-#define REDDOWN_R 550
-#define BLACKUP_R 250
-#define BLUEDOWN_R 250
-#define BLUEUP_R 290
-#define FORAUP_R 450
-#define FORADOWN_R 350
-#define DESVIO 20
+#define REDDOWN_R	550
+#define BLACKUP_R	250
+#define BLUEDOWN_R	250
+#define BLUEUP_R	290
+#define FORAUP_R	450
+#define FORADOWN_R 	350
+#define DESVIO		20
 
 //defines do teste cor
-#define WHITEDOWN 579
-#define WHITEUP 595
-#define BLACKUP 259
-#define BLACKDOWN 221
-#define REDUP 419
-#define REDDOWN 416
-#define GREENUP 378
-#define GREENDOWN 351
-#define BLUEUP 276
-#define BLUEDOWN 273
-#define FORAUP 360
-#define FORADOWN 304
+#define WHITEDOWN	579
+#define WHITEUP		595
+#define REDUP		455
+#define REDDOWN		445
+#define FORAUP		398
+#define FORADOWN	390
+#define GREENUP		385
+#define GREENDOWN	367
+#define BLUEUP		277
+#define BLUEDOWN	270
+#define BLACKUP		247
+#define BLACKDOWN	243
+#define DESVIO		20
 #define OFFSET_COLOR 1/9.0
 
 int passageiros = 0;
 
-sub BTCheck(int conn){
-     if (!BluetoothStatus(conn)==NO_ERR){
+sub BTCheck(){
+     if (!BluetoothStatus(CONEXAO)==NO_ERR){
           ClearScreen();
           TextOut(5,LCD_LINE2,"Erro");
           Wait(1000);
@@ -102,16 +104,17 @@ sub BTCheck(int conn){
       }
 }
 
+// Inicio das funcoes para cores 
 void set_sensor_color(char porta, char color)
 {
      if(color == VERMELHO){
-          RemoteSetInputMode(BT_CONN, porta, SENSOR_TYPE_COLORRED, SENSOR_MODE_RAW);
+          RemoteSetInputMode(CONEXAO, porta, SENSOR_TYPE_COLORRED, 	 SENSOR_MODE_RAW);
      }else if(color == VERDE){
-          RemoteSetInputMode(BT_CONN, porta, SENSOR_TYPE_COLORGREEN, SENSOR_MODE_RAW);
+          RemoteSetInputMode(CONEXAO, porta, SENSOR_TYPE_COLORGREEN, SENSOR_MODE_RAW);
      }else if(color == AZUL){
-          RemoteSetInputMode(BT_CONN, porta, SENSOR_TYPE_COLORBLUE, SENSOR_MODE_RAW);
+          RemoteSetInputMode(CONEXAO, porta, SENSOR_TYPE_COLORBLUE,  SENSOR_MODE_RAW);
      }else if(color == BRANCO){
-          RemoteSetInputMode(BT_CONN, porta, SENSOR_TYPE_COLORFULL, SENSOR_MODE_RAW);
+          RemoteSetInputMode(CONEXAO, porta, SENSOR_TYPE_COLORFULL,  SENSOR_MODE_RAW);
      }
 }
 
@@ -123,20 +126,21 @@ void ligar_sensores() //testada
 	set_sensor_color(SENSOR_COR_ESQUERDA, VERMELHO);
 	Wait(100);
 	set_sensor_color(SENSOR_COR_DIREITA, VERMELHO);
-	Wait(100);
 }
 
 int get_value_color(char porta)
 {
 	int leitura = 0, i;
-     InputValuesType params;
+	InputValuesType params;
 
-     params.Port = porta;
-     RemoteGetInputValues(BT_CONN, params)
-     leitura = params.RawValue;
+	params.Port = porta;
+	RemoteGetInputValues(CONEXAO, params)
+	leitura = params.RawValue;
 
-     return leitura;
+	return leitura;
 }
+
+
 
 int sensor_cor(int sensor)
 {	
@@ -156,16 +160,15 @@ int sensor_cor(int sensor)
 		return PRETO;
 	} else if (leitura >= (BLUEDOWN_R - DESVIO) && leitura <= (BLUEUP_R + DESVIO)){
 		return AZUL;
-	} else 	if (leitura <= FORAUP_R && leitura >= FORADOWN_R){
+	} else{
 		return FORA;
 	}
-	return FORA;
 }
 
-int teste_cor(int sensor)
+int get_leitura_rgb(int sensor)
 {
-	
-	int leitura_r = 0, leitura_g = 0, leitura_b = 0, leitura = 0;
+	int leitura_r = 0, leitura_g = 0, leitura_b = 0;
+	int i, leitura;
 	for(int i = 0; i < 1/OFFSET_COLOR; i++)
 	{
 		leitura_r += get_value_color(sensor)*OFFSET_COLOR;
@@ -190,37 +193,100 @@ int teste_cor(int sensor)
 	//Wait(50);
 	set_sensor_color(sensor, VERMELHO);
 	Wait(100);
-
 	leitura = (4*leitura_r + 2*leitura_g + leitura_b)/7;
-
-	//comentar quando for ver parametros
-	if (leitura <= BLACKUP)
-		return PRETO;
-	if (leitura <= BLUEUP)
-		return AZUL;
-	if (leitura <= FORAUP)
-		return FORA;
-	if (leitura <= GREENUP)
-		return VERDE;
-	if (leitura <= REDUP)
-		return VERMELHO;
-
-	return BRANCO;
-	//return leitura; /*"descomentar" quando for ver parametros*/
+	return leitura; // Se quisermos o valor entr 100 e 700
 }
 
-
-float ultrassom_filtrado(int sensor) //testada
+int trata_leitura(int leitura)
 {
-	float valor = SensorUS(sensor);
-	float aux;
-	for (int i = 0; i < 8; ++i)
-	{
-		aux = SensorUS(sensor);
-		valor = valor * SENSIBILIDADE + aux * (1-SENSIBILIDADE); // Algoritimo passado pelo B.Andreguetti da aula de SisMed
+	int cor;
+	if (leitura <= BLACKUP){
+		cor = PRETO;
+	}else if (leitura <= BLUEUP){
+		cor = AZUL;
+	}else if (leitura <= FORAUP){
+		cor = FORA;
+	}else if (leitura <= GREENUP){
+		cor = VERDE;
+	}else if (leitura <= REDUP){
+		cor = VERMELHO;
+	}else{
+		cor = BRANCO;
 	}
-	return valor;
+	// Toca os sons
+	int wait = 200, duration = 100, frequency = 1000;
+	switch(cor)
+	{
+		case VERMELHO:
+			PlayTone(frequency, duration);
+			Wait(wait);
+		case VERDE:
+			PlayTone(frequency, duration);
+			Wait(wait);
+		case AZUL:
+			PlayTone(frequency, duration);
+			Wait(wait);
+			Wait(wait);
+		case BRANCO:
+			PlayTone(frequency, duration);
+			Wait(wait);
+		case PRETO:
+			PlayTone(frequency, duration);
+			Wait(wait);
+		case FORA:
+			PlayTone(frequency, duration);
+			Wait(wait);
+	}
+	return cor;		// Se quisermos o valor entre 1 e 7	
 }
+
+int teste_cor(int sensor)
+{
+	int cor, leitura;
+	leitura = get_leitura_rgb(sensor);
+	cor 	= trata_leitura(leitura);
+	return cor;	
+}
+
+void get_two_rgb(int &leitura_e, int &leitura_d )
+{
+	// Essa funcao pega os dois valores simultaneamente, da esquerda e da direita
+	int left[3], right[3];
+	int CORES[3] = {VERMELHO, VERDE, AZUL};
+	int Q_LEITURA = 9, DELAY = 30;
+	float divide = 1.0/Q_LEITURA;
+	int i, j;
+	for(i = 0; i < 3; i++)
+	{
+		left[i] = 0;
+		right[i] = 0;
+		set_sensor_color(SENSOR_COR_ESQUERDA, CORES[i]);
+		Wait(20);
+		set_sensor_color(SENSOR_COR_DIREITA, CORES[i]);
+		for(j = 0; j < Q_LEITURA; j++)
+		{
+			left[i] += get_value_color(SENSOR_COR_ESQUERDA);
+			right[i] += get_value_color(SENSOR_COR_DIREITA);
+			Wait(DELAY);
+		}
+		left[i]  *= divide;
+		right[i] *= divide;
+	}
+	leitura_e = (4*left[0]+left[1]+2*left[2])/7;
+	leitura_d = (4*right[0]+right[1]+2*right[2])/7;
+}
+
+int preto_branco(int color)
+{
+	if(550 <= color)
+		return BRANCO;
+	else
+		return PRETO;
+}
+
+
+// Fim das funcoes de cores 
+// Locomoção
 
 void dist(int low_speed, int high_speed, int distancia)
 {
@@ -300,29 +366,49 @@ void distancia_re(int low_speed, int high_speed, int distancia){//função do Ka
 void ajeitar(int cor) //arruma o robo pra ficar alinhado no quadrado da cor que recebe
 {
 	int contador;
+	int left, right;
 	Off(MOTORES);
 	ClearScreen();
 	TextOut(0,0,"ajeitando");
 	NumOut(10,10, cor);
 	Wait(1000);
-
-	while(sensor_cor(SENSOR_COR_DIREITA) != cor && sensor_cor(SENSOR_COR_ESQUERDA) != cor) // Aqui ele comeca a ajeitar, para caso chegue torto, ele fique certo no final
+	left = sensor_cor(SENSOR_COR_DIREITA);
+	right = sensor_cor(SENSOR_COR_ESQUERDA);
+	while( left != cor || right != cor) // Aqui ele comeca a ajeitar, para caso chegue torto, ele fique certo no final
 	{
 		Off(AMBOS_MOTORES);
-		OnRev(MOTOR_ESQUERDA, (-1)*VELOCIDADE_MEDIA);
 		contador = 0;
-		while(sensor_cor(SENSOR_COR_ESQUERDA) != cor && contador < 3)
-		{ // Ajusta a roda esquerda para ficar em cima da linha.
-			Wait(75);
-			contador += 1;
+		left = sensor_cor(SENSOR_COR_ESQUERDA);
+		if(left != cor)
+		{
+			OnRev(MOTOR_ESQUERDA, (-1)*VELOCIDADE_MEDIA);
+			Wait(100);
+			PlayTone(600, 100);
 		}
-		Off(AMBOS_MOTORES);
-		OnRev(MOTOR_DIREITA,  (-1)*VELOCIDADE_MEDIA);
-		contador = 0;
-		while(sensor_cor(SENSOR_COR_DIREITA) != cor && contador < 3)
+		while(left != cor && contador < 3)
 		{ // Ajusta a roda esquerda para ficar em cima da linha.
-			Wait(75);
+			Wait(100);
+			PlayTone(600, 100);
 			contador += 1;
+			left = sensor_cor(SENSOR_COR_ESQUERDA);
+		}
+
+		Off(AMBOS_MOTORES);
+		
+		contador = 0;
+		right = sensor_cor(SENSOR_COR_DIREITA);
+		if(left != cor)
+		{
+			OnRev(MOTOR_DIREITA,  (-1)*VELOCIDADE_MEDIA);
+			Wait(100);
+			PlayTone(600, 100);
+		}
+		while(right != cor && contador < 3)
+		{ // Ajusta a roda esquerda para ficar em cima da linha.
+			Wait(100);
+			PlayTone(600, 100);
+			contador += 1;
+			right = sensor_cor(SENSOR_COR_DIREITA);	
 		}
 	}
 	Off(MOTORES);
@@ -339,8 +425,6 @@ float getGyroOffset()
 
     return gyro_sum/OFFSET_SAMPLES;
 }
-
-
 void giro(float degrees) // Algoritimo usado pela sek do ano passado //testada
 {
 
@@ -401,7 +485,6 @@ void giro(float degrees) // Algoritimo usado pela sek do ano passado //testada
 
 	Off(MOTORES);
 }
-
 void girar(float degrees) //função para mover o robo de acordo com o giro e girar, valores de acordo com testes
 {
 	if (degrees == 90 || degrees == -90)
@@ -427,7 +510,7 @@ void girar(float degrees) //função para mover o robo de acordo com o giro e gi
 			OnFwd(MOTOR_ESQUERDA, VELOCIDADE_MEDIA);
 		}
 		Off(MOTOR_ESQUERDA); 
-/*
+		/*
 		OnRev(MOTOR_DIREITA, -VELOCIDADE_MEDIA);
 		Wait(200);
 		Off(MOTORES);
@@ -439,8 +522,21 @@ void girar(float degrees) //função para mover o robo de acordo com o giro e gi
 		giro(90);	
 	}
 	if (degrees != 90 && degrees != -90 && degrees != 180)
-		giro(degrees);
-	
+		giro(degrees);	
+}
+// Fim da locomocao
+// Inicio das funcoes para pegar boneco
+
+float ultrassom_filtrado(int sensor) //testada
+{
+	float valor = SensorUS(sensor);
+	float aux;
+	for (int i = 0; i < 8; ++i)
+	{
+		aux = SensorUS(sensor);
+		valor = valor * SENSIBILIDADE + aux * (1-SENSIBILIDADE); // Algoritimo passado pelo B.Andreguetti da aula de SisMed
+	}
+	return valor;
 }
 
 void levantar_garra() //testada
@@ -479,7 +575,6 @@ void abaixar_garra() //testada
 	}
 
 	Off(MOTOR_GARRA);
-
 }
 
 int agarrar()//testada
@@ -528,9 +623,6 @@ int agarrar()//testada
 	return confirma_que_pegou;
 }
 
-
-
-
 int pegar_passageiro ( int lado) //testado, mas precisa mudar a função gira para o robô girar no centro dele
 {
 
@@ -573,7 +665,8 @@ int pegar_passageiro ( int lado) //testado, mas precisa mudar a função gira pa
 
 void procura_boneco()
 { 
-	int l = ultrassom_filtrado(SENSOR_US_ESQUERDA), d = ultrassom_filtrado(SENSOR_US_DIREITA); 
+	int l = ultrassom_filtrado(SENSOR_US_ESQUERDA);
+	int d = ultrassom_filtrado(SENSOR_US_DIREITA); 
 	if (d <= 15)
 	{
 		pegar_passageiro(DIREITA);
@@ -587,6 +680,11 @@ void procura_boneco()
 	NumOut(10, 10, d);
 }
 
+//FIm das funcoes para pegar boneco
+// Inicio da mesclagem das funções
+
+
+
 void reto(int cor) //robo move ate que os dois sensores parem de ver a cor
 {
 	while (sensor_cor(SENSOR_COR_DIREITA) == cor || sensor_cor(SENSOR_COR_ESQUERDA) == cor)
@@ -594,22 +692,24 @@ void reto(int cor) //robo move ate que os dois sensores parem de ver a cor
 		OnFwdSync(MOTORES, -VELOCIDADE_MEDIA, 0);
 		while(sensor_cor(SENSOR_COR_ESQUERDA) == FORA && sensor_cor(SENSOR_COR_DIREITA) == cor)
 		{
-			OnRevSync(MOTORES, - VELOCIDADE_BAIXA, 0);
+			OnRevSync(MOTORES, - VELOCIDADE_BAIXA, 0); // Da uma pequena re
 			Wait(300);
 			Off(MOTORES);
 			OnFwd(MOTOR_ESQUERDA, -VELOCIDADE_MEDIA);
 			OnRev(MOTOR_DIREITA,  -VELOCIDADE_BAIXA);
 			ClearScreen();
+			PlayTone(400, 100);
 			TextOut(50,50, "E:P");
 		}
 		while(sensor_cor(SENSOR_COR_DIREITA) == FORA && sensor_cor(SENSOR_COR_ESQUERDA) == cor)
 		{
-			OnRevSync(MOTORES, - VELOCIDADE_BAIXA, 0);
+			OnRevSync(MOTORES, - VELOCIDADE_BAIXA, 0); // Da uma pequena re
 			Wait(300);
 			Off(MOTORES);
 			OnFwd(MOTOR_DIREITA, -VELOCIDADE_MEDIA);
 			OnRev(MOTOR_ESQUERDA, -VELOCIDADE_BAIXA);
 			ClearScreen();
+			PlayTone(800, 100);
 			TextOut(50,50, "D:P");
 		}
 		ClearScreen();
@@ -865,14 +965,27 @@ void modo_plaza ()
 	Off(AMBOS_MOTORES);
 }
 
+int identifica_cor()
+{
+	int cor_e, cor_d;
+	do
+	{
+		ajeitar(BRANCO);
+		distancia_reto(VELOCIDADE_MEDIA, VELOCIDADE_ALTA, 5);
+		cor_e = teste_cor(SENSOR_COR_ESQUERDA);
+		cor_d = teste_cor(SENSOR_COR_DIREITA);
+	}while(cor_e != cor_d);
+	return cor_e;
+
+}
 
 task main () //por enquato a maior parte está só com a lógica, tem que alterar as funções pra ele conseguir andar certinho e girar
 {
-	int direcoes[6] = {0, 0, 0, 0, 0, 0}; //achei mais prático criar um vetor de 6 posiçoes e usar as constantes como o valor do índice
-	int cor_e, cor_d;
+	int direcoes[6] = {NADA, NADA, NADA, NADA, NADA, NADA}; //achei mais prático criar um vetor de 6 posiçoes e usar as constantes como o valor do índice
+	int cor_achada;
 	int CORES[3] = {AZUL, VERMELHO, VERDE};
 	int i;
-	BTCheck(BT_CONN);
+	BTCheck();
 	ligar_sensores();
 	
 while (true){
@@ -884,27 +997,22 @@ while (true){
 		{
 			modo_plaza();
 		}
+		PlayTone(440, 200);
+		Wait(300);
+		PlayTone(440, 200);
+		Wait(300);	
 	}
-	ajeitar(BRANCO);
-	distancia_reto(VELOCIDADE_MEDIA, VELOCIDADE_ALTA, 5);
-	cor_e = teste_cor(SENSOR_COR_ESQUERDA);
-	cor_d = teste_cor(SENSOR_COR_DIREITA);
+	cor_achada = identifica_cor();
 	for(i = 0; i < 3; i++)
 	{
-		if(cor_e == CORES[i] || cor_d == CORES[i])
+		if(cor_achada == CORES[i])
 		{
 			switch(i)
 			{
 				case 2:
 					PlayTone(440, 200);
 					Wait(300);
-					PlayTone(440, 200);
-					Wait(300);
-					PlayTone(440, 200);
-					Wait(300);
 				case 1:
-					PlayTone(440, 200);
-					Wait(300);
 					PlayTone(440, 200);
 					Wait(300);
 				case 0:
@@ -912,13 +1020,14 @@ while (true){
 			}
 			reto(CORES[i]);
 			ajeitar(CORES[i]);
-			if (direcoes [CORES[i]] == 0)
+			if (direcoes [CORES[i]] == NADA)
 			{
 				direcoes[CORES[i]] = testar_caminho(CORES[i], direcoes);
 			} else 
 			{
 				seguir_direcao(direcoes, CORES[i]);		
-			}		
+			}
+			break;
 		}
 	}
 }
