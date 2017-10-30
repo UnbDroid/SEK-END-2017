@@ -4,8 +4,11 @@
 #define MOTOR_DIREITA OUT_C
 #define AMBOS_MOTORES OUT_AC
 #define MOTORES OUT_AC
+#define MOTOR(p,s) RemoteSetOutputState(BT_CONN, p, s, \
+OUT_MODE_MOTORON+OUT_MODE_BRAKE+OUT_MODE_REGULATED, \
+OUT_REGMODE_SPEED, 0, OUT_RUNSTATE_RUNNING, 0)
 //#define MOTOR_GARRA OUT_B
-#define MOTOR_PORTA OUT_B /*conexÃ£o com o outro cÃ©rebro*/
+#define MOTOR_PORTA OUT_A /*conexÃ£o com o outro cÃ©rebro*/
 #define SENSOR_COR_ESQUERDA IN_4
 #define SENSOR_COR_DIREITA IN_1
 //#define SENSOR_US_ESQUERDA IN_3
@@ -14,7 +17,8 @@
 #define SENSOR_US_GARRA IN_4 /*teste*/
 #define VELOCIDADE_BAIXA 35
 #define VELOCIDADE_MEDIA 50
-#define VELOCIDADE_ALTA 85
+#define VELOCIDADE_ALTA 65
+#define VELOCIDADE_ALTISSIMA 85
 #define PRETO 1
 #define VERDE 3
 #define BRANCO 6
@@ -184,33 +188,6 @@ int sensor_cor(int sensor)
 	return FORA;
 }
 
-int teste_cor(int sensor)
-{
-	int leitura_r, leitura_g, leitura_b;
-	leitura_r = get_value_color(sensor);
-	Wait(50);
-	set_sensor_color(sensor, VERDE);
-	Wait(100);
-	leitura_g = get_value_color(sensor);
-	Wait(50);
-	set_sensor_color(sensor, AZUL);
-	Wait(100);
-	leitura_b = get_value_color(sensor);
-	Wait(50);
-	set_sensor_color(sensor, VERMELHO);
-	Wait(100);
-	if (leitura_r <= BLACKUP_R + DESVIO && (leitura_g <= BLACKUP_G + DESVIO || leitura_b <= BLACKUP_B + DESVIO))
-		return PRETO;
-	if (leitura_r <= BLUEUP_R + DESVIO && (leitura_g <= BLUEUP_G + DESVIO || leitura_b <= BLUEUP_B + DESVIO))
-		return AZUL;
-	if (leitura_r  <= GREENUP_R + DESVIO && (leitura_g <= GREENUP_G + DESVIO || leitura_b <= GREENUP_B + DESVIO))
-		return VERDE;
-	if (leitura_r <= REDUP_R + DESVIO && (leitura_g <= REDUP_G + DESVIO || leitura_b <= REDUP_B + DESVIO))
-		return VERMELHO;
-
-	return FORA;
-}
-
 float getGyroOffset()
 {
 	SetSensorHTGyro(SENSOR_GYRO);
@@ -350,7 +327,7 @@ void girar_sem_re(float degrees) // Algoritimo usado pela sek do ano passado //t
 
 void modo_plaza ()
 {
-	int aux, prev_motor;
+	int aux, prev_motor, offset_velocidade = 0; //Essa ultima constante é para armazenar o ultimo parâmetro do Sync
 	SetSensorHTGyro(SENSOR_GYRO);
 	float angle = 0, gyro = 0, angle_inicial = 0;
 	unsigned long time = CurrentTick(), prev_time;
@@ -359,7 +336,13 @@ void modo_plaza ()
 	PlayTone(880, 500);
 
 	girar(90);
-	girar(42); //por algum motivo esses angulos fazem o robo girar 180 graus perfeitamente
+	OnFwdSync(AMBOS_MOTORES, -VELOCIDADE_ALTA, 0);
+	while(sensor_cor(SENSOR_COR_ESQUERDA) != FORA && sensor_cor(SENSOR_COR_DIREITA) != FORA);
+	Off(AMBOS_MOTORES);
+	OnRevSync(AMBOS_MOTORES, -VELOCIDADE_ALTA, 0);
+	while(sensor_cor(SENSOR_COR_ESQUERDA) != BRANCO && sensor_cor(SENSOR_COR_DIREITA) != BRANCO);
+	Off(AMBOS_MOTORES);
+	girar(90); //por algum motivo esses angulos fazem o robo girar 180 graus perfeitamente
 	//OnRevSync(AMBOS_MOTORES, -VELOCIDADE_ALTA, 1.3);
 	//while(sensor_cor(SENSOR_COR_ESQUERDA) != FORA && sensor_cor(SENSOR_COR_DIREITA) != FORA);
 	//Off(AMBOS_MOTORES);
@@ -386,18 +369,23 @@ void modo_plaza ()
 		NumOut(55, LCD_LINE1, angle_inicial);
 		TextOut(0, LCD_LINE2, "ANGLE:");
 		NumOut(55, LCD_LINE2, angle);
+		OnRevSync(AMBOS_MOTORES, -VELOCIDADE_ALTA, offset_velocidade);
 
-		if (angle - angle_inicial > 0.01)
+
+		if (angle - angle_inicial > 0.1)
 		{
-			girar_sem_re(0.5);
+			//girar_sem_re(-0.5);
+			offset_velocidade -= 0.3;
 		}
-		else if (angle - angle_inicial < 0.01)
+		else if (angle - angle_inicial < 0.1)
 		{
-			girar_sem_re(-0.5);
+			//girar_sem_re(0.5);
+			
+			offset_velocidade -= 0.3;
 		}
 		else
 		{
-			OnRevSync(AMBOS_MOTORES, -VELOCIDADE_ALTA, 0);
+			OnRevSync(AMBOS_MOTORES, -VELOCIDADE_ALTISSIMA, 0);
 			Wait(200);
 			Off(AMBOS_MOTORES);
 		}
@@ -405,18 +393,18 @@ void modo_plaza ()
 	PlayTone(880, 500);
 	Wait(2000);
 	Off(AMBOS_MOTORES);
-	OnRevSync(AMBOS_MOTORES, -VELOCIDADE_ALTA, 0);
+	OnRevSync(AMBOS_MOTORES, -VELOCIDADE_ALTISSIMA, 0);
 	while(sensor_cor(SENSOR_COR_ESQUERDA) != PRETO && sensor_cor(SENSOR_COR_DIREITA) != PRETO);
 	Off(AMBOS_MOTORES);
 	PlayTone(880, 500);
 	aux = abs(MotorRotationCount(MOTOR_DIREITA));
 
 	distancia_re(VELOCIDADE_MEDIA, VELOCIDADE_ALTA, 15);
-	OnFwd(MOTOR_PORTA, VELOCIDADE_BAIXA);
+	MOTOR(MOTOR_PORTA, VELOCIDADE_BAIXA);
 	Wait(900);
 	Off(MOTOR_PORTA);
 	distancia_reto(VELOCIDADE_MEDIA, VELOCIDADE_ALTA, 30);
-	OnRev(MOTOR_PORTA, VELOCIDADE_BAIXA);
+	MOTOR(MOTOR_PORTA, -VELOCIDADE_BAIXA);
 	Wait(900);
 	Off(MOTOR_PORTA);
 

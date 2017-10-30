@@ -6,6 +6,9 @@
 #define AMBOS_MOTORES OUT_AC
 #define MOTOR_GARRA OUT_B
 #define MOTOR_PORTA OUT_B /*conexão com o outro cérebro*/
+#define MOTOR(p,s) RemoteSetOutputState(CONEXAO, p, s, \
+OUT_MODE_MOTORON+OUT_MODE_BRAKE+OUT_MODE_REGULATED, \
+OUT_REGMODE_SPEED, 0, OUT_RUNSTATE_RUNNING, 0)
 
 #define SENSOR_COR_ESQUERDA IN_4
 #define SENSOR_COR_DIREITA IN_1
@@ -875,51 +878,51 @@ task main () //por enquato a maior parte está só com a lógica, tem que altera
 	BTCheck(BT_CONN);
 	ligar_sensores();
 	
-while (true){
-	reto(BRANCO);
-	if (sensor_cor(SENSOR_COR_ESQUERDA) == FORA && sensor_cor(SENSOR_COR_DIREITA) == FORA){
-		Off(AMBOS_MOTORES);
-		distancia_re(VELOCIDADE_BAIXA, VELOCIDADE_ALTA, 10);
-		if(direcoes[AZUL] != 2 && direcoes[VERDE] != 2 && direcoes[VERMELHO] != 2)
-		{
-			modo_plaza();
-		}
-	}
-	ajeitar(BRANCO);
-	distancia_reto(VELOCIDADE_MEDIA, VELOCIDADE_ALTA, 5);
-	cor_e = teste_cor(SENSOR_COR_ESQUERDA);
-	cor_d = teste_cor(SENSOR_COR_DIREITA);
-	for(i = 0; i < 3; i++)
-	{
-		if(cor_e == CORES[i] || cor_d == CORES[i])
-		{
-			switch(i)
+	while (true){
+		reto(BRANCO);
+		if (sensor_cor(SENSOR_COR_ESQUERDA) == FORA && sensor_cor(SENSOR_COR_DIREITA) == FORA){
+			Off(AMBOS_MOTORES);
+			distancia_re(VELOCIDADE_BAIXA, VELOCIDADE_ALTA, 10);
+			if(direcoes[AZUL] != 2 && direcoes[VERDE] != 2 && direcoes[VERMELHO] != 2)
 			{
-				case 2:
-					PlayTone(440, 200);
-					Wait(300);
-					PlayTone(440, 200);
-					Wait(300);
-					PlayTone(440, 200);
-					Wait(300);
-				case 1:
-					PlayTone(440, 200);
-					Wait(300);
-					PlayTone(440, 200);
-					Wait(300);
-				case 0:
-					PlayTone(440, 200);		
+				modo_plaza();
 			}
-			reto(CORES[i]);
-			ajeitar(CORES[i]);
-			if (direcoes [CORES[i]] == 0)
+		}
+		ajeitar(BRANCO);
+		distancia_reto(VELOCIDADE_MEDIA, VELOCIDADE_ALTA, 5);
+		cor_e = teste_cor(SENSOR_COR_ESQUERDA);
+		cor_d = teste_cor(SENSOR_COR_DIREITA);
+		for(i = 0; i < 3; i++)
+		{
+			if(cor_e == CORES[i] || cor_d == CORES[i])
 			{
-				direcoes[CORES[i]] = testar_caminho(CORES[i], direcoes);
-			} else 
-			{
-				seguir_direcao(direcoes, CORES[i]);		
-			}		
+				switch(i)
+				{
+					case 2:
+						PlayTone(440, 200);
+						Wait(300);
+						PlayTone(440, 200);
+						Wait(300);
+						PlayTone(440, 200);
+						Wait(300);
+					case 1:
+						PlayTone(440, 200);
+						Wait(300);
+						PlayTone(440, 200);
+						Wait(300);
+					case 0:
+						PlayTone(440, 200);		
+				}
+				reto(CORES[i]);
+				ajeitar(CORES[i]);
+				if (direcoes [CORES[i]] == 0)
+				{
+					direcoes[CORES[i]] = testar_caminho(CORES[i], direcoes);
+				} else 
+				{
+					seguir_direcao(direcoes, CORES[i]);
+				}
+			}
 		}
 	}
-}
 }
