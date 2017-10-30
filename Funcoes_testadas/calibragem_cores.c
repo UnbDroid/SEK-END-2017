@@ -51,18 +51,23 @@
 
 #define WHITEDOWN 579
 #define WHITEUP 595
-#define BLACKUP 259
-#define BLACKDOWN 221
-#define REDUP 419
-#define REDDOWN 416
-#define GREENUP 378
-#define GREENDOWN 351
-#define BLUEUP 276
-#define BLUEDOWN 273
-#define FORAUP 360
-#define FORADOWN 304
+#define REDUP 455
+#define REDDOWN 445
+#define FORAUP 398
+#define FORADOWN 390
+#define GREENUP 385
+#define GREENDOWN 367
+#define BLUEUP 277
+#define BLUEDOWN 270
+#define BLACKUP 247
+#define BLACKDOWN 243
 #define DESVIO 20
 #define OFFSET_COLOR 1/9.0
+
+#define COL1 0
+#define COL2 12
+#define COL3 43
+#define COL4 55
 
 sub BTCheck(){
      if (!BluetoothStatus(CONEXAO)==NO_ERR){
@@ -103,10 +108,17 @@ void ligar_sensores()
 	Wait(100);
 	set_sensor_color(SENSOR_COR_ESQUERDA, VERMELHO);
 }
-
-int teste_cor(int sensor)
+int abss(int x)
 {
-	int leitura_r = 0, leitura_g = 0, leitura_b = 0, leitura = 0;
+	if(x < 0)
+		return -x;
+	return x;
+}
+
+int get_leitura_rgb(int sensor)
+{
+	int leitura_r = 0, leitura_g = 0, leitura_b = 0;
+	int i, leitura;
 	for(int i = 0; i < 1/OFFSET_COLOR; i++)
 	{
 		leitura_r += get_value_color(sensor)*OFFSET_COLOR;
@@ -131,52 +143,222 @@ int teste_cor(int sensor)
 	//Wait(50);
 	set_sensor_color(sensor, VERMELHO);
 	Wait(100);
-
 	leitura = (4*leitura_r + 2*leitura_g + leitura_b)/7;
+	return leitura; // Se quisermos o valor entr 100 e 700
+}
 
+void get_two_rgb(int & leitura_e, int & leitura_d )
+{
+	// Essa funcao pega os dois valores simultaneamente, da esquerda e da direita
+	int left[3], right[3];
+	int CORES[3] = {VERMELHO, VERDE, AZUL};
+	int LINE[3] = {LCD_LINE3, LCD_LINE4, LCD_LINE5};
+	int Q_LEITURA = 9, DELAY = 30;
+	float divide = 1.0/Q_LEITURA;
+	int i, j;
+	for(i = 0; i < 3; i++)
+	{
+		left[i] = 0;
+		right[i] = 0;
+		set_sensor_color(SENSOR_COR_ESQUERDA, CORES[i]);
+		Wait(20);
+		set_sensor_color(SENSOR_COR_DIREITA, CORES[i]);
+		for(j = 0; j < Q_LEITURA; j++)
+		{
+			left[i] += get_value_color(SENSOR_COR_ESQUERDA);
+			right[i] += get_value_color(SENSOR_COR_DIREITA);
+			Wait(DELAY);
+		}
+		left[i]  *= divide;
+		right[i] *= divide;
+		ClearLine(LINE[i]);
+		if(i == 0){
+			TextOut(COL1, LINE[i], "R");
+			TextOut(COL3, LINE[i], "R");
+		}else if(i == 1){
+			TextOut(COL1, LINE[i], "G");
+			TextOut(COL3, LINE[i], "G");
+		}else{
+			TextOut(COL1, LINE[i], "B");
+			TextOut(COL3, LINE[i], "B");
+		}
+		NumOut( COL2, LINE[i], left[i]);
+		NumOut( COL4, LINE[i], right[i]);
+	}
+	leitura_e = (4*left[0]+left[1]+2*left[2])/7;
+	leitura_d = (4*right[0]+right[1]+2*right[2])/7;
+}
+
+int trata_leitura(int leitura)
+{
+	int cor;
 	//comentar quando for ver parametros
-	if (leitura <= BLACKUP)
-		return PRETO;
-	if (leitura <= BLUEUP)
-		return AZUL;
-	if (leitura <= FORAUP)
-		return FORA;
-	if (leitura <= GREENUP)
-		return VERDE;
-	if (leitura <= REDUP)
-		return VERMELHO;
 
-	return BRANCO;
-	//return leitura; /*"descomentar" quando for ver parametros*/
+	/*
+	// Condicionais novas 
+	int Mwhite 	= abss((WHITEUP + WHITEDOWN)/2	- leitura);
+	int Mgreen 	= abss((GREENUP + GREENDOWN)/2	- leitura);
+	int Mred	= abss( (REDUP   + REDDOWN) /2	- leitura);
+	int Mblue	= abss((BLUEUP  + BLUEDOWN) /2	- leitura);
+	int Mout 	= abss((FORAUP  + FORADOWN) /2	- leitura);
+	int Mblack	= abss((BLACKUP + BLACKDOWN)/2	- leitura);
+
+	if(Mwhite < Mred && Mwhite < Mout && Mwhite < Mgreen)
+	{
+		cor = BRANCO;
+	}
+	else if(Mred < Mout && Mred < Mgreen && Mred < Mblue)
+	{
+		cor = VERMELHO;
+	}
+	else if(Mout < Mgreen && Mout < Mblue)
+	{
+		cor = FORA;
+	}
+	else if(Mgreen < Mblue && Mgreen < Mblack)
+	{
+		cor = VERDE;
+	}
+	else if(Mblue < Mblack)
+	{
+		cor = AZUL;
+	}
+	else
+	{
+		cor = PRETO;
+	}
+	*/
+	// Condicionais antigas
+	if (leitura <= BLACKUP)
+	{
+		cor = PRETO;
+	}
+	else if (leitura <= BLUEUP)
+	{
+		cor = AZUL;
+	}
+	else if (leitura <= FORAUP)
+	{
+		cor = FORA;
+	}
+	else if (leitura <= GREENUP)
+	{
+		cor = VERDE;
+	}
+	else if (leitura <= REDUP)
+	{
+		cor = VERMELHO;
+	}
+	else
+	{
+		cor = BRANCO;
+	}
+	
+	
+	// Toca os sons
+	
+	int wait = 200, duration = 100, frequency = 1000;
+	/*
+	switch(cor)
+	{
+		case VERMELHO:
+			PlayTone(frequency, duration);
+			Wait(wait);
+		case VERDE:
+			PlayTone(frequency, duration);
+			Wait(wait);
+		case AZUL:
+			PlayTone(frequency, duration);
+			Wait(wait);
+			Wait(wait);
+		case BRANCO:
+			PlayTone(frequency, duration);
+			Wait(wait);
+		case PRETO:
+			PlayTone(frequency, duration);
+			Wait(wait);
+		case FORA:
+			PlayTone(frequency, duration);
+			Wait(wait);
+	}*/
+	if(cor == VERMELHO)
+		PlayTone(1200, duration);
+	else if(cor == VERDE)
+		PlayTone(750, duration);
+	else if(cor == AZUL)
+		PlayTone(300, duration);
+	else if(cor == BRANCO)
+	{
+		PlayTone(400, duration);
+		Wait(wait);
+		PlayTone(1200, duration);
+	}
+	else if(cor == PRETO)
+	{
+		PlayTone(400, duration);
+		Wait(wait);
+		PlayTone(750, duration);
+	}
+	else if(cor == FORA)
+	{
+		PlayTone(400, duration);
+		Wait(wait);
+		PlayTone(300, duration);
+	}
+	Wait(2*wait);
+	return cor;		// Se quisermos o valor entre 1 e 7	
+}
+
+int teste_cor(int sensor)
+{
+	int cor, leitura;
+	leitura = get_leitura_rgb(sensor);
+	cor 	= trata_leitura(leitura);
+	return cor;	
 }
 
 task main()
 {
+	int corD, corE, leit, leituraD, leituraE;
 	ligar_sensores();
-	int valorD, valorE, leit;
+	//BTCheck();
+	ClearScreen();
+	TextOut(COL1, LCD_LINE1, "LEFT:");
+	TextOut(COL3, LCD_LINE1, "RIGHT:");
 	while(1)
 	{
-		valorD = teste_cor(SENSOR_COR_DIREITA);
-		valorE = teste_cor(SENSOR_COR_ESQUERDA);
-		ClearLine(LCD_LINE3);
-		/*ClearLine(LCD_LINE1);
-		ClearLine(LCD_LINE3);
-		TextOut(0, LCD_LINE1, "Direita:");
-		NumOut(50, LCD_LINE1, valorD);
-		TextOut(0, LCD_LINE3, "Esquerda::");
-		NumOut(50, LCD_LINE3, valorE);*/
-		if(valorD == VERMELHO || valorE == VERMELHO) TextOut(0, LCD_LINE3, "Vermelho");
-		else if(valorD == VERDE || valorE == VERDE) TextOut(0, LCD_LINE3, "Verde");
-		else if(valorD == AZUL || valorE == AZUL) TextOut(0, LCD_LINE3, "Azul");
-		else if(valorD == BRANCO || valorE == BRANCO) TextOut(0, LCD_LINE3, "Branco");
-		else if(valorD == PRETO || valorE == PRETO){
-			TextOut(0, LCD_LINE3, "Preto");
-			PlayTone(400, 100);
-		}
-		else{
-			TextOut(0, LCD_LINE3, "Fora");
-			PlayTone(200, 100);
-		}
+		// leituraD = get_leitura_rgb(SENSOR_COR_DIREITA);
+		// leituraE = get_leitura_rgb(SENSOR_COR_ESQUERDA);
+		
+		get_two_rgb(leituraE, leituraD);
+		
+		ClearLine(LCD_LINE6);
+
+		TextOut(COL1, LCD_LINE6, "T ");
+		NumOut( COL2, LCD_LINE6, leituraE);
+
+		TextOut(COL3, LCD_LINE6, "T ");		
+		NumOut( COL4, LCD_LINE6, leituraD);
+		
+		corD 	 = trata_leitura(leituraD);
+		corE 	 = trata_leitura(leituraE);
+
+		ClearLine(LCD_LINE8);
+
+		if(corE == VERMELHO) 	TextOut(COL2, LCD_LINE8, "RED");
+		else if(corE == VERDE) 	TextOut(COL2, LCD_LINE8, "GREEN");
+		else if(corE == AZUL) 	TextOut(COL2, LCD_LINE8, "BLUE");
+		else if(corE == BRANCO) TextOut(COL2, LCD_LINE8, "WHITE");
+		else if(corE == PRETO)	TextOut(COL2, LCD_LINE8, "BLACK");
+		else					TextOut(COL2, LCD_LINE8, "OUT");
+		
+		if(corD == VERMELHO) 	TextOut(COL4, LCD_LINE8, "RED");
+		else if(corD == VERDE) 	TextOut(COL4, LCD_LINE8, "GREEN");
+		else if(corD == AZUL) 	TextOut(COL4, LCD_LINE8, "BLUE");
+		else if(corD == BRANCO) TextOut(COL4, LCD_LINE8, "WHITE");
+		else if(corD == PRETO)	TextOut(COL4, LCD_LINE8, "BLACK");
+		else					TextOut(COL4, LCD_LINE8, "OUT");
+
 		Wait(100);
 
 	}
