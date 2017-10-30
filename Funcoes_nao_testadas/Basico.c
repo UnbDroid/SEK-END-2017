@@ -41,12 +41,10 @@ int sensor_cor(int sensor)
 {
 	unsigned int rawData[];
 	int red = 0, green = 1 , blue = 2, none = 3, result = ReadSensorColorRaw(sensor, rawData);
-
 	if(rawData[red] < REDUP_R && rawData[red] > REDDOWN_R && rawData[green] < REDUP_G && rawData[green] > REDDOWN_G && rawData[blue] < REDUP_B && rawData[blue] > REDDOWN_B && rawData[none] < REDUP_N && rawData[none] > REDDOWN_N)
 	{
 		return VERMELHO;
 	}
-
 	if(rawData[red] < BLUEUP_R && rawData[red] > BLUEDOWN_R && rawData[green] < BLUEUP_G && rawData[green] > BLUEDOWN_G && rawData[blue] < BLUEUP_B && rawData[blue] > BLUEDOWN_B && rawData[none] < BLUEUP_N && rawData[none] > BLUEDOWN_N)
 	{
 		return AZUL;
@@ -64,7 +62,6 @@ int sensor_cor(int sensor)
 	{
 		return BRANCO;
 	}
-
 	return PRETO;
 }*/
 
@@ -212,11 +209,9 @@ int reto(int passageiros) // Essa funcao e executada ate retornar preto
 				Entao temos duas possibilidades: Quando esta saindo fora da pista e quando esta no quadrado preto
 				1) Para o caso de quando esta fora da pista, os dois sensores nao vao reconhecer preto, mas somente um
 				2) Para o caso do quadrado preto, entao os dois sensores veem preto.
-
 				As correcoes sao respectivamente:
 				1) colocar uma potencia maior na roda que esta mais perto de cair
 				2) retornar o valor indicando que achou um quadrado preto
-
 				Contudo, existe a possibilidade do robo chegar torto e entao reconhecer como se estivesse caindo.
 				Nesse caso, ele iria colocar uma potencia grande na roda que ja esta na frente e entao ficaria em circulos.
 				Assim, introduzimos um contador: Se ele mantem a mesma opcao durante muito tempo, o contador chega a um limiar

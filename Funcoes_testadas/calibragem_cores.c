@@ -202,7 +202,6 @@ int trata_leitura(int leitura)
 	int Mblue	= abss((BLUEUP  + BLUEDOWN) /2	- leitura);
 	int Mout 	= abss((FORAUP  + FORADOWN) /2	- leitura);
 	int Mblack	= abss((BLACKUP + BLACKDOWN)/2	- leitura);
-
 	if(Mwhite < Mred && Mwhite < Mout && Mwhite < Mgreen)
 	{
 		cor = BRANCO;
