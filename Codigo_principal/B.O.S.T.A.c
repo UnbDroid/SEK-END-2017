@@ -11,11 +11,12 @@ OUT_MODE_MOTORON+OUT_MODE_BRAKE+OUT_MODE_REGULATED, \
 OUT_REGMODE_SPEED, 0, OUT_RUNSTATE_RUNNING, 0)
 
 #define SENSOR_COR_ESQUERDA IN_4 /*conexÃ£o com o outro cÃ©rebro*/
-#define SENSOR_COR_DIREITA IN_1 /*conexÃ£o com o outro cÃ©rebro*/yyyy
+#define SENSOR_COR_DIREITA IN_1 /*conexÃ£o com o outro cÃ©rebro*/
 #define SENSOR_US_ESQUERDA IN_3
 #define SENSOR_US_DIREITA IN_4
 #define SENSOR_GYRO IN_1 /*teste*/
 #define SENSOR_US_GARRA IN_3 /*teste*/
+#define CONEXAO 1
 
 #define VELOCIDADE_BAIXINHA 15
 #define VELOCIDADE_BAIXA 35
@@ -36,6 +37,7 @@ OUT_REGMODE_SPEED, 0, OUT_RUNSTATE_RUNNING, 0)
 #define ESQUERDA 1
 #define DIREITA 2
 #define FRENTE 3
+#define NADA 0
 
 #define WHITEUP_B 550
 #define WHITEDOWN_B 470
@@ -105,7 +107,7 @@ sub BTCheck(){
       }
 }
 
-// Inicio das funcoes para cores 
+// Inicio das funcoes para cores
 void set_sensor_color(char porta, char color)
 {
      if(color == VERMELHO){
@@ -144,7 +146,7 @@ int get_value_color(char porta)
 
 
 int sensor_cor(int sensor)
-{	
+{
 	int leitura = get_value_color(sensor);
 
 	if (sensor == SENSOR_COR_ESQUERDA)
@@ -173,7 +175,7 @@ int get_leitura_rgb(int sensor)
 	for(int i = 0; i < 1/OFFSET_COLOR; i++)
 	{
 		leitura_r += get_value_color(sensor)*OFFSET_COLOR;
-		Wait(50); 
+		Wait(50);
 	}
 	//Wait(50);
 	set_sensor_color(sensor, VERDE);
@@ -181,15 +183,15 @@ int get_leitura_rgb(int sensor)
 	for(int i = 0; i < 1/OFFSET_COLOR; i++)
 	{
 		leitura_g += get_value_color(sensor)*OFFSET_COLOR;
-		Wait(50); 
+		Wait(50);
 	}
 	//Wait(50);
 	set_sensor_color(sensor, AZUL);
-	Wait(100); 
+	Wait(100);
 	for(int i = 0; i < 1/OFFSET_COLOR; i++)
 	{
 		leitura_b += get_value_color(sensor)*OFFSET_COLOR;
-		Wait(50); 
+		Wait(50);
 	}
 	//Wait(50);
 	set_sensor_color(sensor, VERMELHO);
@@ -238,7 +240,7 @@ int trata_leitura(int leitura)
 			PlayTone(frequency, duration);
 			Wait(wait);
 	}
-	return cor;		// Se quisermos o valor entre 1 e 7	
+	return cor;		// Se quisermos o valor entre 1 e 7
 }
 
 int teste_cor(int sensor)
@@ -246,7 +248,7 @@ int teste_cor(int sensor)
 	int cor, leitura;
 	leitura = get_leitura_rgb(sensor);
 	cor 	= trata_leitura(leitura);
-	return cor;	
+	return cor;
 }
 
 void get_two_rgb(int &leitura_e, int &leitura_d )
@@ -286,7 +288,7 @@ int preto_branco(int color)
 }
 
 
-// Fim das funcoes de cores 
+// Fim das funcoes de cores
 // Locomoção
 
 void dist(int low_speed, int high_speed, int distancia)
@@ -312,7 +314,7 @@ void dist(int low_speed, int high_speed, int distancia)
 		}
 	}while(sinal*(count_A - MotorRotationCount(MOTOR_ESQUERDA))*6*PI/360 <= distancia);
 	Off(AMBOS_MOTORES);
-	
+
 }
 
 void distancia_reto(int low_speed, int high_speed, int distancia){//função do kaynã
@@ -342,7 +344,7 @@ void distancia_reto(int low_speed, int high_speed, int distancia){//função do 
 
 void distancia_re(int low_speed, int high_speed, int distancia){//função do Kaynã
 	//dist(low_speed, high_speed, (-1)*distancia);
-	
+
 	int count_A =  MotorRotationCount(MOTOR_ESQUERDA);
 	int count_C =  MotorRotationCount(MOTOR_DIREITA);
 	OnFwd(AMBOS_MOTORES, high_speed);
@@ -361,7 +363,7 @@ void distancia_re(int low_speed, int high_speed, int distancia){//função do Ka
 		}
 	}while((MotorRotationCount(MOTOR_ESQUERDA) - count_A)*6*PI/360 <= distancia);
 	Off(AMBOS_MOTORES);
-	
+
 }
 
 void ajeitar(int cor) //arruma o robo pra ficar alinhado no quadrado da cor que recebe
@@ -395,7 +397,7 @@ void ajeitar(int cor) //arruma o robo pra ficar alinhado no quadrado da cor que 
 		}
 
 		Off(AMBOS_MOTORES);
-		
+
 		contador = 0;
 		right = sensor_cor(SENSOR_COR_DIREITA);
 		if(left != cor)
@@ -409,13 +411,13 @@ void ajeitar(int cor) //arruma o robo pra ficar alinhado no quadrado da cor que 
 			Wait(100);
 			PlayTone(600, 100);
 			contador += 1;
-			right = sensor_cor(SENSOR_COR_DIREITA);	
+			right = sensor_cor(SENSOR_COR_DIREITA);
 		}
 	}
 	Off(MOTORES);
 }
 
-float getGyroOffset() 
+float getGyroOffset()
 {
     float gyro_sum = 0, i;
 
@@ -510,7 +512,7 @@ void girar(float degrees) //função para mover o robo de acordo com o giro e gi
 		{
 			OnFwd(MOTOR_ESQUERDA, VELOCIDADE_MEDIA);
 		}
-		Off(MOTOR_ESQUERDA); 
+		Off(MOTOR_ESQUERDA);
 		/*
 		OnRev(MOTOR_DIREITA, -VELOCIDADE_MEDIA);
 		Wait(200);
@@ -520,10 +522,10 @@ void girar(float degrees) //função para mover o robo de acordo com o giro e gi
 		Off(MOTORES);*/
 
 		distancia_re(VELOCIDADE_MEDIA, VELOCIDADE_ALTA, 13);
-		giro(90);	
+		giro(90);
 	}
 	if (degrees != 90 && degrees != -90 && degrees != 180)
-		giro(degrees);	
+		giro(degrees);
 }
 // Fim da locomocao
 // Inicio das funcoes para pegar boneco
@@ -665,9 +667,9 @@ int pegar_passageiro ( int lado) //testado, mas precisa mudar a função gira pa
 }
 
 void procura_boneco()
-{ 
+{
 	int l = ultrassom_filtrado(SENSOR_US_ESQUERDA);
-	int d = ultrassom_filtrado(SENSOR_US_DIREITA); 
+	int d = ultrassom_filtrado(SENSOR_US_DIREITA);
 	if (d <= 15)
 	{
 		pegar_passageiro(DIREITA);
@@ -719,7 +721,7 @@ void reto(int cor) //robo move ate que os dois sensores parem de ver a cor
 		}
 	}
 	Off(MOTORES);
-	
+
 	//alterei o laço para dentro da função recenbendo a cor como argumento
 
 }
@@ -747,7 +749,7 @@ bool verificar_direcao(int cor)
 }
 
 void voltar(int cor)//voltar para o quadrado de origem visto que errou o caminho
-{	
+{
 	ajeitar(BRANCO);
 	girar(180);
 	reto(BRANCO);
@@ -775,8 +777,8 @@ int testar_caminho(int cor, int vetor_direcao[])//testa as direções verificand
 
 		if (vetor_direcao[AZUL] != FRENTE && vetor_direcao[VERMELHO] != FRENTE && vetor_direcao[VERDE] != FRENTE)
 		{
-			girar(90); 
-	
+			girar(90);
+
 			if (verificar_direcao(cor))
 			{
 				return FRENTE;
@@ -784,8 +786,8 @@ int testar_caminho(int cor, int vetor_direcao[])//testa as direções verificand
 			voltar(cor);
 			girar(90);
 			verificar_direcao(cor);
-			return DIREITA;	
-		} else 
+			return DIREITA;
+		} else
 		{
 			verificar_direcao(cor);
 			return DIREITA;
@@ -803,8 +805,8 @@ int testar_caminho(int cor, int vetor_direcao[])//testa as direções verificand
 		return DIREITA;
 	}
 	verificar_direcao(cor);
-	return DIREITA; 
-}	
+	return DIREITA;
+}
 
 
 void seguir_direcao(int vetor_direcao[], int cor)//função que sera usada quando a cor ja tiver uma direção definida
@@ -988,7 +990,7 @@ task main () //por enquato a maior parte está só com a lógica, tem que altera
 	int i;
 	BTCheck();
 	ligar_sensores();
-	
+
 while (true){
 	reto(BRANCO);
 	if (sensor_cor(SENSOR_COR_ESQUERDA) == FORA && sensor_cor(SENSOR_COR_DIREITA) == FORA){
@@ -1001,7 +1003,7 @@ while (true){
 		PlayTone(440, 200);
 		Wait(300);
 		PlayTone(440, 200);
-		Wait(300);	
+		Wait(300);
 	}
 	cor_achada = identifica_cor();
 	for(i = 0; i < 3; i++)
@@ -1017,16 +1019,16 @@ while (true){
 					PlayTone(440, 200);
 					Wait(300);
 				case 0:
-					PlayTone(440, 200);		
+					PlayTone(440, 200);
 			}
 			reto(CORES[i]);
 			ajeitar(CORES[i]);
 			if (direcoes [CORES[i]] == NADA)
 			{
 				direcoes[CORES[i]] = testar_caminho(CORES[i], direcoes);
-			} else 
+			} else
 			{
-				seguir_direcao(direcoes, CORES[i]);		
+				seguir_direcao(direcoes, CORES[i]);
 			}
 			break;
 		}
