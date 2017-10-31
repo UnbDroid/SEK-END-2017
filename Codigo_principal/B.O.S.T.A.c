@@ -96,7 +96,7 @@ OUT_REGMODE_SPEED, 0, OUT_RUNSTATE_RUNNING, 0)
 #define FORADOWN 304
 #define OFFSET_COLOR 1/9.0
 
-int passageiros = 0;
+int passageiros = 0, direcoes[6] = {NADA, NADA, NADA, NADA, NADA, NADA}; //achei mais prático criar um vetor de 6 posiçoes e usar as constantes como o valor do índice
 
 sub BTCheck(){
      if (!BluetoothStatus(CONEXAO)==NO_ERR){
@@ -759,9 +759,9 @@ void voltar(int cor)//voltar para o quadrado de origem visto que errou o caminho
 	ajeitar(cor);
 }
 
-int testar_caminho(int cor, int vetor_direcao[])//testa as direções verificando se ja há alguma cor com a direção
+int testar_caminho(int cor)//testa as direções verificando se ja há alguma cor com a direção
 {
-	if (vetor_direcao[AZUL] != ESQUERDA && vetor_direcao[VERMELHO] != ESQUERDA && vetor_direcao[VERDE] != ESQUERDA)
+	if (direcoes[AZUL] != ESQUERDA && direcoes[VERMELHO] != ESQUERDA && direcoes[VERDE] != ESQUERDA)
 	{
 		TextOut(10,10, "teste esquerda");
 		Wait(2000);
@@ -775,7 +775,7 @@ int testar_caminho(int cor, int vetor_direcao[])//testa as direções verificand
 		}
 		voltar(cor);
 
-		if (vetor_direcao[AZUL] != FRENTE && vetor_direcao[VERMELHO] != FRENTE && vetor_direcao[VERDE] != FRENTE)
+		if (direcoes[AZUL] != FRENTE && direcoes[VERMELHO] != FRENTE && direcoes[VERDE] != FRENTE)
 		{
 			girar(90);
 
@@ -793,7 +793,7 @@ int testar_caminho(int cor, int vetor_direcao[])//testa as direções verificand
 			return DIREITA;
 		}
 	}
-	if (vetor_direcao[AZUL] != FRENTE && vetor_direcao[VERMELHO] != FRENTE && vetor_direcao[VERDE] != FRENTE)
+	if (direcoes[AZUL] != FRENTE && direcoes[VERMELHO] != FRENTE && direcoes[VERDE] != FRENTE)
 	{
 		if (verificar_direcao(cor))
 		{
@@ -809,13 +809,13 @@ int testar_caminho(int cor, int vetor_direcao[])//testa as direções verificand
 }
 
 
-void seguir_direcao(int vetor_direcao[], int cor)//função que sera usada quando a cor ja tiver uma direção definida
+void seguir_direcao(int cor)//função que sera usada quando a cor ja tiver uma direção definida
 {
-	if (vetor_direcao[cor] == ESQUERDA)
+	if (direcoes[cor] == ESQUERDA)
 	{
 		girar(90);
 	}
-	if (vetor_direcao[cor] == DIREITA)
+	if (direcoes[cor] == DIREITA)
 	{
 		girar(-90);
 	}
@@ -984,7 +984,6 @@ int identifica_cor()
 
 task main () //por enquato a maior parte está só com a lógica, tem que alterar as funções pra ele conseguir andar certinho e girar
 {
-	int direcoes[6] = {NADA, NADA, NADA, NADA, NADA, NADA}; //achei mais prático criar um vetor de 6 posiçoes e usar as constantes como o valor do índice
 	int cor_achada;
 	int CORES[3] = {AZUL, VERMELHO, VERDE};
 	int i;
@@ -1025,10 +1024,10 @@ while (true){
 			ajeitar(CORES[i]);
 			if (direcoes [CORES[i]] == NADA)
 			{
-				direcoes[CORES[i]] = testar_caminho(CORES[i], direcoes);
+				direcoes[CORES[i]] = testar_caminho(CORES[i]);
 			} else
 			{
-				seguir_direcao(direcoes, CORES[i]);
+				seguir_direcao(CORES[i]);
 			}
 			break;
 		}
