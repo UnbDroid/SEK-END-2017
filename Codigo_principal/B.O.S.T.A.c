@@ -10,8 +10,8 @@
 OUT_MODE_MOTORON+OUT_MODE_BRAKE+OUT_MODE_REGULATED, \
 OUT_REGMODE_SPEED, 0, OUT_RUNSTATE_RUNNING, 0)
 
-#define SENSOR_COR_ESQUERDA IN_4
-#define SENSOR_COR_DIREITA IN_1
+#define SENSOR_COR_ESQUERDA IN_4 /*conexÃ£o com o outro cÃ©rebro*/
+#define SENSOR_COR_DIREITA IN_1 /*conexÃ£o com o outro cÃ©rebro*/yyyy
 #define SENSOR_US_ESQUERDA IN_3
 #define SENSOR_US_DIREITA IN_4
 #define SENSOR_GYRO IN_1 /*teste*/
@@ -653,7 +653,7 @@ int pegar_passageiro ( int lado) //testado, mas precisa mudar a função gira pa
 		Off(MOTORES);
 		confirma_que_pegou = agarrar();
 		distancia_re(VELOCIDADE_MEDIA, VELOCIDADE_ALTA, 20);
-		giro(-90);
+		giro(-80);
 	}
 
 	if (confirma_que_pegou == 1)
