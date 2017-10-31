@@ -35,9 +35,9 @@ OUT_REGMODE_SPEED, 0, OUT_RUNSTATE_RUNNING, 0)
 #define OFFSET_SAMPLES 2000
 
 #define ESQUERDA 1
-#define DIREITA 2
-#define FRENTE 3
-#define NADA 0
+#define DIREITA -1
+#define FRENTE 0
+#define NADA 2
 
 #define WHITEUP_B 550
 #define WHITEDOWN_B 470
