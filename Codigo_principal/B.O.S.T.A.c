@@ -989,16 +989,17 @@ task main () //por enquato a maior parte está só com a lógica, tem que altera
 	int i;
 	BTCheck();
 	ligar_sensores();
+ 	Wait(1000);
+ 	MOTOR(MOTOR_PORTA, 20);
+ 	Wait(200);
+	MOTOR(MOTOR_PORTA, 0);
 
 while (true){
 	reto(BRANCO);
 	if (sensor_cor(SENSOR_COR_ESQUERDA) == FORA && sensor_cor(SENSOR_COR_DIREITA) == FORA){
 		Off(AMBOS_MOTORES);
 		distancia_re(VELOCIDADE_BAIXA, VELOCIDADE_ALTA, 10);
-		if(direcoes[AZUL] != 2 && direcoes[VERDE] != 2 && direcoes[VERMELHO] != 2)
-		{
-			modo_plaza();
-		}
+		if(direcoes[AZUL] != NADA && direcoes[VERDE] != NADA && direcoes[VERMELHO] != NADA) modo_plaza();
 		PlayTone(440, 200);
 		Wait(300);
 		PlayTone(440, 200);

@@ -1,8 +1,8 @@
 #define CONEXAO 1 // Numero da porta BlueTooth
 
 #define MOTOR_PORTA OUT_B
-#define COR_ESQUERDA IN_4
-#define COR_DIREITA IN_1
+#define SENSOR_COR_ESQUERDA IN_4
+#define SENSOR_COR_DIREITA IN_1
 
 #define SENSOR_US_ESQUERDA IN_3
 #define SENSOR_US_DIREITA IN_2
