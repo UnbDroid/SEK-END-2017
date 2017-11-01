@@ -389,6 +389,10 @@ void modo_plaza ()
 	gyro = SensorHTGyro(SENSOR_GYRO);
 	angle_inicial = (gyro - offset) * (time - prev_time)/1000.0;
 	retinho(-VELOCIDADE_ALTISSIMA, PRETO, 1);
+	OnRevSync(AMBOS_MOTORES, -VELOCIDADE_ALTA, 0);
+	Wait(3000);
+	Off(AMBOS_MOTORES);
+	retinho(-VELOCIDADE_ALTISSIMA, PRETO, 1);
 	PlayTone(880, 500);
 	/*while(sensor_cor(SENSOR_COR_ESQUERDA) != PRETO && sensor_cor(SENSOR_COR_DIREITA) != PRETO) 
 	{
