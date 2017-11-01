@@ -96,6 +96,8 @@ OUT_REGMODE_SPEED, 0, OUT_RUNSTATE_RUNNING, 0)
 #define FORADOWN 304
 #define OFFSET_COLOR 1/9.0
 
+#define CORRECAO 0.051
+
 int passageiros = 0, direcoes[6] = {NADA, NADA, NADA, NADA, NADA, NADA}; //achei mais prático criar um vetor de 6 posiçoes e usar as constantes como o valor do índice
 
 sub BTCheck(){
@@ -719,14 +721,34 @@ void procura_boneco()
 //FIm das funcoes para pegar boneco
 // Inicio da mesclagem das funções
 
-
+void retinho(int velocidade) // se dif == 1: realizar função enquanto não for "cor", se n, enquanto for "cor"
+{
+	float gyro1, gyro2, erro, velo1 = velocidade, velo2 = velocidade;
+	gyro1 = SensorHTGyro(SENSOR_GYRO);
+	OnFwdSync(AMBOS_MOTORES, -velocidade, 5);
+	Wait(100);
+	while(gyro2 >= -0.5 && gyro2 <= 0.5){
+		gyro2 = SensorHTGyro(SENSOR_GYRO);
+	}
+	erro = gyro2 - gyro1;
+	velo1 = velocidade + CORRECAO * erro;
+	velo2 = velocidade - CORRECAO * erro;
+	if (velo1 > 90) velo1 = 90;
+	else if (velo1 < -90) velo1 = -90;
+	if (velo2 > 90) velo2 = 90;
+	else if (velo2 < -90) velo2 = -90;
+	OnRev(MOTOR_DIREITA, velo1);
+	OnRev(MOTOR_ESQUERDA, velo2);
+	Wait(250);
+}
 
 void reto(int cor) //robo move ate que os dois sensores parem de ver a cor
 {
 	if (cor != VERDE){
 		while (sensor_cor(SENSOR_COR_DIREITA) == cor || sensor_cor(SENSOR_COR_ESQUERDA) == cor)
 		{
-			OnFwdSync(MOTORES, -VELOCIDADE_MEDIA, 0);
+			while (sensor_cor(SENSOR_COR_DIREITA) == cor && sensor_cor(SENSOR_COR_ESQUERDA) == cor) retinho(VELOCIDADE_MEDIA);
+			Off(AMBOS_MOTORES);
 			while(sensor_cor(SENSOR_COR_ESQUERDA) == FORA && sensor_cor(SENSOR_COR_DIREITA) == cor)
 			{
 				OnRevSync(MOTORES, - VELOCIDADE_BAIXA, 0); // Da uma pequena re
@@ -962,7 +984,9 @@ void modo_plaza ()
 	unsigned long time = CurrentTick(), prev_time;
 	float offset = getGyroOffset();
 
-	PlayTone(880, 500);
+	PlayTone(1400, 300);
+	PlayTone(880, 300);
+	PlayTone(220, 300);
 
 	girar(90);
 	girar(42); //por algum motivo esses angulos fazem o robo girar 180 graus perfeitamente

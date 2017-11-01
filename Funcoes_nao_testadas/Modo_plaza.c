@@ -18,7 +18,7 @@ OUT_REGMODE_SPEED, 0, OUT_RUNSTATE_RUNNING, 0)
 #define VELOCIDADE_BAIXA 35
 #define VELOCIDADE_MEDIA 50
 #define VELOCIDADE_ALTA 65
-#define VELOCIDADE_ALTISSIMA 85
+#define VELOCIDADE_ALTISSIMA 90
 #define PRETO 1
 #define VERDE 3
 #define BRANCO 6
@@ -78,11 +78,7 @@ OUT_REGMODE_SPEED, 0, OUT_RUNSTATE_RUNNING, 0)
 
 #define OFFSET_SAMPLES 2000
 
-#define CORRECAO 0.51
-#define OUT_REGMODE_IDLE 0
-#define OUT_REGMODE_SPEED 1
-#define OUT_REGMODE_SYNC 2
-#define OUT_REGMODE_POS 4
+#define CORRECAO 0.051
 
 
 int direcoes[6] = {1, 1, 1, 1, 1, 1};
@@ -288,14 +284,7 @@ void girar(float degrees) //função para mover o robo de acordo com o giro e gi
 		{
 			OnFwd(MOTOR_ESQUERDA, VELOCIDADE_MEDIA);
 		}
-		Off(MOTOR_ESQUERDA); 
-/*
-		OnRev(MOTOR_DIREITA, -VELOCIDADE_MEDIA);
-		Wait(200);
-		Off(MOTORES);
-		OnRev(MOTOR_ESQUERDA, -VELOCIDADE_MEDIA);
-		Wait(150);
-		Off(MOTORES);*/
+		Off(MOTOR_ESQUERDA);
 
 		distancia_re(VELOCIDADE_MEDIA, VELOCIDADE_ALTA, 10);
 		giro(90);	
@@ -305,56 +294,25 @@ void girar(float degrees) //função para mover o robo de acordo com o giro e gi
 	
 }
 
-void retinho(int velocidade, int cor, int dif) // se dif == 1: realizar função enquanto não for "cor", se n, enquanto for "cor"
+void retinho(int velocidade ) // se dif == 1: realizar função enquanto não for "cor", se n, enquanto for "cor"
 {
 	float gyro1, gyro2, erro, velo1 = velocidade, velo2 = velocidade;
 	gyro1 = SensorHTGyro(SENSOR_GYRO);
-	OnFwdSync(AMBOS_MOTORES, -velocidade, 0);
-	Wait(500);
-	if(dif == 1)
-	{
-		while(sensor_cor(SENSOR_COR_ESQUERDA) != cor && sensor_cor(SENSOR_COR_DIREITA) != cor)
-		{
-			ClearScreen();
-			OnFwdSync(AMBOS_MOTORES, -velocidade, 0.3);
-			Wait(400);
-			gyro2 = SensorHTGyro(SENSOR_GYRO);
-			erro = gyro2 - gyro1;
-			NumOut(0, LCD_LINE1, erro);
-			velo1 = velocidade + CORRECAO * erro;
-			velo2 = velocidade - CORRECAO * erro;
-			if (velo1 > 90) velo1 = 90;
-			else if (velo1 < -90) velo1 = -90;
-			if (velo2 > 90) velo2 = 90;
-			else if (velo2 < -90) velo2 = -90;
-			gyro1 = gyro2;
-			OnRev(MOTOR_DIREITA, velo1);
-			OnRev(MOTOR_ESQUERDA, velo2);
-			Wait(200);
-		}
+	OnFwdSync(AMBOS_MOTORES, -velocidade, 5);
+	Wait(100);
+	while(gyro2 >= -0.5 && gyro2 <= 0.5){
+		gyro2 = SensorHTGyro(SENSOR_GYRO);
 	}
-	else
-	{
-		while(sensor_cor(SENSOR_COR_ESQUERDA) == cor && sensor_cor(SENSOR_COR_DIREITA) == cor)
-		{
-			ClearScreen();
-			OnFwdSync(AMBOS_MOTORES, -velocidade, 0.3);
-			Wait(400);
-			gyro2 = SensorHTGyro(SENSOR_GYRO);
-			erro = gyro2 - gyro1;
-			NumOut(0, LCD_LINE1, erro);
-			velo1 = velocidade + CORRECAO * erro;
-			velo2 = velocidade - CORRECAO * erro;
-			if (velo1 > 90) velo1 = 90;
-			else if (velo1 < -90) velo1 = -90;
-			if (velo2 > 90) velo2 = 90;
-			else if (velo2 < -90) velo2 = -90;
-			gyro1 = gyro2;
-			OnRev(MOTOR_DIREITA, velo1);
-			OnRev(MOTOR_ESQUERDA, velo2);
-			Wait(200);
-		}
-	}
+	erro = gyro2 - gyro1;
+	velo1 = velocidade + CORRECAO * erro;
+	velo2 = velocidade - CORRECAO * erro;
+	if (velo1 > 90) velo1 = 90;
+	else if (velo1 < -90) velo1 = -90;
+	if (velo2 > 90) velo2 = 90;
+	else if (velo2 < -90) velo2 = -90;
+	OnRev(MOTOR_DIREITA, velo1);
+	OnRev(MOTOR_ESQUERDA, velo2);
+	Wait(250);
 }
 
 void modo_plaza ()
@@ -388,49 +346,12 @@ void modo_plaza ()
 	time = CurrentTick();
 	gyro = SensorHTGyro(SENSOR_GYRO);
 	angle_inicial = (gyro - offset) * (time - prev_time)/1000.0;
-	retinho(-VELOCIDADE_ALTISSIMA, PRETO, 1);
+	while (sensor_cor(SENSOR_COR_ESQUERDA) != PRETO && sensor_cor(SENSOR_COR_DIREITA) != PRETO) retinho(-VELOCIDADE_ALTISSIMA);
 	OnRevSync(AMBOS_MOTORES, -VELOCIDADE_ALTA, 0);
 	Wait(3000);
 	Off(AMBOS_MOTORES);
-	retinho(-VELOCIDADE_ALTISSIMA, PRETO, 1);
+	while (sensor_cor(SENSOR_COR_ESQUERDA) != PRETO && sensor_cor(SENSOR_COR_DIREITA) != PRETO) retinho(-VELOCIDADE_ALTISSIMA);
 	PlayTone(880, 500);
-	/*while(sensor_cor(SENSOR_COR_ESQUERDA) != PRETO && sensor_cor(SENSOR_COR_DIREITA) != PRETO) 
-	{
-
-		time = CurrentTick();
-		gyro = SensorHTGyro(SENSOR_GYRO);
-		angle = (gyro - offset) * (time - prev_time)/1000.0;
-
-		ClearLine(LCD_LINE1);
-		ClearLine(LCD_LINE2);
-		ClearLine(LCD_LINE3);
-		TextOut(0, LCD_LINE1, "ANGLE_I:");
-		NumOut(55, LCD_LINE1, angle_inicial);
-		TextOut(0, LCD_LINE2, "ANGLE:");
-		NumOut(55, LCD_LINE2, angle);
-		TextOut(0, LCD_LINE3, "RESULT:");
-		NumOut(55, LCD_LINE3, angle - angle_inicial);
-		OnRevSync(AMBOS_MOTORES, -VELOCIDADE_ALTISSIMA, offset_velocidade);
-		Wait(100);
-
-
-		if (angle - angle_inicial > 0.5)
-		{
-			//girar_sem_re(-0.5);
-			offset_velocidade = -1;
-		}
-		else if (angle - angle_inicial < 0.5)
-		{
-			//girar_sem_re(0.5);
-			offset_velocidade = +1;
-		}
-		else
-		{
-			OnRevSync(AMBOS_MOTORES, -VELOCIDADE_ALTISSIMA, 0);
-			Wait(200);
-		}
-	}
-	PlayTone(880, 500);*/
 	aux = abs(MotorRotationCount(MOTOR_DIREITA));
 
 	distancia_re(VELOCIDADE_MEDIA, VELOCIDADE_ALTA, 15);
