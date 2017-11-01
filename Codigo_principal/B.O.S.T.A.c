@@ -168,6 +168,17 @@ int sensor_cor(int sensor)
 	}
 }
 
+int sensor_cor_verde(int sensor)
+{
+	int leitura = get_value_color(sensor);
+	if (leitura >= (WHITEDOWN_G - DESVIO))
+		return BRANCO;
+	if (leitura >= (GREENDOWN_G - DESVIO))
+		return VERDE;
+	else 
+		return FORA;
+}
+
 int get_leitura_rgb(int sensor)
 {
 	int leitura_r = 0, leitura_g = 0, leitura_b = 0;
@@ -374,7 +385,7 @@ void ajeitar(int cor) //arruma o robo pra ficar alinhado no quadrado da cor que 
 	ClearScreen();
 	TextOut(0,0,"ajeitando");
 	NumOut(10,10, cor);
-	Wait(1000);
+	/*Wait(1000);
 	left = sensor_cor(SENSOR_COR_DIREITA);
 	right = sensor_cor(SENSOR_COR_ESQUERDA);
 	while( left != cor || right != cor) // Aqui ele comeca a ajeitar, para caso chegue torto, ele fique certo no final
@@ -397,7 +408,7 @@ void ajeitar(int cor) //arruma o robo pra ficar alinhado no quadrado da cor que 
 		}
 
 		Off(AMBOS_MOTORES);
-
+		
 		contador = 0;
 		right = sensor_cor(SENSOR_COR_DIREITA);
 		if(left != cor)
@@ -411,10 +422,32 @@ void ajeitar(int cor) //arruma o robo pra ficar alinhado no quadrado da cor que 
 			Wait(100);
 			PlayTone(600, 100);
 			contador += 1;
-			right = sensor_cor(SENSOR_COR_DIREITA);
+			right = sensor_cor(SENSOR_COR_DIREITA);	
+		}
+	}
+	Off(MOTORES);*/
+	while(sensor_cor(SENSOR_COR_DIREITA) != cor || sensor_cor(SENSOR_COR_ESQUERDA) != cor) // Aqui ele comeca a ajeitar, para caso chegue torto, ele fique certo no final
+	{
+		Off(AMBOS_MOTORES);
+		
+		contador = 0;
+		while(sensor_cor(SENSOR_COR_ESQUERDA) != cor && contador < 3)
+		{ // Ajusta a roda esquerda para ficar em cima da linha.
+			OnRev(MOTOR_ESQUERDA, (-1)*VELOCIDADE_MEDIA);
+			Wait(50);
+			contador += 1;
+		}
+		Off(AMBOS_MOTORES);
+		contador = 0;
+		while(sensor_cor(SENSOR_COR_DIREITA) != cor && contador < 3)
+		{ // Ajusta a roda esquerda para ficar em cima da linha.
+			OnRev(MOTOR_DIREITA,  (-1)*VELOCIDADE_MEDIA);
+			Wait(50);
+			contador += 1;
 		}
 	}
 	Off(MOTORES);
+	Wait(500);
 }
 
 float getGyroOffset()
@@ -521,7 +554,7 @@ void girar(float degrees) //função para mover o robo de acordo com o giro e gi
 		Wait(150);
 		Off(MOTORES);*/
 
-		distancia_re(VELOCIDADE_MEDIA, VELOCIDADE_ALTA, 13);
+		distancia_re(VELOCIDADE_MEDIA, VELOCIDADE_ALTA, 11);
 		giro(90);
 	}
 	if (degrees != 90 && degrees != -90 && degrees != 180)
@@ -690,40 +723,77 @@ void procura_boneco()
 
 void reto(int cor) //robo move ate que os dois sensores parem de ver a cor
 {
-	while (sensor_cor(SENSOR_COR_DIREITA) == cor || sensor_cor(SENSOR_COR_ESQUERDA) == cor)
-	{
-		OnFwdSync(MOTORES, -VELOCIDADE_MEDIA, 0);
-		while(sensor_cor(SENSOR_COR_ESQUERDA) == FORA && sensor_cor(SENSOR_COR_DIREITA) == cor)
+	if (cor != VERDE){
+		while (sensor_cor(SENSOR_COR_DIREITA) == cor || sensor_cor(SENSOR_COR_ESQUERDA) == cor)
 		{
-			OnRevSync(MOTORES, - VELOCIDADE_BAIXA, 0); // Da uma pequena re
-			Wait(300);
-			Off(MOTORES);
-			OnFwd(MOTOR_ESQUERDA, -VELOCIDADE_MEDIA);
-			OnRev(MOTOR_DIREITA,  -VELOCIDADE_BAIXA);
+			OnFwdSync(MOTORES, -VELOCIDADE_MEDIA, 0);
+			while(sensor_cor(SENSOR_COR_ESQUERDA) == FORA && sensor_cor(SENSOR_COR_DIREITA) == cor)
+			{
+				OnRevSync(MOTORES, - VELOCIDADE_BAIXA, 0); // Da uma pequena re
+				Wait(200);
+				Off(MOTORES);
+				OnFwd(MOTOR_ESQUERDA, -VELOCIDADE_MEDIA);
+				OnRev(MOTOR_DIREITA,  -VELOCIDADE_BAIXA);
+				ClearScreen();
+				//PlayTone(400, 100);
+				TextOut(50,50, "E:P");
+			}
+			while(sensor_cor(SENSOR_COR_DIREITA) == FORA && sensor_cor(SENSOR_COR_ESQUERDA) == cor)
+			{
+				OnRevSync(MOTORES, - VELOCIDADE_BAIXA, 0); // Da uma pequena re
+				Wait(200);
+				Off(MOTORES);
+				OnFwd(MOTOR_DIREITA, -VELOCIDADE_MEDIA);
+				OnRev(MOTOR_ESQUERDA, -VELOCIDADE_BAIXA);
+				ClearScreen();
+				//PlayTone(800, 100);
+				TextOut(50,50, "D:P");
+			}
 			ClearScreen();
-			PlayTone(400, 100);
-			TextOut(50,50, "E:P");
+			if (cor == BRANCO){
+				procura_boneco();
+			}
 		}
-		while(sensor_cor(SENSOR_COR_DIREITA) == FORA && sensor_cor(SENSOR_COR_ESQUERDA) == cor)
+	} else{ //andar reto no verde com o sensor verde
+		set_sensor_color(SENSOR_COR_DIREITA, VERDE);
+		Wait(100);
+		set_sensor_color(SENSOR_COR_ESQUERDA, VERDE);
+		while (sensor_cor_verde(SENSOR_COR_DIREITA) == cor || sensor_cor_verde(SENSOR_COR_ESQUERDA) == cor)
 		{
-			OnRevSync(MOTORES, - VELOCIDADE_BAIXA, 0); // Da uma pequena re
-			Wait(300);
-			Off(MOTORES);
-			OnFwd(MOTOR_DIREITA, -VELOCIDADE_MEDIA);
-			OnRev(MOTOR_ESQUERDA, -VELOCIDADE_BAIXA);
+			OnFwdSync(MOTORES, -VELOCIDADE_MEDIA, 0);
+			while(sensor_cor_verde(SENSOR_COR_ESQUERDA) == FORA && sensor_cor_verde(SENSOR_COR_DIREITA) == cor)
+			{
+				OnRevSync(MOTORES, - VELOCIDADE_BAIXA, 0); // Da uma pequena re
+				Wait(200);
+				Off(MOTORES);
+				OnFwd(MOTOR_ESQUERDA, -VELOCIDADE_MEDIA);
+				OnRev(MOTOR_DIREITA,  -VELOCIDADE_BAIXA);
+				ClearScreen();
+				PlayTone(400, 100);
+				TextOut(50,50, "E:P");
+			}
+			while(sensor_cor_verde(SENSOR_COR_DIREITA) == FORA && sensor_cor_verde(SENSOR_COR_ESQUERDA) == cor)
+			{
+				OnRevSync(MOTORES, - VELOCIDADE_BAIXA, 0); // Da uma pequena re
+				Wait(200);
+				Off(MOTORES);
+				OnFwd(MOTOR_DIREITA, -VELOCIDADE_MEDIA);
+				OnRev(MOTOR_ESQUERDA, -VELOCIDADE_BAIXA);
+				ClearScreen();
+				PlayTone(800, 100);
+				TextOut(50,50, "D:P");
+			}
 			ClearScreen();
-			PlayTone(800, 100);
-			TextOut(50,50, "D:P");
 		}
-		ClearScreen();
-		if (cor == BRANCO){
-			procura_boneco();
-		}
+		Off(MOTORES);
+		set_sensor_color(SENSOR_COR_DIREITA, VERMELHO);
+		Wait(100);
+		set_sensor_color(SENSOR_COR_ESQUERDA, VERMELHO);
+		Wait(100);
 	}
 	Off(MOTORES);
-
+	
 	//alterei o laço para dentro da função recenbendo a cor como argumento
-
 }
 
 bool verificar_direcao(int cor)
@@ -970,16 +1040,22 @@ void modo_plaza ()
 
 int identifica_cor()
 {
-	int cor_e, cor_d;
+	int cor_e, cor_d, i = 0;
 	do
 	{
+		i++;
 		ajeitar(BRANCO);
 		distancia_reto(VELOCIDADE_MEDIA, VELOCIDADE_ALTA, 5);
 		cor_e = teste_cor(SENSOR_COR_ESQUERDA);
 		cor_d = teste_cor(SENSOR_COR_DIREITA);
-	}while(cor_e != cor_d);
-	return cor_e;
-
+	}while((cor_e != cor_d) && i < 1);
+	if (cor_e != FORA && cor_e != PRETO)
+		return cor_e;
+	if (cor_d != FORA && cor_d != PRETO)
+		return cor_d;
+	if (cor_e == PRETO)
+		return cor_e;
+	return cor_d;
 }
 
 task main () //por enquato a maior parte está só com a lógica, tem que alterar as funções pra ele conseguir andar certinho e girar
