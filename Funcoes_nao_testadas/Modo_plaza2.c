@@ -72,11 +72,11 @@ OUT_REGMODE_SPEED, 0, OUT_RUNSTATE_RUNNING, 0)
 #define GREENUP_R 390
 
 //defines mais importantes, separados pra facilitar quando tiver de mudar
-#define WHITEDOWN_R 590 //629
+#define WHITEDOWN_R 590
 #define REDDOWN_R 550
 #define BLACKUP_R 250
-#define BLUEDOWN_R 250
-#define BLUEUP_R 290
+#define BLUEDOWN_R 220
+#define BLUEUP_R 310
 #define FORAUP_R 450
 #define FORADOWN_R 350
 #define DESVIO 20
@@ -98,7 +98,7 @@ OUT_REGMODE_SPEED, 0, OUT_RUNSTATE_RUNNING, 0)
 
 #define CORRECAO 0.051
 
-int passageiros = 0, direcoes[6] = {NADA, NADA, NADA, NADA, NADA, NADA}; //achei mais prático criar um vetor de 6 posiçoes e usar as constantes como o valor do índice
+int passageiros = 0, direcoes[6] = {1, 1, 1, 1, 1, 1}; //achei mais prático criar um vetor de 6 posiçoes e usar as constantes como o valor do índice
 
 sub BTCheck(){
      if (!BluetoothStatus(CONEXAO)==NO_ERR){
@@ -978,77 +978,83 @@ void girar_sem_re(float degrees) // Algoritimo usado pela sek do ano passado //t
 
 void modo_plaza ()
 {
-	int aux, prev_motor;
+	int aux, prev_motor; //Essa ultima constante é para armazenar o ultimo parâmetro do Sync
 	SetSensorHTGyro(SENSOR_GYRO);
-	float angle = 0, gyro = 0, angle_inicial = 0;
+	float angle = 0, gyro = 0, angle_inicial = 0, result, offset_velocidade = 0, tolerancia = 40.0;
 	unsigned long time = CurrentTick(), prev_time;
 	float offset = getGyroOffset();
 
-	PlayTone(1400, 300);
-	PlayTone(880, 300);
-	PlayTone(220, 300);
 
-	girar(90);
-	girar(42); //por algum motivo esses angulos fazem o robo girar 180 graus perfeitamente
-	//OnRevSync(AMBOS_MOTORES, -VELOCIDADE_ALTA, 1.3);
-	//while(sensor_cor(SENSOR_COR_ESQUERDA) != FORA && sensor_cor(SENSOR_COR_DIREITA) != FORA);
-	//Off(AMBOS_MOTORES);
 	PlayTone(880, 500);
 
+
+	ResetRotationCount(MOTOR_DIREITA);
+	ResetRotationCount(MOTOR_ESQUERDA);
+	distancia_reto(VELOCIDADE_MEDIA, VELOCIDADE_ALTA, 10);
+	reto(BRANCO);
+	while (sensor_cor(SENSOR_COR_DIREITA) !=PRETO && sensor_cor(SENSOR_COR_ESQUERDA) !=PRETO) retinho(VELOCIDADE_MEDIA);
+	distancia_reto(VELOCIDADE_MEDIA, VELOCIDADE_ALTA, 10);
+	while (sensor_cor(SENSOR_COR_DIREITA) !=PRETO && sensor_cor(SENSOR_COR_ESQUERDA) !=PRETO) retinho(VELOCIDADE_MEDIA);
+	distancia_reto(VELOCIDADE_MEDIA, VELOCIDADE_ALTA, 30);
+	giro(180);
+	aux = abs(MotorRotationCount(MOTOR_DIREITA));
+	ResetRotationCount(MOTOR_DIREITA);
+	ResetRotationCount(MOTOR_ESQUERDA);
+	MOTOR(MOTOR_PORTA, VELOCIDADE_BAIXA);
+	Wait(400);
+	MOTOR(MOTOR_PORTA, 0);
+	distancia_reto(VELOCIDADE_MEDIA, VELOCIDADE_ALTA, 30);
+	MOTOR(MOTOR_PORTA, -VELOCIDADE_BAIXA);
+	Wait(400);
+	MOTOR(MOTOR_PORTA, 0);
+	giro(-180);
+	
+	while(prev_motor < aux)
+	{
+    	retinho(VELOCIDADE_MEDIA);
+		Wait(50);
+		prev_motor = abs(MotorRotationCount(MOTOR_DIREITA));
+	}
+
+	
+
+
+	/*distancia_re(VELOCIDADE_MEDIA, VELOCIDADE_ALTA, 5);
+	girar(180);
+	PlayTone(880, 500);
+
+
+	//OnRevSync(AMBOS_MOTORES, -VELOCIDADE_ALTA, 0);
+	OnFwdSync(AMBOS_MOTORES, -VELOCIDADE_ALTA, -20);
+	Wait(500);
+	OnFwdSync(AMBOS_MOTORES, -VELOCIDADE_ALTA, 0);
+	Wait(300);
+	OnFwdSync(AMBOS_MOTORES, -VELOCIDADE_ALTA, 18);
+	Wait(600);
+	Off(AMBOS_MOTORES);
+	Wait(500);
+	ResetRotationCount(MOTOR_DIREITA);
+	ResetRotationCount(MOTOR_ESQUERDA);
 	prev_time = time;
 	time = CurrentTick();
 	gyro = SensorHTGyro(SENSOR_GYRO);
 	angle_inicial = (gyro - offset) * (time - prev_time)/1000.0;
-
-	ResetRotationCount(MOTOR_DIREITA);
-	ResetRotationCount(MOTOR_ESQUERDA);
-	//OnRevSync(AMBOS_MOTORES, -VELOCIDADE_ALTA, 0);
-	while(sensor_cor(SENSOR_COR_ESQUERDA) != PRETO && sensor_cor(SENSOR_COR_DIREITA) != PRETO)
-	{
-
-		time = CurrentTick();
-		gyro = SensorHTGyro(SENSOR_GYRO);
-		angle = (gyro - offset) * (time - prev_time)/1000.0;
-
-		ClearLine(LCD_LINE1);
-		ClearLine(LCD_LINE2);
-		TextOut(0, LCD_LINE1, "ANGLE_I:");
-		NumOut(55, LCD_LINE1, angle_inicial);
-		TextOut(0, LCD_LINE2, "ANGLE:");
-		NumOut(55, LCD_LINE2, angle);
-
-		if (angle - angle_inicial > 0.01)
-		{
-			girar_sem_re(0.5);
-		}
-		else if (angle - angle_inicial < 0.01)
-		{
-			girar_sem_re(-0.5);
-		}
-		else
-		{
-			OnRevSync(AMBOS_MOTORES, -VELOCIDADE_ALTA, 0);
-			Wait(200);
-			Off(AMBOS_MOTORES);
-		}
-	}
-	PlayTone(880, 500);
-	Wait(2000);
-	Off(AMBOS_MOTORES);
+	while (sensor_cor(SENSOR_COR_ESQUERDA) != PRETO && sensor_cor(SENSOR_COR_DIREITA) != PRETO) retinho(-VELOCIDADE_ALTISSIMA);
 	OnRevSync(AMBOS_MOTORES, -VELOCIDADE_ALTA, 0);
-	while(sensor_cor(SENSOR_COR_ESQUERDA) != PRETO && sensor_cor(SENSOR_COR_DIREITA) != PRETO);
+	Wait(3000);
 	Off(AMBOS_MOTORES);
+	while (sensor_cor(SENSOR_COR_ESQUERDA) != PRETO && sensor_cor(SENSOR_COR_DIREITA) != PRETO) retinho(-VELOCIDADE_ALTISSIMA);
 	PlayTone(880, 500);
 	aux = abs(MotorRotationCount(MOTOR_DIREITA));
 
 	distancia_re(VELOCIDADE_MEDIA, VELOCIDADE_ALTA, 15);
-	OnFwd(MOTOR_PORTA, VELOCIDADE_BAIXA);
-	Wait(900);
-	Off(MOTOR_PORTA);
+ 	MOTOR(MOTOR_PORTA, VELOCIDADE_BAIXA);
+	Wait(400);
+	MOTOR(MOTOR_PORTA, 0);
 	distancia_reto(VELOCIDADE_MEDIA, VELOCIDADE_ALTA, 30);
-	OnRev(MOTOR_PORTA, VELOCIDADE_BAIXA);
-	Wait(900);
-	Off(MOTOR_PORTA);
+	MOTOR(MOTOR_PORTA, -VELOCIDADE_BAIXA);
+	Wait(400);
+	MOTOR(MOTOR_PORTA, 0);
 
 	ResetRotationCount(MOTOR_DIREITA);
 	Wait(50);
@@ -1058,80 +1064,29 @@ void modo_plaza ()
     	OnFwdSync(AMBOS_MOTORES, -VELOCIDADE_ALTA, 0);
 		Wait(50);
 		prev_motor = abs(MotorRotationCount(MOTOR_DIREITA));
-	}
+	}*/
 	Off(AMBOS_MOTORES);
-}
-
-int identifica_cor()
-{
-	int cor_e, cor_d, i = 0;
-	do
+	for (int i = 0; i < 5; ++i)
 	{
-		i++;
-		ajeitar(BRANCO);
-		distancia_reto(VELOCIDADE_MEDIA, VELOCIDADE_ALTA, 5);
-		cor_e = teste_cor(SENSOR_COR_ESQUERDA);
-		cor_d = teste_cor(SENSOR_COR_DIREITA);
-	}while((cor_e != cor_d) && i < 1);
-	if (cor_e != FORA && cor_e != PRETO)
-		return cor_e;
-	if (cor_d != FORA && cor_d != PRETO)
-		return cor_d;
-	if (cor_e == PRETO)
-		return cor_e;
-	return cor_d;
+		direcoes[i] = -direcoes[i];
+	}
 }
 
-task main () //por enquato a maior parte está só com a lógica, tem que alterar as funções pra ele conseguir andar certinho e girar
+
+task main ()
 {
-	int cor_achada;
-	int CORES[3] = {AZUL, VERMELHO, VERDE};
-	int i;
 	BTCheck();
-	ligar_sensores();
+
+ 	ligar_sensores();
  	Wait(1000);
- 	MOTOR(MOTOR_PORTA, -20);
+ 	MOTOR(MOTOR_PORTA, -10);
  	Wait(200);
 	MOTOR(MOTOR_PORTA, 0);
 
-while (true){
-	reto(BRANCO);
-	if (sensor_cor(SENSOR_COR_ESQUERDA) == FORA && sensor_cor(SENSOR_COR_DIREITA) == FORA){
-		Off(AMBOS_MOTORES);
-		distancia_re(VELOCIDADE_BAIXA, VELOCIDADE_ALTA, 10);
-		if(direcoes[AZUL] != NADA && direcoes[VERDE] != NADA && direcoes[VERMELHO] != NADA) modo_plaza();
-		PlayTone(440, 200);
-		Wait(300);
-		PlayTone(440, 200);
-		Wait(300);
-	}
-	cor_achada = identifica_cor();
-	for(i = 0; i < 3; i++)
-	{
-		if(cor_achada == CORES[i])
-		{
-			switch(i)
-			{
-				case 2:
-					PlayTone(440, 200);
-					Wait(300);
-				case 1:
-					PlayTone(440, 200);
-					Wait(300);
-				case 0:
-					PlayTone(440, 200);
-			}
-			reto(CORES[i]);
-			ajeitar(CORES[i]);
-			if (direcoes [CORES[i]] == NADA)
-			{
-				direcoes[CORES[i]] = testar_caminho(CORES[i]);
-			} else
-			{
-				seguir_direcao(CORES[i]);
-			}
-			break;
-		}
-	}
-}
+
+	OnFwdSync(AMBOS_MOTORES, -VELOCIDADE_MEDIA, 0);
+	while(sensor_cor(SENSOR_COR_ESQUERDA) != FORA && sensor_cor(SENSOR_COR_DIREITA) != FORA);
+	Off(AMBOS_MOTORES);
+	distancia_re(VELOCIDADE_BAIXA, VELOCIDADE_ALTA, 10);
+	if(direcoes[AZUL] != 2 && direcoes[VERDE] != 2 && direcoes[VERMELHO] != 2) modo_plaza();
 }

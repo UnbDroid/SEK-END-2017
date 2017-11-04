@@ -170,7 +170,7 @@ void distancia_re(int low_speed, int high_speed, float distancia)
 }
 
 int sensor_cor(int sensor)
-{	
+{
 	int leitura = get_value_color(sensor);
 
 	if (sensor == SENSOR_COR_ESQUERDA)
@@ -287,18 +287,18 @@ void girar(float degrees) //função para mover o robo de acordo com o giro e gi
 		Off(MOTOR_ESQUERDA);
 
 		distancia_re(VELOCIDADE_MEDIA, VELOCIDADE_ALTA, 10);
-		giro(90);	
+		giro(90);
 	}
 	if (degrees != 90 && degrees != -90 && degrees != 180)
 		giro(degrees);
-	
+
 }
 
 void retinho(int velocidade ) // se dif == 1: realizar função enquanto não for "cor", se n, enquanto for "cor"
 {
 	float gyro1, gyro2, erro, velo1 = velocidade, velo2 = velocidade;
 	gyro1 = SensorHTGyro(SENSOR_GYRO);
-	OnFwdSync(AMBOS_MOTORES, -velocidade, 5);
+	OnFwdSync(AMBOS_MOTORES, -velocidade, 12);
 	Wait(100);
 	while(gyro2 >= -0.5 && gyro2 <= 0.5){
 		gyro2 = SensorHTGyro(SENSOR_GYRO);
@@ -355,11 +355,11 @@ void modo_plaza ()
 	aux = abs(MotorRotationCount(MOTOR_DIREITA));
 
 	distancia_re(VELOCIDADE_MEDIA, VELOCIDADE_ALTA, 15);
- 	MOTOR(MOTOR_PORTA, -VELOCIDADE_BAIXA);
+ 	MOTOR(MOTOR_PORTA, VELOCIDADE_BAIXA);
 	Wait(400);
 	MOTOR(MOTOR_PORTA, 0);
 	distancia_reto(VELOCIDADE_MEDIA, VELOCIDADE_ALTA, 30);
-	MOTOR(MOTOR_PORTA, VELOCIDADE_BAIXA);
+	MOTOR(MOTOR_PORTA, -VELOCIDADE_BAIXA);
 	Wait(400);
 	MOTOR(MOTOR_PORTA, 0);
 
@@ -386,11 +386,11 @@ task main ()
 
  	ligar_sensores();
  	Wait(1000);
- 	MOTOR(MOTOR_PORTA, 20);
+ 	MOTOR(MOTOR_PORTA, -10);
  	Wait(200);
 	MOTOR(MOTOR_PORTA, 0);
 
- 	
+
 	OnFwdSync(AMBOS_MOTORES, -VELOCIDADE_MEDIA, 0);
 	while(sensor_cor(SENSOR_COR_ESQUERDA) != FORA && sensor_cor(SENSOR_COR_DIREITA) != FORA);
 	Off(AMBOS_MOTORES);
