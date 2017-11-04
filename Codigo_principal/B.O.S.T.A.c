@@ -1,7 +1,7 @@
 #define BT_CONN 1
 
-#define MOTOR_ESQUERDA OUT_A
-#define MOTOR_DIREITA OUT_C
+#define MOTOR_ESQUERDA OUT_C
+#define MOTOR_DIREITA OUT_A
 #define MOTORES OUT_AC
 #define AMBOS_MOTORES OUT_AC
 #define MOTOR_GARRA OUT_B
@@ -39,61 +39,47 @@ OUT_REGMODE_SPEED, 0, OUT_RUNSTATE_RUNNING, 0)
 #define FRENTE 0
 #define NADA 2
 
-#define WHITEUP_B 550
-#define WHITEDOWN_B 470
-#define	BLUEDOWN_B 260
-#define BLACKDOWN_B 120
-#define FORAUP_B 380
-#define FORADOWN_B 310
-#define REDDOWN_B 310
-#define GREENDOWN_B 300
-#define WHITEUP_G 560
-#define WHITEDOWN_G 490
-#define	BLUEDOWN_G 220
-#define BLACKDOWN_G 130
-#define REDDOWN_G 320
-#define GREENDOWN_G 370
-#define FORAUP_G 390
-#define FORADOWN_G 340
-#define WHITEUP_R 620
-#define BLACKDOWN_R 190
-#define GREENDOWN_R 350
-
-//defines secundarios
-#define BLUEUP_B 320
-#define	BLACKUP_B 200
-#define	REDUP_B 250
-#define GREENUP_B 350
-#define BLUEUP_G 300
-#define	BLACKUP_G 220
-#define	REDUP_G 290
-#define GREENUP_G 450
-#define	REDUP_R 590
-#define GREENUP_R 390
-
 //defines mais importantes, separados pra facilitar quando tiver de mudar
-#define WHITEDOWN_R 590 //629
-#define REDDOWN_R 550
-#define BLACKUP_R 250
-#define BLUEDOWN_R 250
-#define BLUEUP_R 290
-#define FORAUP_R 450
-#define FORADOWN_R 350
+//#define BLACKUP_R 250
+//#define FORAUP_R 450
+//#define FORADOWN_R 350
+#define L_WHITEDOWN_R 560
+#define L_REDDOWN_R 470
+#define L_BLUEUP_R 330
+#define L_GREENUP_R 345
+#define R_WHITEDOWN_R 520
+#define R_REDDOWN_R 500
+#define R_BLUEUP_R 270
+#define R_GREENUP_R 355
+
+#define L_GREENDOWN_G 345
+#define L_GREENUP_G 375
+#define L_WHITEDOWN_G 530
+#define L_WHITEUP_G 600
+#define R_GREENDOWN_G 370
+#define R_GREENUP_G 400
+#define R_WHITEDOWN_G 500
+#define R_WHITEUP_G 550
 #define DESVIO 20
 
 //defines do teste cor
-#define WHITEDOWN 579
+/*#define WHITEDOWN 540
 #define WHITEUP 595
-#define BLACKUP 259
-#define BLACKDOWN 221
-#define REDUP 419
-#define REDDOWN 416
-#define GREENUP 378
-#define GREENDOWN 351
-#define BLUEUP 276
-#define BLUEDOWN 273
-#define FORAUP 360
-#define FORADOWN 304
+#define BLACKDOWN 180
+#define REDDOWN 410
+#define GREENDOWN 335
+#define BLUEDOWN 260
+#define FORADOWN 350 */
+#define L_BLACKUP 205
+#define L_REDUP 440
+#define L_GREENUP 357
+#define L_BLUEUP 273
+#define L_FORAUP 375
+#define R_BLACKUP 260
+#define R_REDUP 500
+#define R_GREENUP 358
+#define R_BLUEUP 325
+#define R_FORAUP 400
 #define OFFSET_COLOR 1/9.0
 
 #define CORRECAO 0.051
@@ -150,35 +136,63 @@ int get_value_color(char porta)
 int sensor_cor(int sensor)
 {
 	int leitura = get_value_color(sensor);
-
-	if (sensor == SENSOR_COR_ESQUERDA)
+	if (sensor == SENSOR_COR_ESQUERDA){
 		NumOut(0,0, leitura);
-	if(sensor == SENSOR_COR_DIREITA)
+	
+		if(leitura >= L_WHITEDOWN_R){
+			return BRANCO;
+		} else if (leitura >= L_REDDOWN_R){
+			return VERMELHO;
+		}/* else if (leitura <= BLACKUP_R){
+			return PRETO; 
+		}*/else if (leitura <= L_BLUEUP_R){
+			return AZUL;
+		} else if (leitura <= L_GREENUP_R){
+			return VERDE;
+		} else{
+			return FORA;
+		}
+	}
+	if (sensor == SENSOR_COR_DIREITA){
 		NumOut(0,40, leitura);
 
-	if(leitura >= WHITEDOWN_R){
-		return BRANCO;
-	}
-	else if (leitura >= REDDOWN_R - DESVIO){
-		return VERMELHO;
-	} else if (leitura <= BLACKUP_R){
-		return PRETO;
-	} else if (leitura >= (BLUEDOWN_R - DESVIO) && leitura <= (BLUEUP_R + DESVIO)){
-		return AZUL;
-	} else{
-		return FORA;
+		if(leitura >= R_WHITEDOWN_R){
+			return BRANCO;
+		} else if (leitura >= R_REDDOWN_R){
+			return VERMELHO;
+		} /*else if (leitura <= BLACKUP_R){
+			return PRETO; 
+		}*/else if (leitura <= L_BLUEUP_R){
+			return AZUL;
+		} else if (leitura <= L_GREENUP_R){
+			return VERDE;
+		} else{
+			return FORA;
+		}
 	}
 }
 
 int sensor_cor_verde(int sensor)
 {
 	int leitura = get_value_color(sensor);
-	if (leitura >= (WHITEDOWN_G - DESVIO))
-		return BRANCO;
-	if (leitura >= (GREENDOWN_G - DESVIO))
-		return VERDE;
-	else 
-		return FORA;
+	if (sensor == SENSOR_COR_ESQUERDA)
+	{
+		if (leitura >= L_WHITEDOWN_G && leitura <= L_WHITEUP_G)
+			return BRANCO;
+		if (leitura >= L_GREENDOWN_G && leitura <= L_GREENUP_G)
+			return VERDE;
+		else 
+			return FORA;
+	}
+	if (sensor == SENSOR_COR_DIREITA)
+	{
+		if (leitura >= R_WHITEDOWN_G && leitura <= R_WHITEUP_G)
+			return BRANCO;
+		if (leitura >= R_GREENDOWN_G && leitura <= R_GREENUP_G)
+			return VERDE;
+		else 
+			return FORA;
+	}
 }
 
 int get_leitura_rgb(int sensor)
@@ -213,21 +227,40 @@ int get_leitura_rgb(int sensor)
 	return leitura; // Se quisermos o valor entr 100 e 700
 }
 
-int trata_leitura(int leitura)
+int trata_leitura(int leitura, int sensor)
 {
 	int cor;
-	if (leitura <= BLACKUP){
-		cor = PRETO;
-	}else if (leitura <= BLUEUP){
-		cor = AZUL;
-	}else if (leitura <= FORAUP){
-		cor = FORA;
-	}else if (leitura <= GREENUP){
-		cor = VERDE;
-	}else if (leitura <= REDUP){
-		cor = VERMELHO;
-	}else{
-		cor = BRANCO;
+	if (sensor == SENSOR_COR_ESQUERDA)
+	{
+		if (leitura <= L_BLACKUP){
+			cor = PRETO;
+		}else if (leitura <= L_BLUEUP){
+			cor = AZUL;
+		}else if (leitura <= L_FORAUP){
+			cor = FORA;
+		}else if (leitura <= L_GREENUP){
+			cor = VERDE;
+		}else if (leitura <= L_REDUP){
+			cor = VERMELHO;
+		}else{
+			cor = BRANCO;
+		}
+	}
+	if (sensor == SENSOR_COR_DIREITA)
+	{
+		if (leitura <= R_BLACKUP){
+			cor = PRETO;
+		}else if (leitura <= R_BLUEUP){
+			cor = AZUL;
+		}else if (leitura <= R_FORAUP){
+			cor = FORA;
+		}else if (leitura <= R_GREENUP){
+			cor = VERDE;
+		}else if (leitura <= R_REDUP){
+			cor = VERMELHO;
+		}else{
+			cor = BRANCO;
+		}
 	}
 	// Toca os sons
 	int wait = 200, duration = 100, frequency = 1000;
@@ -260,7 +293,7 @@ int teste_cor(int sensor)
 {
 	int cor, leitura;
 	leitura = get_leitura_rgb(sensor);
-	cor 	= trata_leitura(leitura);
+	cor 	= trata_leitura(leitura, sensor);
 	return cor;
 }
 
@@ -408,7 +441,6 @@ void ajeitar(int cor) //arruma o robo pra ficar alinhado no quadrado da cor que 
 			contador += 1;
 			left = sensor_cor(SENSOR_COR_ESQUERDA);
 		}
-
 		Off(AMBOS_MOTORES);
 		
 		contador = 0;
@@ -428,25 +460,61 @@ void ajeitar(int cor) //arruma o robo pra ficar alinhado no quadrado da cor que 
 		}
 	}
 	Off(MOTORES);*/
-	while(sensor_cor(SENSOR_COR_DIREITA) != cor || sensor_cor(SENSOR_COR_ESQUERDA) != cor) // Aqui ele comeca a ajeitar, para caso chegue torto, ele fique certo no final
-	{
-		Off(AMBOS_MOTORES);
+	if (cor != VERDE){
+		while(sensor_cor(SENSOR_COR_DIREITA) != cor && sensor_cor(SENSOR_COR_ESQUERDA) != cor)
+			OnRevSync(MOTORES, -VELOCIDADE_MEDIA, 0);
+		while(sensor_cor(SENSOR_COR_DIREITA) != cor || sensor_cor(SENSOR_COR_ESQUERDA) != cor) // Aqui ele comeca a ajeitar, para caso chegue torto, ele fique certo no final
+		{
+			Off(AMBOS_MOTORES);
 		
-		contador = 0;
-		while(sensor_cor(SENSOR_COR_ESQUERDA) != cor && contador < 3)
-		{ // Ajusta a roda esquerda para ficar em cima da linha.
-			OnRev(MOTOR_ESQUERDA, (-1)*VELOCIDADE_MEDIA);
-			Wait(50);
-			contador += 1;
+			contador = 0;
+			while(sensor_cor(SENSOR_COR_ESQUERDA) != cor && contador < 3)
+			{ // Ajusta a roda esquerda para ficar em cima da linha.
+				OnRev(MOTOR_ESQUERDA, (-1)*VELOCIDADE_MEDIA);
+				Wait(50);
+				contador += 1;
+			}
+			Off(AMBOS_MOTORES);
+			contador = 0;
+			while(sensor_cor(SENSOR_COR_DIREITA) != cor && contador < 3)
+			{ // Ajusta a roda esquerda para ficar em cima da linha.
+				OnRev(MOTOR_DIREITA,  (-1)*VELOCIDADE_MEDIA);
+				Wait(50);
+				contador += 1;
+			}
 		}
-		Off(AMBOS_MOTORES);
-		contador = 0;
-		while(sensor_cor(SENSOR_COR_DIREITA) != cor && contador < 3)
-		{ // Ajusta a roda esquerda para ficar em cima da linha.
-			OnRev(MOTOR_DIREITA,  (-1)*VELOCIDADE_MEDIA);
-			Wait(50);
-			contador += 1;
+	} else{
+		set_sensor_color(SENSOR_COR_DIREITA, VERDE);
+		Wait(100);
+		set_sensor_color(SENSOR_COR_ESQUERDA, VERDE);
+		Wait(100);
+		while(sensor_cor_verde(SENSOR_COR_DIREITA) != cor && sensor_cor_verde(SENSOR_COR_ESQUERDA) != cor)
+			OnRevSync(MOTORES, -VELOCIDADE_MEDIA, 0);
+		while(sensor_cor_verde(SENSOR_COR_DIREITA) != cor || sensor_cor_verde(SENSOR_COR_ESQUERDA) != cor) // Aqui ele comeca a ajeitar, para caso chegue torto, ele fique certo no final
+		{
+			Off(AMBOS_MOTORES);
+		
+			contador = 0;
+			while(sensor_cor_verde(SENSOR_COR_ESQUERDA) != cor && contador < 3)
+			{ // Ajusta a roda esquerda para ficar em cima da linha.
+				OnRev(MOTOR_ESQUERDA, (-1)*VELOCIDADE_MEDIA);
+				Wait(50);
+				contador += 1;
+			}
+			Off(AMBOS_MOTORES);
+			contador = 0;
+			while(sensor_cor_verde(SENSOR_COR_DIREITA) != cor && contador < 3)
+			{ // Ajusta a roda esquerda para ficar em cima da linha.
+				OnRev(MOTOR_DIREITA,  (-1)*VELOCIDADE_MEDIA);
+				Wait(50);
+				contador += 1;
+			}
 		}
+		Off(MOTORES);
+		set_sensor_color(SENSOR_COR_DIREITA, VERMELHO);
+		Wait(100);
+		set_sensor_color(SENSOR_COR_ESQUERDA, VERMELHO);
+		Wait(100);
 	}
 	Off(MOTORES);
 	Wait(500);
@@ -747,8 +815,9 @@ void reto(int cor) //robo move ate que os dois sensores parem de ver a cor
 	if (cor != VERDE){
 		while (sensor_cor(SENSOR_COR_DIREITA) == cor || sensor_cor(SENSOR_COR_ESQUERDA) == cor)
 		{
+			OnFwdSync(MOTORES, -VELOCIDADE_MEDIA, 0);
 			while (sensor_cor(SENSOR_COR_DIREITA) == cor && sensor_cor(SENSOR_COR_ESQUERDA) == cor) retinho(VELOCIDADE_MEDIA);
-			Off(AMBOS_MOTORES);
+			//Off(AMBOS_MOTORES);
 			while(sensor_cor(SENSOR_COR_ESQUERDA) == FORA && sensor_cor(SENSOR_COR_DIREITA) == cor)
 			{
 				OnRevSync(MOTORES, - VELOCIDADE_BAIXA, 0); // Da uma pequena re
@@ -887,6 +956,8 @@ int testar_caminho(int cor)//testa as direções verificando se ja há alguma co
 	}
 	if (direcoes[AZUL] != FRENTE && direcoes[VERMELHO] != FRENTE && direcoes[VERDE] != FRENTE)
 	{
+		TextOut(10,10, "teste frente");
+		Wait(2000);
 		if (verificar_direcao(cor))
 		{
 			return FRENTE;
@@ -896,6 +967,8 @@ int testar_caminho(int cor)//testa as direções verificando se ja há alguma co
 		verificar_direcao(cor);
 		return DIREITA;
 	}
+	TextOut(10,10, "teste direita");
+	Wait(2000);
 	verificar_direcao(cor);
 	return DIREITA;
 }
@@ -1090,7 +1163,7 @@ task main () //por enquato a maior parte está só com a lógica, tem que altera
 	BTCheck();
 	ligar_sensores();
  	Wait(1000);
- 	MOTOR(MOTOR_PORTA, -20);
+ 	MOTOR(MOTOR_PORTA, 20);
  	Wait(200);
 	MOTOR(MOTOR_PORTA, 0);
 
