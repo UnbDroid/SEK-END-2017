@@ -55,11 +55,9 @@ OUT_REGMODE_SPEED, 0, OUT_RUNSTATE_RUNNING, 0)
 #define L_GREENDOWN_G 345
 #define L_GREENUP_G 375
 #define L_WHITEDOWN_G 530
-#define L_WHITEUP_G 600
 #define R_GREENDOWN_G 370
 #define R_GREENUP_G 400
 #define R_WHITEDOWN_G 500
-#define R_WHITEUP_G 550
 #define DESVIO 20
 
 //defines do teste cor
@@ -71,20 +69,20 @@ OUT_REGMODE_SPEED, 0, OUT_RUNSTATE_RUNNING, 0)
 #define BLUEDOWN 260
 #define FORADOWN 350 */
 #define L_BLACKUP 205
-#define L_REDUP 440
+#define L_REDUP 460
 #define L_GREENUP 357
-#define L_BLUEUP 273
-#define L_FORAUP 375
+#define L_BLUEUP 280
+#define L_FORAUP 380
 #define R_BLACKUP 260
-#define R_REDUP 500
-#define R_GREENUP 358
+#define R_REDUP 510
+#define R_GREENUP 365
 #define R_BLUEUP 325
 #define R_FORAUP 400
 #define OFFSET_COLOR 1/9.0
 
 #define CORRECAO 0.051
 
-int passageiros = 0, direcoes[6] = {NADA, NADA, NADA, NADA, NADA, NADA}; //achei mais prático criar um vetor de 6 posiçoes e usar as constantes como o valor do índice
+int passageiros = 0; //achei mais prático criar um vetor de 6 posiçoes e usar as constantes como o valor do índice
 
 sub BTCheck(){
      if (!BluetoothStatus(CONEXAO)==NO_ERR){
@@ -177,18 +175,18 @@ int sensor_cor_verde(int sensor)
 	int leitura = get_value_color(sensor);
 	if (sensor == SENSOR_COR_ESQUERDA)
 	{
-		if (leitura >= L_WHITEDOWN_G && leitura <= L_WHITEUP_G)
+		if (leitura >= L_WHITEDOWN_G)
 			return BRANCO;
-		if (leitura >= L_GREENDOWN_G && leitura <= L_GREENUP_G)
+		if (leitura >= (L_GREENDOWN_G - DESVIO) && leitura <= (L_GREENUP_G + DESVIO))
 			return VERDE;
 		else 
 			return FORA;
 	}
 	if (sensor == SENSOR_COR_DIREITA)
 	{
-		if (leitura >= R_WHITEDOWN_G && leitura <= R_WHITEUP_G)
+		if (leitura >= R_WHITEDOWN_G)
 			return BRANCO;
-		if (leitura >= R_GREENDOWN_G && leitura <= R_GREENUP_G)
+		if (leitura >= (R_GREENDOWN_G - DESVIO) && leitura <= (R_GREENUP_G + DESVIO))
 			return VERDE;
 		else 
 			return FORA;
@@ -223,7 +221,7 @@ int get_leitura_rgb(int sensor)
 	//Wait(50);
 	set_sensor_color(sensor, VERMELHO);
 	Wait(100);
-	leitura = (4*leitura_r + 2*leitura_g + leitura_b)/7;
+	leitura = (4*leitura_r + leitura_g + 2*leitura_b)/7;
 	return leitura; // Se quisermos o valor entr 100 e 700
 }
 
@@ -236,10 +234,10 @@ int trata_leitura(int leitura, int sensor)
 			cor = PRETO;
 		}else if (leitura <= L_BLUEUP){
 			cor = AZUL;
-		}else if (leitura <= L_FORAUP){
-			cor = FORA;
 		}else if (leitura <= L_GREENUP){
 			cor = VERDE;
+		}else if (leitura <= L_FORAUP){
+			cor = FORA;
 		}else if (leitura <= L_REDUP){
 			cor = VERMELHO;
 		}else{
@@ -252,10 +250,10 @@ int trata_leitura(int leitura, int sensor)
 			cor = PRETO;
 		}else if (leitura <= R_BLUEUP){
 			cor = AZUL;
-		}else if (leitura <= R_FORAUP){
-			cor = FORA;
 		}else if (leitura <= R_GREENUP){
 			cor = VERDE;
+		}else if (leitura <= R_FORAUP){
+			cor = FORA;
 		}else if (leitura <= R_REDUP){
 			cor = VERMELHO;
 		}else{
@@ -920,7 +918,7 @@ void voltar(int cor)//voltar para o quadrado de origem visto que errou o caminho
 	ajeitar(cor);
 }
 
-int testar_caminho(int cor)//testa as direções verificando se ja há alguma cor com a direção
+int testar_caminho(int cor, int direcoes[])//testa as direções verificando se ja há alguma cor com a direção
 {
 	if (direcoes[AZUL] != ESQUERDA && direcoes[VERMELHO] != ESQUERDA && direcoes[VERDE] != ESQUERDA)
 	{
@@ -974,7 +972,7 @@ int testar_caminho(int cor)//testa as direções verificando se ja há alguma co
 }
 
 
-void seguir_direcao(int cor)//função que sera usada quando a cor ja tiver uma direção definida
+void seguir_direcao(int cor, int direcoes[])//função que sera usada quando a cor ja tiver uma direção definida
 {
 	if (direcoes[cor] == ESQUERDA)
 	{
@@ -1159,11 +1157,12 @@ task main () //por enquato a maior parte está só com a lógica, tem que altera
 {
 	int cor_achada;
 	int CORES[3] = {AZUL, VERMELHO, VERDE};
+	int direcoes[6] = {NADA, NADA, NADA, NADA, NADA, NADA};
 	int i;
 	BTCheck();
 	ligar_sensores();
  	Wait(1000);
- 	MOTOR(MOTOR_PORTA, 20);
+ 	MOTOR(MOTOR_PORTA, -20);
  	Wait(200);
 	MOTOR(MOTOR_PORTA, 0);
 
@@ -1198,10 +1197,13 @@ while (true){
 			ajeitar(CORES[i]);
 			if (direcoes [CORES[i]] == NADA)
 			{
-				direcoes[CORES[i]] = testar_caminho(CORES[i]);
+				ClearScreen();
+				TextOut(10,10, "NADA GRAVADO");
+				Wait(3000);
+				direcoes[CORES[i]] = testar_caminho(CORES[i], direcoes);
 			} else
 			{
-				seguir_direcao(CORES[i]);
+				seguir_direcao(CORES[i], direcoes);
 			}
 			break;
 		}
