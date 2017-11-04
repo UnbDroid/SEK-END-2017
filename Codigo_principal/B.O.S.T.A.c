@@ -193,6 +193,7 @@ int sensor_cor_verde(int sensor)
 	}
 }
 
+/*
 int get_leitura_rgb(int sensor)
 {
 	int leitura_r = 0, leitura_g = 0, leitura_b = 0;
@@ -224,7 +225,7 @@ int get_leitura_rgb(int sensor)
 	leitura = (4*leitura_r + leitura_g + 2*leitura_b)/7;
 	return leitura; // Se quisermos o valor entr 100 e 700
 }
-
+*/
 int trata_leitura(int leitura, int sensor)
 {
 	int cor;
@@ -286,7 +287,7 @@ int trata_leitura(int leitura, int sensor)
 	}
 	return cor;		// Se quisermos o valor entre 1 e 7
 }
-
+/*
 int teste_cor(int sensor)
 {
 	int cor, leitura;
@@ -294,7 +295,7 @@ int teste_cor(int sensor)
 	cor 	= trata_leitura(leitura, sensor);
 	return cor;
 }
-
+*/
 void get_two_rgb(int &leitura_e, int &leitura_d )
 {
 	// Essa funcao pega os dois valores simultaneamente, da esquerda e da direita
@@ -321,6 +322,13 @@ void get_two_rgb(int &leitura_e, int &leitura_d )
 	}
 	leitura_e = (4*left[0]+left[1]+2*left[2])/7;
 	leitura_d = (4*right[0]+right[1]+2*right[2])/7;
+}
+void teste_two_colors(int &left, int &right)
+{
+	int leitura_e, leitura_d;
+	get_two_rgb(leitura_e, leitura_d);
+	left = trata_leitura(SENSOR_COR_ESQUERDA, leitura_e);
+	right = trata_leitura(SENSOR_COR_DIREITA, leitura_d);
 }
 
 int preto_branco(int color)
@@ -892,10 +900,7 @@ bool verificar_direcao(int cor)
 	distancia_reto(VELOCIDADE_MEDIA, VELOCIDADE_ALTA, 1.5);
 	reto(BRANCO);
 	distancia_reto(VELOCIDADE_MEDIA, VELOCIDADE_ALTA, 2);
-
-	cor_d = teste_cor(SENSOR_COR_DIREITA);
-	cor_e = teste_cor(SENSOR_COR_ESQUERDA);
-
+	teste_two_colors(cor_e, cor_d);
 	if (cor_e != PRETO && cor_d != PRETO)//se os dois nao veem preto entao o robo acertou o caminho
 	{
 		TextOut(10,10, "caminho certo");
@@ -1141,14 +1146,15 @@ int identifica_cor()
 		i++;
 		ajeitar(BRANCO);
 		distancia_reto(VELOCIDADE_MEDIA, VELOCIDADE_ALTA, 5);
-		cor_e = teste_cor(SENSOR_COR_ESQUERDA);
-		cor_d = teste_cor(SENSOR_COR_DIREITA);
+		teste_two_colors(cor_e, cor_d);
 	}while((cor_e != cor_d) && i < 1);
-	if (cor_e != FORA && cor_e != PRETO)
+	if(cor_e == cor_d) // Vai entrar aqui caso ache cores iguais
+		return cor_e;
+	if (cor_e != FORA && cor_e != PRETO) // Vai entrar aqui se as cores for diferente, mas a cor esquerda for r/g/b/w
 		return cor_e;
 	if (cor_d != FORA && cor_d != PRETO)
 		return cor_d;
-	if (cor_e == PRETO)
+	if (cor_e == PRETO) // Vai entrar aqui caso a cor esquerda for for preto
 		return cor_e;
 	return cor_d;
 }
@@ -1161,14 +1167,15 @@ task main () //por enquato a maior parte está só com a lógica, tem que altera
 	int i;
 	BTCheck();
 	ligar_sensores();
- 	Wait(1000);
+ 	//Wait(1000);
  	MOTOR(MOTOR_PORTA, -20);
  	Wait(200);
 	MOTOR(MOTOR_PORTA, 0);
 
 while (true){
 	reto(BRANCO);
-	if (sensor_cor(SENSOR_COR_ESQUERDA) == FORA && sensor_cor(SENSOR_COR_DIREITA) == FORA){
+	cor_achada = identifica_cor();
+	if (cor_achada == FORA){
 		Off(AMBOS_MOTORES);
 		distancia_re(VELOCIDADE_BAIXA, VELOCIDADE_ALTA, 10);
 		if(direcoes[AZUL] != NADA && direcoes[VERDE] != NADA && direcoes[VERMELHO] != NADA) modo_plaza();
@@ -1177,7 +1184,6 @@ while (true){
 		PlayTone(440, 200);
 		Wait(300);
 	}
-	cor_achada = identifica_cor();
 	for(i = 0; i < 3; i++)
 	{
 		if(cor_achada == CORES[i])
@@ -1195,14 +1201,12 @@ while (true){
 			}
 			reto(CORES[i]);
 			ajeitar(CORES[i]);
-			if (direcoes [CORES[i]] == NADA)
-			{
+			if (direcoes [CORES[i]] == NADA){
 				ClearScreen();
 				TextOut(10,10, "NADA GRAVADO");
 				Wait(3000);
 				direcoes[CORES[i]] = testar_caminho(CORES[i], direcoes);
-			} else
-			{
+			}else{
 				seguir_direcao(CORES[i], direcoes);
 			}
 			break;
