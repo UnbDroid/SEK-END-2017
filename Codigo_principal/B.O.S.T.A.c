@@ -52,11 +52,11 @@ OUT_REGMODE_SPEED, 0, OUT_RUNSTATE_RUNNING, 0)
 #define R_BLUEUP_R 270
 #define R_GREENUP_R 355
 
-#define L_GREENDOWN_G 345
-#define L_GREENUP_G 375
+#define L_GREENDOWN_G 310
+#define L_GREENUP_G 350
 #define L_WHITEDOWN_G 530
-#define R_GREENDOWN_G 370
-#define R_GREENUP_G 400
+#define R_GREENDOWN_G 310
+#define R_GREENUP_G 350
 #define R_WHITEDOWN_G 500
 #define DESVIO 20
 
@@ -68,14 +68,14 @@ OUT_REGMODE_SPEED, 0, OUT_RUNSTATE_RUNNING, 0)
 #define GREENDOWN 335
 #define BLUEDOWN 260
 #define FORADOWN 350 */
-#define L_BLACKUP 205
+#define L_BLACKUP 260
 #define L_REDUP 460
-#define L_GREENUP 357
-#define L_BLUEUP 280
+#define L_GREENUP 380
+#define L_BLUEUP 
 #define L_FORAUP 380
 #define R_BLACKUP 260
 #define R_REDUP 510
-#define R_GREENUP 365
+#define R_GREENUP 370
 #define R_BLUEUP 325
 #define R_FORAUP 400
 #define OFFSET_COLOR 1/9.0
@@ -115,6 +115,7 @@ void ligar_sensores() //testada
 	set_sensor_color(SENSOR_COR_ESQUERDA, VERMELHO);
 	Wait(100);
 	set_sensor_color(SENSOR_COR_DIREITA, VERMELHO);
+	Wait(100);
 }
 
 int get_value_color(char porta)
@@ -193,7 +194,6 @@ int sensor_cor_verde(int sensor)
 	}
 }
 
-/*
 int get_leitura_rgb(int sensor)
 {
 	int leitura_r = 0, leitura_g = 0, leitura_b = 0;
@@ -225,7 +225,7 @@ int get_leitura_rgb(int sensor)
 	leitura = (4*leitura_r + leitura_g + 2*leitura_b)/7;
 	return leitura; // Se quisermos o valor entr 100 e 700
 }
-*/
+
 int trata_leitura(int leitura, int sensor)
 {
 	int cor;
@@ -287,7 +287,7 @@ int trata_leitura(int leitura, int sensor)
 	}
 	return cor;		// Se quisermos o valor entre 1 e 7
 }
-/*
+
 int teste_cor(int sensor)
 {
 	int cor, leitura;
@@ -295,7 +295,7 @@ int teste_cor(int sensor)
 	cor 	= trata_leitura(leitura, sensor);
 	return cor;
 }
-*/
+
 void get_two_rgb(int &leitura_e, int &leitura_d )
 {
 	// Essa funcao pega os dois valores simultaneamente, da esquerda e da direita
@@ -322,13 +322,6 @@ void get_two_rgb(int &leitura_e, int &leitura_d )
 	}
 	leitura_e = (4*left[0]+left[1]+2*left[2])/7;
 	leitura_d = (4*right[0]+right[1]+2*right[2])/7;
-}
-void teste_two_colors(int &left, int &right)
-{
-	int leitura_e, leitura_d;
-	get_two_rgb(leitura_e, leitura_d);
-	left = trata_leitura(SENSOR_COR_ESQUERDA, leitura_e);
-	right = trata_leitura(SENSOR_COR_DIREITA, leitura_d);
 }
 
 int preto_branco(int color)
@@ -599,6 +592,7 @@ void giro(float degrees) // Algoritimo usado pela sek do ano passado //testada
 }
 void girar(float degrees) //função para mover o robo de acordo com o giro e girar, valores de acordo com testes
 {
+	int contador = 0;
 	if (degrees == 90 || degrees == -90)
 	{
 		distancia_re(VELOCIDADE_MEDIA, VELOCIDADE_ALTA, 12);
@@ -607,10 +601,30 @@ void girar(float degrees) //função para mover o robo de acordo com o giro e gi
 	if (degrees == 180)
 	{
 		giro(90);
-		Wait(2000);
 		while(sensor_cor(SENSOR_COR_ESQUERDA) != FORA && sensor_cor(SENSOR_COR_DIREITA) != FORA)
 			OnFwdSync(MOTORES, -VELOCIDADE_MEDIA, 0);
 		Off(MOTORES);
+
+		while(sensor_cor(SENSOR_COR_DIREITA) == FORA || sensor_cor(SENSOR_COR_ESQUERDA) == FORA) // Aqui ele comeca a ajeitar, para caso chegue torto, ele fique certo no final
+		{
+			Off(AMBOS_MOTORES);
+		
+			contador = 0;
+			while(sensor_cor(SENSOR_COR_ESQUERDA) == FORA && contador < 3)
+			{ // Ajusta a roda esquerda para ficar em cima da linha.
+				OnRev(MOTOR_ESQUERDA, (-1)*VELOCIDADE_MEDIA);
+				Wait(50);
+				contador += 1;
+			}
+			Off(AMBOS_MOTORES);
+			contador = 0;
+			while(sensor_cor(SENSOR_COR_DIREITA) == FORA && contador < 3)
+			{ // Ajusta a roda esquerda para ficar em cima da linha.
+				OnRev(MOTOR_DIREITA,  (-1)*VELOCIDADE_MEDIA);
+				Wait(50);
+				contador += 1;
+			}
+		}
 
 		while(sensor_cor(SENSOR_COR_DIREITA) == FORA){
 			OnFwd(MOTOR_DIREITA, VELOCIDADE_MEDIA);
@@ -795,25 +809,27 @@ void procura_boneco()
 //FIm das funcoes para pegar boneco
 // Inicio da mesclagem das funções
 
-void retinho(int velocidade) // se dif == 1: realizar função enquanto não for "cor", se n, enquanto for "cor"
+void retinho(int velocidade, int cor) // se dif == 1: realizar função enquanto não for "cor", se n, enquanto for "cor"
 {
 	float gyro1, gyro2, erro, velo1 = velocidade, velo2 = velocidade;
 	gyro1 = SensorHTGyro(SENSOR_GYRO);
 	OnFwdSync(AMBOS_MOTORES, -velocidade, 5);
-	Wait(100);
-	while(gyro2 >= -0.5 && gyro2 <= 0.5){
-		gyro2 = SensorHTGyro(SENSOR_GYRO);
+	while (sensor_cor(SENSOR_COR_DIREITA) == cor && sensor_cor(SENSOR_COR_ESQUERDA) == cor) {
+		while(gyro2 >= -0.5 && gyro2 <= 0.5){
+			gyro2 = SensorHTGyro(SENSOR_GYRO);
+		}
+		erro = gyro2 - gyro1;
+		velo1 = velocidade + CORRECAO * erro;
+		velo2 = velocidade - CORRECAO * erro;
+		if (velo1 > 90) velo1 = 90;
+		else if (velo1 < -90) velo1 = -90;
+		if (velo2 > 90) velo2 = 90;
+		else if (velo2 < -90) velo2 = -90;
+		OnRev(MOTOR_DIREITA, velo1);
+		OnRev(MOTOR_ESQUERDA, velo2);
+		if (cor == BRANCO)
+		procura_boneco();
 	}
-	erro = gyro2 - gyro1;
-	velo1 = velocidade + CORRECAO * erro;
-	velo2 = velocidade - CORRECAO * erro;
-	if (velo1 > 90) velo1 = 90;
-	else if (velo1 < -90) velo1 = -90;
-	if (velo2 > 90) velo2 = 90;
-	else if (velo2 < -90) velo2 = -90;
-	OnRev(MOTOR_DIREITA, velo1);
-	OnRev(MOTOR_ESQUERDA, velo2);
-	Wait(250);
 }
 
 void reto(int cor) //robo move ate que os dois sensores parem de ver a cor
@@ -822,7 +838,7 @@ void reto(int cor) //robo move ate que os dois sensores parem de ver a cor
 		while (sensor_cor(SENSOR_COR_DIREITA) == cor || sensor_cor(SENSOR_COR_ESQUERDA) == cor)
 		{
 			OnFwdSync(MOTORES, -VELOCIDADE_MEDIA, 0);
-			while (sensor_cor(SENSOR_COR_DIREITA) == cor && sensor_cor(SENSOR_COR_ESQUERDA) == cor) retinho(VELOCIDADE_MEDIA);
+			retinho(VELOCIDADE_MEDIA, cor);
 			//Off(AMBOS_MOTORES);
 			while(sensor_cor(SENSOR_COR_ESQUERDA) == FORA && sensor_cor(SENSOR_COR_DIREITA) == cor)
 			{
@@ -899,16 +915,18 @@ bool verificar_direcao(int cor)
 	reto(cor);
 	distancia_reto(VELOCIDADE_MEDIA, VELOCIDADE_ALTA, 1.5);
 	reto(BRANCO);
-	distancia_reto(VELOCIDADE_MEDIA, VELOCIDADE_ALTA, 2);
-	teste_two_colors(cor_e, cor_d);
+	ajeitar(BRANCO);
+	distancia_reto(VELOCIDADE_MEDIA, VELOCIDADE_ALTA, 5);
+
+	cor_d = teste_cor(SENSOR_COR_DIREITA);
+	cor_e = teste_cor(SENSOR_COR_ESQUERDA);
+
 	if (cor_e != PRETO && cor_d != PRETO)//se os dois nao veem preto entao o robo acertou o caminho
 	{
 		TextOut(10,10, "caminho certo");
-		Wait(2000);
 		return true;
 	}
 	TextOut(10, 10, "Caminho errado");
-	Wait(2000);
 	return false;
 }
 
@@ -928,7 +946,6 @@ int testar_caminho(int cor, int direcoes[])//testa as direções verificando se 
 	if (direcoes[AZUL] != ESQUERDA && direcoes[VERMELHO] != ESQUERDA && direcoes[VERDE] != ESQUERDA)
 	{
 		TextOut(10,10, "teste esquerda");
-		Wait(2000);
 		ClearScreen();
 		girar(90);
 		ClearScreen();
@@ -960,7 +977,6 @@ int testar_caminho(int cor, int direcoes[])//testa as direções verificando se 
 	if (direcoes[AZUL] != FRENTE && direcoes[VERMELHO] != FRENTE && direcoes[VERDE] != FRENTE)
 	{
 		TextOut(10,10, "teste frente");
-		Wait(2000);
 		if (verificar_direcao(cor))
 		{
 			return FRENTE;
@@ -971,7 +987,6 @@ int testar_caminho(int cor, int direcoes[])//testa as direções verificando se 
 		return DIREITA;
 	}
 	TextOut(10,10, "teste direita");
-	Wait(2000);
 	verificar_direcao(cor);
 	return DIREITA;
 }
@@ -1146,15 +1161,14 @@ int identifica_cor()
 		i++;
 		ajeitar(BRANCO);
 		distancia_reto(VELOCIDADE_MEDIA, VELOCIDADE_ALTA, 5);
-		teste_two_colors(cor_e, cor_d);
+		cor_e = teste_cor(SENSOR_COR_ESQUERDA);
+		cor_d = teste_cor(SENSOR_COR_DIREITA);
 	}while((cor_e != cor_d) && i < 1);
-	if(cor_e == cor_d) // Vai entrar aqui caso ache cores iguais
-		return cor_e;
-	if (cor_e != FORA && cor_e != PRETO) // Vai entrar aqui se as cores for diferente, mas a cor esquerda for r/g/b/w
+	if (cor_e != FORA && cor_e != PRETO)
 		return cor_e;
 	if (cor_d != FORA && cor_d != PRETO)
 		return cor_d;
-	if (cor_e == PRETO) // Vai entrar aqui caso a cor esquerda for for preto
+	if (cor_e == PRETO)
 		return cor_e;
 	return cor_d;
 }
@@ -1167,15 +1181,14 @@ task main () //por enquato a maior parte está só com a lógica, tem que altera
 	int i;
 	BTCheck();
 	ligar_sensores();
- 	//Wait(1000);
+ 	Wait(1000);
  	MOTOR(MOTOR_PORTA, -20);
  	Wait(200);
 	MOTOR(MOTOR_PORTA, 0);
 
 while (true){
 	reto(BRANCO);
-	cor_achada = identifica_cor();
-	if (cor_achada == FORA){
+	if (sensor_cor(SENSOR_COR_ESQUERDA) == FORA && sensor_cor(SENSOR_COR_DIREITA) == FORA){
 		Off(AMBOS_MOTORES);
 		distancia_re(VELOCIDADE_BAIXA, VELOCIDADE_ALTA, 10);
 		if(direcoes[AZUL] != NADA && direcoes[VERDE] != NADA && direcoes[VERMELHO] != NADA) modo_plaza();
@@ -1184,6 +1197,7 @@ while (true){
 		PlayTone(440, 200);
 		Wait(300);
 	}
+	cor_achada = identifica_cor();
 	for(i = 0; i < 3; i++)
 	{
 		if(cor_achada == CORES[i])
@@ -1201,12 +1215,13 @@ while (true){
 			}
 			reto(CORES[i]);
 			ajeitar(CORES[i]);
-			if (direcoes [CORES[i]] == NADA){
+			if (direcoes [CORES[i]] == NADA)
+			{
 				ClearScreen();
 				TextOut(10,10, "NADA GRAVADO");
-				Wait(3000);
 				direcoes[CORES[i]] = testar_caminho(CORES[i], direcoes);
-			}else{
+			} else
+			{
 				seguir_direcao(CORES[i], direcoes);
 			}
 			break;
