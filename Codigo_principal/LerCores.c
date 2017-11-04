@@ -22,10 +22,33 @@
 
 int handle = 0;
 
+struct type_value
+{
+	int min, med, max;
+};
+
 struct type_COR
 {
-   int r, g, b; //red, green, blue
+   type_value r, g, b; // red, green, blue
 };
+
+type_value init_value(int minimo, int media, int maximo)
+{
+	type_value color;
+	color.min = minimo;
+	color.med = media;
+	color.max = maximo;
+	return color;
+}
+
+type_COR init_COR(type_value red, type_value green, type_value blue)
+{
+	type_COR color;
+	color.r = red;
+	color.g = green;
+	color.b = blue;
+	return color;
+}
 
 int alerta(int frequency)
 {
@@ -89,6 +112,12 @@ void imprime_cor(int x, int y, int color)
 	}
 }
 
+void imprime_value(int LINE, type_value color)
+{
+	NumOut( 10, LINE, color.min);
+	NumOut( 30, LINE, color.med);
+	NumOut( 50, LINE, color.max);
+}
 
 task main()
 {
@@ -96,10 +125,11 @@ task main()
 	int CORES[6] = {VERMELHO, VERDE, AZUL, BRANCO, PRETO, FORA};
 	int LINE[4] = {LCD_LINE5, LCD_LINE6, LCD_LINE7, LCD_LINE8};
 	type_COR left[6], right[6], aux1, aux2;
-	int l[6], r[6];
+	type_value l[6], r[6];
 	SetSensorTouch(TOUCH); // Liga o sensor touch
 	p = open_for_read();
-	if(p == 1){
+	if(p == 1)
+	{
 		for(i = 0; i < 6; i++)
 		{
 			p = read_two_colors(aux1, aux2);
@@ -110,39 +140,49 @@ task main()
 			}
 			left[i] = aux1;
 			right[i] = aux2;
-			l[i] = (4*aux1.r+aux1.g+2*aux1.b)/7;
-			r[i] = (4*aux2.r+aux2.g+2*aux2.b)/7;
+			l[i] = init_value((4*aux1.r.min+aux1.g.min+2*aux1.b.min)/7,
+							  (4*aux1.r.med+aux1.g.med+2*aux1.b.med)/7,
+							  (4*aux1.r.max+aux1.g.max+2*aux1.b.max)/7);
+			r[i] = init_value((4*aux2.r.min+aux2.g.min+2*aux2.b.min)/7,
+							  (4*aux2.r.med+aux2.g.med+2*aux2.b.med)/7,
+							  (4*aux2.r.max+aux2.g.max+2*aux2.b.max)/7);
 		}
 		while(1)
 		{
-			for(i = 0; i < 6; i++)
+			for(i = 0; i < 12; i++)
 			{
 				ClearScreen();
-				TextOut(COL1, LCD_LINE3, "LEFT:");
-				TextOut(COL3, LCD_LINE3, "RIGHT:");
-				imprime_cor(25, LCD_LINE1, CORES[i]);
+				if( i % 2)
+					TextOut(COL1, LCD_LINE1, "RIGHT:");
+				else
+					TextOut(COL1, LCD_LINE1, "LEFT:");
+				imprime_cor(35, LCD_LINE1, CORES[i/2]);
 				for(j = 0; j < 4; j++)
 				{
 					if(j == 0){
 						TextOut(COL1, LINE[j], "R");
-						TextOut(COL3, LINE[j], "R");
-						NumOut( COL2, LINE[j], left[i].r);
-						NumOut( COL4, LINE[j], right[i].r);
+						if( i % 2)
+							imprime_value(LINE[j], right[i/2].r);
+						else
+							imprime_value(LINE[j], left[i/2].r);	
 					}else if(j == 1){
 						TextOut(COL1, LINE[j], "G");
-						TextOut(COL3, LINE[j], "G");
-						NumOut( COL2, LINE[j], left[i].g);
-						NumOut( COL4, LINE[j], right[i].g);
+						if( i % 2)
+							imprime_value(LINE[j], right[i/2].g);
+						else
+							imprime_value(LINE[j], left[i/2].g);
 					}else if(j == 2){
 						TextOut(COL1, LINE[j], "B");
-						TextOut(COL3, LINE[j], "B");
-						NumOut( COL2, LINE[j], left[i].b);
-						NumOut( COL4, LINE[j], right[i].b);
+						if( i % 2)
+							imprime_value(LINE[j], right[i/2].b);
+						else
+							imprime_value(LINE[j], left[i/2].b);
 					}else{
 						TextOut(COL1, LINE[j], "T");
-						TextOut(COL3, LINE[j], "T");
-						NumOut( COL2, LINE[j], l[i]);
-						NumOut( COL4, LINE[j], r[i]);
+						if( i % 2)
+							imprime_value(LINE[j], l[i/2]);
+						else
+							imprime_value(LINE[j], r[i/2]);
 					}
 				}
 				while(!press){

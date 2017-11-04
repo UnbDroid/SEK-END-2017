@@ -24,16 +24,31 @@
 int handle = 0;
 
 #define FILE_NAME "cores.dat"
-#define RECORDS 2*6 // Pois sao 6 intervalos de cores para cada sensor
-#define RECORD_SIZE 12 // Pois sao 3 inteiros(4 bytes) 
-#define FILE_SIZE (RECORD_SIZE * RECORDS)
+#define VALUE_SIZE 3*4 // Pois sao 3 valores inteiros(4 bytes): min, med e max
+#define COR_SIZE 3*VALUE_SIZE // Pois sao 3 cores: red, green, blue
+#define QUANT_CORES 6 // Pois existe: red, green, blue, white, black and out
+#define FILE_SIZE 2*QUANT_CORES*COR_SIZE // Esquerda e direita
+
+struct type_value
+{
+	int min, med, max;
+};
 
 struct type_COR
 {
-   int r, g, b; //red, green, blue
+   type_value r, g, b; // red, green, blue
 };
 
-type_COR init_COR(int red, int green, int blue)
+type_value init_value(int minimo, int media, int maximo)
+{
+	type_value color;
+	color.min = minimo;
+	color.med = media;
+	color.max = maximo;
+	return color;
+}
+
+type_COR init_COR(type_value red, type_value green, type_value blue)
 {
 	type_COR color;
 	color.r = red;
@@ -167,28 +182,46 @@ void ligar_sensores(int color)
 void get_two_rgb(type_COR & left, type_COR & right)
 {
 	// Essa funcao pega os dois valores simultaneamente, da esquerda e da direita
-	int l[3], r[3];
+	type_value l[3], r[3];
 	int CORES[3] = {VERMELHO, VERDE, AZUL};
 	int LINE[3] = {LCD_LINE5, LCD_LINE6, LCD_LINE7};
-	int Q_LEITURA = 9, DELAY = 30;
+	int Q_LEITURA = 9, DELAY = 30, temp;
 	float divide = 1.0/Q_LEITURA;
 	int i, j;
 	PlayTone(1000, 500);
 	for(i = 0; i < 3; i++)
 	{
-		l[i] = 0;
-		r[i] = 0;
 		set_sensor_color(SENSOR_COR_ESQUERDA, CORES[i]);
 		Wait(20);
 		set_sensor_color(SENSOR_COR_DIREITA, CORES[i]);
-		for(j = 0; j < Q_LEITURA; j++)
+
+		temp = get_value_color(SENSOR_COR_ESQUERDA);
+		l[i] = init_value(temp, temp, temp);
+		temp = get_value_color(SENSOR_COR_DIREITA);
+		r[i] = init_value(temp, temp, temp);
+		Wait(DELAY);
+		
+		for(j = 1; j < Q_LEITURA; j++)
 		{
-			l[i] += get_value_color(SENSOR_COR_ESQUERDA);
-			r[i] += get_value_color(SENSOR_COR_DIREITA);
+			temp = get_value_color(SENSOR_COR_ESQUERDA);
+			l[i].med += temp;
+			if(l[i].min > temp)
+				l[i].min = temp;
+			else if(l[i].max < temp)
+				l[i].max = temp;
+
+			temp = get_value_color(SENSOR_COR_DIREITA);
+			r[i].med += temp;
+			if(r[i].min > temp)
+				r[i].min = temp;
+			else if(r[i].max < temp)
+				r[i].max = temp;		
+
 			Wait(DELAY);
 		}
-		l[i] *= divide;
-		r[i] *= divide;
+
+		l[i].med *= divide;
+		r[i].med *= divide;
 		ClearLine(LINE[i]);
 		if(i == 0){
 			TextOut(COL1, LINE[i], "R");
@@ -200,8 +233,8 @@ void get_two_rgb(type_COR & left, type_COR & right)
 			TextOut(COL1, LINE[i], "B");
 			TextOut(COL3, LINE[i], "B");
 		}
-		NumOut( COL2, LINE[i], l[i]);
-		NumOut( COL4, LINE[i], r[i]);
+		NumOut( COL2, LINE[i], l[i].med);
+		NumOut( COL4, LINE[i], r[i].med);
 	}
 
 	left  = init_COR(l[0], l[1], l[2]);
