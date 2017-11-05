@@ -1,5 +1,13 @@
 #define BT_CONN 1
 
+#define DIRECOES_FILE "direcoes.dat"
+#define DIRECOES_SIZE 3 // Pois é um vetor de 3 valores byte.
+#define CORES_FILE "cores.dat"
+#define VALUE_SIZE 3*4 // Pois sao 3 valores inteiros(4 bytes): min, med e max
+#define COR_SIZE 3*VALUE_SIZE // Pois sao 3 cores: red, green, blue
+#define QUANT_CORES 6 // Pois existe: red, green, blue, white, black and out
+#define CORES_SIZE 2*QUANT_CORES*COR_SIZE // Esquerda e direita
+
 #define MOTOR_ESQUERDA OUT_A
 #define MOTOR_DIREITA OUT_C
 #define AMBOS_MOTORES OUT_AC
@@ -37,45 +45,39 @@ OUT_REGMODE_SPEED, 0, OUT_RUNSTATE_RUNNING, 0)
 #define FRENTE 0
 #define NADA 2
 
-//defines mais importantes, separados pra facilitar quando tiver de mudar
-//#define BLACKUP_R 250
-//#define FORAUP_R 450
-//#define FORADOWN_R 350
-#define L_WHITEDOWN_R 590
-#define L_REDDOWN_R 510
-#define L_BLUEUP_R 270
-#define L_GREENUP_R 275
-#define R_WHITEDOWN_R 560
-#define R_REDDOWN_R 495
-#define R_BLUEUP_R 225
-#define R_GREENUP_R 282
+struct type_INTERVAL
+{
+	int up, down;
+};
+struct type_LADO
+{
+	type_INTERVAL red, green, blue;
+	type_INTERVAL white, black, out;
+}
+type_INTERVAL init_interval(int u, int d)
+{
+	type_INTERVAL new;
+	new.up 	 = u;
+	new.down = d;
+	return new;
+}
 
-#define L_GREENDOWN_G 310
-#define L_GREENUP_G 350
-#define L_WHITEDOWN_G 530
-#define R_GREENDOWN_G 310
-#define R_GREENUP_G 350
-#define R_WHITEDOWN_G 500
-#define DESVIO 20
 
-//defines do teste cor
-/*#define WHITEDOWN 540
-#define WHITEUP 595
-#define BLACKDOWN 180
-#define REDDOWN 410
-#define GREENDOWN 335
-#define BLUEDOWN 260
-#define FORADOWN 350 */
-#define L_BLACKUP 260
-#define L_REDUP 460
-#define L_GREENUP 380
-#define L_BLUEUP 
-#define L_FORAUP 380
-#define R_BLACKUP 260
-#define R_REDUP 510
-#define R_GREENUP 370
-#define R_BLUEUP 325
-#define R_FORAUP 400
+type_LADO L, R;
+L.red 	= init_interval(442, 447);
+L.green = init_interval(549, 558);
+L.blue	= init_interval(549, 558);
+L.white = init_interval(549, 558);
+L.black	= init_interval(549, 558);
+L.out	= init_interval(549, 558);
+
+R.red 	= init_interval(549, 558);
+R.green = init_interval(549, 558);
+R.blue	= init_interval(549, 558);
+R.white = init_interval(549, 558);
+R.black	= init_interval(549, 558);
+R.out	= init_interval(549, 558);
+
 #define OFFSET_COLOR 1/9.0
 
 #define CORRECAO 0.051
@@ -202,7 +204,7 @@ int sensor_cor_verde(int sensor)
 			return FORA;
 	}
 }
-
+/*
 int get_leitura_rgb(int sensor)
 {
 	int leitura_r = 0, leitura_g = 0, leitura_b = 0;
@@ -234,7 +236,7 @@ int get_leitura_rgb(int sensor)
 	leitura = (4*leitura_r + leitura_g + 2*leitura_b)/7;
 	return leitura; // Se quisermos o valor entr 100 e 700
 }
-
+*/
 int trata_leitura(int leitura, int sensor)
 {
 	int cor;
@@ -296,7 +298,7 @@ int trata_leitura(int leitura, int sensor)
 	}
 	return cor;		// Se quisermos o valor entre 1 e 7
 }
-
+/*
 int teste_cor(int sensor)
 {
 	int cor, leitura;
@@ -304,7 +306,7 @@ int teste_cor(int sensor)
 	cor 	= trata_leitura(leitura, sensor);
 	return cor;
 }
-
+*/
 void get_two_rgb(int &leitura_e, int &leitura_d )
 {
 	// Essa funcao pega os dois valores simultaneamente, da esquerda e da direita
@@ -332,7 +334,13 @@ void get_two_rgb(int &leitura_e, int &leitura_d )
 	leitura_e = (4*left[0]+left[1]+2*left[2])/7;
 	leitura_d = (4*right[0]+right[1]+2*right[2])/7;
 }
-
+void teste_two_colors(int &left, int &right)
+{
+	int leitura_e, leitura_d;
+	get_two_rgb(leitura_e, leitura_d);
+	left = trata_leitura(SENSOR_COR_ESQUERDA, leitura_e);
+	right = trata_leitura(SENSOR_COR_DIREITA, leitura_d);
+}
 int preto_branco(int color)
 {
 	if(550 <= color)
@@ -368,7 +376,6 @@ void dist(int low_speed, int high_speed, int distancia)
 		}
 	}while(sinal*(count_A - MotorRotationCount(MOTOR_ESQUERDA))*6*PI/360 <= distancia);
 	Off(AMBOS_MOTORES);
-
 }
 
 void distancia_reto(int low_speed, int high_speed, int distancia){//função do kaynã
@@ -417,7 +424,6 @@ void distancia_re(int low_speed, int high_speed, int distancia){//função do Ka
 		}
 	}while((MotorRotationCount(MOTOR_ESQUERDA) - count_A)*6*PI/360 <= distancia);
 	Off(AMBOS_MOTORES);
-
 }
 
 void ajeitar(int cor) //arruma o robo pra ficar alinhado no quadrado da cor que recebe
@@ -921,8 +927,7 @@ bool verificar_direcao(int cor)
 	ajeitar(BRANCO);
 	distancia_reto(VELOCIDADE_MEDIA, VELOCIDADE_ALTA, 5);
 
-	cor_d = teste_cor(SENSOR_COR_DIREITA);
-	cor_e = teste_cor(SENSOR_COR_ESQUERDA);
+	teste_two_colors(cor_e, cor_d);
 
 	if (cor_e != PRETO && cor_d != PRETO)//se os dois nao veem preto entao o robo acertou o caminho
 	{
@@ -1176,14 +1181,121 @@ int identifica_cor()
 	return cor_d;
 }
 
+// Funcoes para trabalhar com a leitura de arquivos para gravar as direcoes e as cores
+
+int open_for_write(int &handle, int SIZE, char NAME[])
+{
+	unsigned int file_size = SIZE;
+	handle = 0;
+	// Start with the assumptions the file doesn't exist and needs to be created.
+	unsigned int rtn_code = CreateFile(NAME, file_size, handle);
+	// If the file already exists, open it with the intent of adding to the data
+	// that is already there.
+	if (rtn_code == LDR_FILEEXISTS)
+	{
+		rtn_code = DeleteFile(NAME);
+		if(rtn_code == LDR_SUCCESS)
+		{
+			rtn_code = CreateFile(NAME, file_size, handle);
+		}
+		else
+		{
+			// Deu algum erro, acho que nunca vai entrar aqui
+		}
+	}
+	// Return code handling
+	switch (rtn_code)
+	{
+		case LDR_SUCCESS:
+			return 1;
+		case LDR_FILEISFULL:
+			// Acho que nunca vai entrar nesse caso, pois o arquivo sempre é criado novamente
+			TextOut(0, LCD_LINE1, "file is full    ");
+			break;
+		default:
+			// Unanticipated exception.
+			TextOut(0, LCD_LINE1, "write open      ");
+			break;
+	}
+	alerta(800);
+	return 0;
+}
+int write_direcoes(int &handle, byte direcoes[]) // Retorna 1 caso consiga gravar
+{
+	byte CORES[3] = [VERMELHO, VERDE, AZUL];
+	unsigned int p; //Problem
+	int i;
+
+	for(i = 0; i < 3; i++) // Pois sao 3 direcoes apenas
+	{
+		p = Write(handle, direcoes[CORES[i]]);
+		// Return code handling
+		if (p != LDR_SUCCESS)
+			return 0;
+	}
+	return 1;
+}
+int open_for_read(int &handle, int SIZE, char NAME[])
+{
+   unsigned int file_size = SIZE;
+   handle = 0;
+   unsigned int rtn_code = OpenFileRead(NAME, file_size, handle);
+   // Return code handling
+   if (rtn_code != LDR_SUCCESS)
+   {
+      return 0;
+   }
+   return 1;
+}
+int read_direct(int &handle, byte &direct)
+{
+
+	unsigned int p;
+	p = Read(handle, direct);
+	// rtn_code_out(rtn_code);
+	// Return code handling
+	if (p == LDR_SUCCESS)
+		return 1;
+	return 0;
+}
+
 task main () //por enquato a maior parte está só com a lógica, tem que alterar as funções pra ele conseguir andar certinho e girar
 {
-	int cor_achada;
-	int CORES[3] = {AZUL, VERMELHO, VERDE};
-	int direcoes[6] = {NADA, NADA, NADA, NADA, NADA, NADA};
-	int i;
+	int handle = 0;
+	byte cor_achada, direc;
+	byte CORES[3] = {VERMELHO, VERDE, AZUL};
+	byte direcoes[6] = {NADA, NADA, NADA, NADA, NADA, NADA};
+	int r = 1, i;
 	BTCheck();
 	ligar_sensores();
+	// Inicia lendo do arquivo de cores
+	r = open_for_read(handle, CORES_SIZE, CORES_FILE);
+	if(r == 1) // Abriu o arquivo com sucesso
+	{
+		
+	}
+	if(r == 0)
+	{
+		
+	}
+	// Inicia lendo do arquivo direcoes 
+	r = open_for_read(handle, DIRECOES_SIZE, DIRECOES_FILE);
+	if(r == 1) // Abriu o arquivo com sucesso
+	{
+		for(i = 0; i < 3 && r == 1; i++)
+		{
+			r = read_direct(handle, direc);
+			direcoes[CORES[i]] = direc;
+		}
+	}
+	if(r == 0) // Ou seja, teve algum erro na abertura do arquivo, ou durante a leitura do arquivo
+	{
+		for(i = 0; i < 3; i++)
+		{
+			direcoes[CORES[i]] = NADA; // Retorna às configurações iniciais caso dê errado
+		}
+	}
+	// Fim de ler as direcoes do arquivo
  	Wait(1000);
  	MOTOR(MOTOR_PORTA, -20);
  	Wait(200);
