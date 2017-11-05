@@ -176,6 +176,7 @@ void ligar_sensores(int color)
 	set_sensor_color(SENSOR_COR_DIREITA, color);
 	Wait(100);
 	set_sensor_color(SENSOR_COR_ESQUERDA, color);
+	Wait(100);
 }
 
 
@@ -277,9 +278,9 @@ task main()
 		ClearScreen();
 		TextOut(5, LCD_LINE3, "Coloque em cima da cor:");
 		imprime_cor(25, LCD_LINE6, CORES[i]);
-		while(!press){
+		while(!ButtonPressed(BTNCENTER, false)){
 			Wait(100);
-		}while(press){
+		}while(ButtonPressed(BTNCENTER, false)){
 			Wait(100);
 		}
 		ClearScreen();
@@ -292,14 +293,14 @@ task main()
 			left[i] = aux1;
 			right[i] = aux2;
 			Wait(300);
-			for(j = 0; j < 50 && !press; j++)
+			for(j = 0; j < 50 && !ButtonPressed(BTNCENTER, false); j++)
 			{
 				PlayTone(300+(1000-300)*j/50, 100);
 				Wait(400-5*i);
 			}
 			if(j < 50)
 			{
-				while(press){
+				while(ButtonPressed(BTNCENTER, false)){
 					Wait(100);
 				}
 				break;
