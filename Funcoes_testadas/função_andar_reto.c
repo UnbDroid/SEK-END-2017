@@ -1,5 +1,5 @@
-#define MOTOR_ESQUERDA OUT_A
-#define MOTOR_DIREITA OUT_C
+#define MOTOR_ESQUERDA OUT_C
+#define MOTOR_DIREITA OUT_A
 #define AMBOS_MOTORES OUT_AC
 #define SENSOR_GYRO IN_1 /*teste*/
 
@@ -17,7 +17,7 @@ void ligar_sensores()
 
 
 
-void retinho(int velocidade) // se dif == 1: realizar função enquanto não for "cor", se n, enquanto for "cor"
+void retinho(int velocidade)
 {
 	float gyro1, gyro2, erro, velo1 = velocidade, velo2 = velocidade;
 	gyro1 = SensorHTGyro(SENSOR_GYRO);

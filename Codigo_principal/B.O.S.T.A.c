@@ -8,8 +8,8 @@
 #define QUANT_CORES 6 // Pois existe: red, green, blue, white, black and out
 #define CORES_SIZE 2*QUANT_CORES*COR_SIZE // Esquerda e direita
 
-#define MOTOR_ESQUERDA OUT_A
-#define MOTOR_DIREITA OUT_C
+#define MOTOR_ESQUERDA OUT_C
+#define MOTOR_DIREITA OUT_A
 #define AMBOS_MOTORES OUT_AC
 #define MOTOR_GARRA OUT_B
 #define MOTOR_PORTA OUT_B /*conexão com o outro cérebro*/

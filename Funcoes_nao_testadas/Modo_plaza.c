@@ -1,7 +1,7 @@
 #define CONEXAO 1 // Numero da porta BlueTooth
 
-#define MOTOR_ESQUERDA OUT_A
-#define MOTOR_DIREITA OUT_C
+#define MOTOR_ESQUERDA OUT_C
+#define MOTOR_DIREITA OUT_A
 #define AMBOS_MOTORES OUT_AC
 #define MOTOR(p,s) RemoteSetOutputState(CONEXAO, p, s, \
 OUT_MODE_MOTORON+OUT_MODE_BRAKE+OUT_MODE_REGULATED, \
