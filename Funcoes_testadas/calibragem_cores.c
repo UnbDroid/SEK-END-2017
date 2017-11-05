@@ -185,8 +185,8 @@ void get_two_rgb(int & leitura_e, int & leitura_d )
 		NumOut( COL2, LINE[i], left[i]);
 		NumOut( COL4, LINE[i], right[i]);
 	}
-	leitura_e = (5*left[0]+left[1]+3*left[2])/9;
-	leitura_d = (5*right[0]+right[1]+3*right[2])/9;
+	leitura_e = (5*left[0]+3*left[1]+left[2])/9;
+	leitura_d = (5*right[0]+3*right[1]+right[2])/9;
 }
 
 int trata_leitura(int leitura)
