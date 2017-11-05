@@ -1,7 +1,7 @@
 #define BT_CONN 1
 
-#define MOTOR_ESQUERDA OUT_A
-#define MOTOR_DIREITA OUT_C
+#define MOTOR_ESQUERDA OUT_C
+#define MOTOR_DIREITA OUT_A
 #define MOTORES OUT_AC
 #define AMBOS_MOTORES OUT_AC
 #define MOTOR_GARRA OUT_B
@@ -9,6 +9,8 @@
 #define MOTOR(p,s) RemoteSetOutputState(CONEXAO, p, s, \
 OUT_MODE_MOTORON+OUT_MODE_BRAKE+OUT_MODE_REGULATED, \
 OUT_REGMODE_SPEED, 0, OUT_RUNSTATE_RUNNING, 0)
+
+/*no define acima, o argumento p correnponde à porta do motor e o argumento s corresponde à potencia que será passada ao motor*/
 
 #define SENSOR_COR_ESQUERDA IN_4 /*conexÃ£o com o outro cÃ©rebro*/
 #define SENSOR_COR_DIREITA IN_1 /*conexÃ£o com o outro cÃ©rebro*/
@@ -293,12 +295,14 @@ void get_two_rgb(int &leitura_e, int &leitura_d )
 	leitura_d = (4*right[0]+right[1]+2*right[2])/7;
 }
 
-int preto_branco(int color)
+int preto_branco(int sensor)
 {
-	if(550 <= color)
-		return BRANCO;
-	else
+	int leitura = get_value_color(sensor);
+
+	if(400 <= leitura)
 		return PRETO;
+	else
+		return BRANCO;
 }
 
 
@@ -901,6 +905,75 @@ int testar_caminho(int cor)//testa as direções verificando se ja há alguma co
 	return DIREITA;
 }
 
+/*void afaga_bonecos(int passageiros, char abre_ou_fecha) //o char determina se o usuario quer apertar ou soltar os bonecos 'a' == abrir 'f' == fechar
+{
+	if (abre_ou_fecha == 'a')
+	{
+
+		switch (passageiros)
+		{
+
+			case 0:
+			break;
+			case 1:
+			MOTOR(MOTOR_PORTA, VELOCIDADE_BAIXA); //os Wait precisam ser determinados experimentalmente para todas as quantidades de bonecos.
+			Wait();
+			MOTOR(MOTOR_PORTA, 0);
+			break;
+			case 2:
+			MOTOR(MOTOR_PORTA, VELOCIDADE_BAIXA);//como não tenho tempo agora e acho que essa função não sera muito util, deixarei a estrutura para caso alguem deseje usar
+			Wait();
+			MOTOR(MOTOR_PORTA, 0);
+			break;
+			case 3:
+			MOTOR(MOTOR_PORTA, VELOCIDADE_BAIXA);
+			Wait();
+			MOTOR(MOTOR_PORTA, 0);
+			break;
+			case 4:
+			MOTOR(MOTOR_PORTA, VELOCIDADE_BAIXA);
+			Wait();
+			MOTOR(MOTOR_PORTA, 0);
+			break;
+
+		}
+	}
+
+	if (abre_ou_fecha == 'f')//os Waits para fechar a porta são iguais aos waits para abri-las para cada quantidade de bonecos  
+	{
+
+		switch (passageiros)
+		{
+
+			case 0:
+			break;
+			case 1:
+			MOTOR(MOTOR_PORTA, -VELOCIDADE_BAIXA);
+			Wait();
+			MOTOR(MOTOR_PORTA, 0);
+			break;
+			case 2:
+			MOTOR(MOTOR_PORTA, -VELOCIDADE_BAIXA);
+			Wait();
+			MOTOR(MOTOR_PORTA, 0);
+			break;
+			case 3:
+			MOTOR(MOTOR_PORTA, -VELOCIDADE_BAIXA);
+			Wait();
+			MOTOR(MOTOR_PORTA, 0);
+			break;
+			case 4:
+			MOTOR(MOTOR_PORTA, -VELOCIDADE_BAIXA);
+			Wait();
+			MOTOR(MOTOR_PORTA, 0);
+			break;
+
+		}
+	}
+
+
+}*/
+
 
 void seguir_direcao(int cor)//função que sera usada quando a cor ja tiver uma direção definida
 {
@@ -991,9 +1064,39 @@ void modo_plaza ()
 
 	ResetRotationCount(MOTOR_DIREITA);
 	ResetRotationCount(MOTOR_ESQUERDA);
-	distancia_reto(VELOCIDADE_MEDIA, VELOCIDADE_ALTA, 10);
-	reto(BRANCO);
-	while (sensor_cor(SENSOR_COR_DIREITA) !=PRETO && sensor_cor(SENSOR_COR_ESQUERDA) !=PRETO) retinho(VELOCIDADE_ALTISSIMA);
+	while (((abs(MotorRotationCount(MOTOR_DIREITA)) + abs(MotorRotationCount(MOTOR_ESQUERDA))) / 2.0) < 9999999999 /*4320.0*/)
+	{
+		if ((preto_branco(SENSOR_COR_DIREITA) == BRANCO) && (preto_branco(SENSOR_COR_ESQUERDA) == BRANCO))
+		{
+			ClearScreen();
+			TextOut(0, LCD_LINE4, "RETO");
+			retinho(VELOCIDADE_ALTISSIMA);
+			Wait(300);
+		}
+
+		else if ((preto_branco(SENSOR_COR_DIREITA) == PRETO) && (preto_branco(SENSOR_COR_ESQUERDA) == BRANCO))
+		{
+			ClearScreen();
+			TextOut(0, LCD_LINE4, "DIREITA");
+			OnFwd(MOTOR_DIREITA, -VELOCIDADE_ALTISSIMA);
+			OnFwd(MOTOR_ESQUERDA, -VELOCIDADE_ALTA);
+			Wait(300);
+		}
+
+		else if ((preto_branco(SENSOR_COR_DIREITA) == BRANCO) && (preto_branco(SENSOR_COR_ESQUERDA) == PRETO))
+		{
+			ClearScreen();
+			TextOut(0, LCD_LINE4, "ESQUERDA");
+			OnFwd(MOTOR_ESQUERDA, -VELOCIDADE_ALTISSIMA);
+			OnFwd(MOTOR_DIREITA, -VELOCIDADE_ALTA);
+			Wait(300);
+		}
+
+	}
+
+	PlayTone(880, 500);
+
+	while (sensor_cor(SENSOR_COR_DIREITA) !=PRETO && sensor_cor(SENSOR_COR_ESQUERDA) !=PRETO) retinho(VELOCIDADE_MEDIA);
 	distancia_reto(VELOCIDADE_MEDIA, VELOCIDADE_ALTA, 10);
 	while (sensor_cor(SENSOR_COR_DIREITA) !=PRETO && sensor_cor(SENSOR_COR_ESQUERDA) !=PRETO) retinho(VELOCIDADE_ALTISSIMA);
 	distancia_reto(VELOCIDADE_MEDIA, VELOCIDADE_ALTA, maximo);
