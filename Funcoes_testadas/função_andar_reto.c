@@ -21,7 +21,7 @@ void retinho(int velocidade)
 {
 	float gyro1, gyro2, erro, velo1 = velocidade, velo2 = velocidade;
 	gyro1 = SensorHTGyro(SENSOR_GYRO);
-	OnFwdSync(AMBOS_MOTORES, -velocidade, -12);
+	OnFwdSync(AMBOS_MOTORES, -velocidade, -18);
 	Wait(50);
 	while(gyro2 >= -0.5 && gyro2 <= 0.5){
 		gyro2 = SensorHTGyro(SENSOR_GYRO);
@@ -35,7 +35,7 @@ void retinho(int velocidade)
 	else if (velo2 < -90) velo2 = -90;
 	OnRev(MOTOR_DIREITA, velo1);
 	OnRev(MOTOR_ESQUERDA, velo2);
-	Wait(150);
+	Wait(50);
 }
 
 task main()
