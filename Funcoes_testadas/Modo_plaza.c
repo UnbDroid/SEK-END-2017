@@ -3,7 +3,6 @@
 #define MOTOR_ESQUERDA OUT_A
 #define MOTOR_DIREITA OUT_C
 #define AMBOS_MOTORES OUT_AC
-#define MOTORES OUT_AC
 #define MOTOR(p,s) RemoteSetOutputState(CONEXAO, p, s, \
 OUT_MODE_MOTORON+OUT_MODE_BRAKE+OUT_MODE_REGULATED, \
 OUT_REGMODE_SPEED, 0, OUT_RUNSTATE_RUNNING, 0)
@@ -66,12 +65,12 @@ OUT_REGMODE_SPEED, 0, OUT_RUNSTATE_RUNNING, 0)
 #define GREENUP_R 385
 
 //defines mais importantes, separados pra facilitar quando tiver de mudar
-#define WHITEDOWN_R 590
-#define REDDOWN_R 550
-#define BLACKUP_R 250
+#define WHITEDOWN_R 560
+#define REDDOWN_R 495
+#define BLACKUP_R 275
 #define BLUEDOWN_R 220
 #define BLUEUP_R 310
-#define FORAUP_R 450
+#define FORAUP_R 355
 #define FORADOWN_R 350
 #define DESVIO 20
 #define OFFSET_COLOR 1/9.0
@@ -232,11 +231,11 @@ void giro(float degrees) // Algoritimo usado pela sek do ano passado //testada
 			gyro = SensorHTGyro(SENSOR_GYRO);
 			angle += (gyro - offset) * (time - prev_time)/1000.0;
 			Wait(100); //MUDAR OS VALORES DOS WAITS PARA ALTERAR AS POSIÇÕES DAS RODAS
-			Off(MOTORES);
+			Off(AMBOS_MOTORES);
 			OnRev(MOTOR_ESQUERDA, -VELOCIDADE_ALTA);
 			OnRev(MOTOR_DIREITA, -VELOCIDADE_ALTA);
 			Wait(20); //USANDO 100 E 20 AS RODAS E AS CASTER BALLS ESTÃO FICANDO DENTRO DO QUADRADO, SWEET, DUDE !
-			Off(MOTORES);
+			Off(AMBOS_MOTORES);
 		}
 	} else {
 
@@ -250,15 +249,15 @@ void giro(float degrees) // Algoritimo usado pela sek do ano passado //testada
 			gyro = SensorHTGyro(SENSOR_GYRO);
 			angle += (gyro - offset) * (time - prev_time)/1000.0;
 		  	Wait(100);
-			Off(MOTORES);
+			Off(AMBOS_MOTORES);
 			OnFwd(MOTOR_ESQUERDA, -VELOCIDADE_ALTA);
 			OnFwd(MOTOR_DIREITA, -VELOCIDADE_ALTA);
 		  	Wait(20);
-			Off(MOTORES);
+			Off(AMBOS_MOTORES);
 		}
 	}
 
-	Off(MOTORES);
+	Off(AMBOS_MOTORES);
 }
 
 void girar(float degrees) //função para mover o robo de acordo com o giro e girar, valores de acordo com testes
@@ -272,8 +271,8 @@ void girar(float degrees) //função para mover o robo de acordo com o giro e gi
 	{
 		giro(90);
 		while(sensor_cor(SENSOR_COR_ESQUERDA) != FORA && sensor_cor(SENSOR_COR_DIREITA) != FORA)
-			OnFwdSync(MOTORES, -VELOCIDADE_MEDIA, 0);
-		Off(MOTORES);
+			OnFwdSync(AMBOS_MOTORES, -VELOCIDADE_MEDIA, 0);
+		Off(AMBOS_MOTORES);
 
 		while(sensor_cor(SENSOR_COR_DIREITA) == FORA){
 			OnFwd(MOTOR_DIREITA, VELOCIDADE_MEDIA);
@@ -294,12 +293,12 @@ void girar(float degrees) //função para mover o robo de acordo com o giro e gi
 
 }
 
-void retinho(int velocidade ) // se dif == 1: realizar função enquanto não for "cor", se n, enquanto for "cor"
+void retinho(int velocidade) // se dif == 1: realizar função enquanto não for "cor", se n, enquanto for "cor"
 {
 	float gyro1, gyro2, erro, velo1 = velocidade, velo2 = velocidade;
 	gyro1 = SensorHTGyro(SENSOR_GYRO);
-	OnFwdSync(AMBOS_MOTORES, -velocidade, 12);
-	Wait(100);
+	OnFwdSync(AMBOS_MOTORES, -velocidade, -12);
+	Wait(50);
 	while(gyro2 >= -0.5 && gyro2 <= 0.5){
 		gyro2 = SensorHTGyro(SENSOR_GYRO);
 	}
@@ -312,7 +311,7 @@ void retinho(int velocidade ) // se dif == 1: realizar função enquanto não fo
 	else if (velo2 < -90) velo2 = -90;
 	OnRev(MOTOR_DIREITA, velo1);
 	OnRev(MOTOR_ESQUERDA, velo2);
-	Wait(250);
+	Wait(150);
 }
 
 void modo_plaza ()
@@ -328,7 +327,7 @@ void modo_plaza ()
 
 	distancia_re(VELOCIDADE_MEDIA, VELOCIDADE_ALTA, 5);
 	girar(180);
-	PlayTone(880, 500);
+	PlayTone(1000, 500);
 
 
 	//OnRevSync(AMBOS_MOTORES, -VELOCIDADE_ALTA, 0);

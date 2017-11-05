@@ -41,27 +41,27 @@
 #define	REDUP_R 590
 #define GREENUP_R 385
 
-#define WHITEDOWN_R 590
-#define REDDOWN_R 550
+#define WHITEDOWN_R 560
+#define REDDOWN_R 495
 #define BLACKUP_R 270
-#define BLUEDOWN_R 220
+#define BLUEDOWN_R 210
 #define BLUEUP_R 310
 #define FORAUP_R 450
 #define FORADOWN_R 350
 
 #define WHITEDOWN 579
-#define WHITEUP 595
-#define REDUP 455
+#define WHITEUP 560 //<--------
+#define REDUP 375 //<--------
 #define REDDOWN 445
-#define FORAUP 398
+#define FORAUP 310 //<--------
 #define FORADOWN 390
-#define GREENUP 385
+#define GREENUP 285 //<--------
 #define GREENDOWN 367
-#define BLUEUP 277
+#define BLUEUP 265 //<--------
 #define BLUEDOWN 270
-#define BLACKUP 247
+#define BLACKUP 225 //<--------
 #define BLACKDOWN 243
-#define DESVIO 20
+#define DESVIO 5
 #define OFFSET_COLOR 1/9.0
 
 #define COL1 0
@@ -143,7 +143,7 @@ int get_leitura_rgb(int sensor)
 	//Wait(50);
 	set_sensor_color(sensor, VERMELHO);
 	Wait(100);
-	leitura = (4*leitura_r + 2*leitura_g + leitura_b)/7;
+	leitura = (5*leitura_r + 3*leitura_g + leitura_b)/9;
 	return leitura; // Se quisermos o valor entr 100 e 700
 }
 
@@ -236,13 +236,13 @@ int trata_leitura(int leitura)
 	{
 		cor = AZUL;
 	}
-	else if (leitura <= FORAUP)
-	{
-		cor = FORA;
-	}
 	else if (leitura <= GREENUP)
 	{
 		cor = VERDE;
+	}
+	else if (leitura <= FORAUP)
+	{
+		cor = FORA;
 	}
 	else if (leitura <= REDUP)
 	{

@@ -20,8 +20,9 @@ OUT_REGMODE_SPEED, 0, OUT_RUNSTATE_RUNNING, 0)
 
 #define VELOCIDADE_BAIXINHA 15
 #define VELOCIDADE_BAIXA 35
-#define VELOCIDADE_MEDIA 45
+#define VELOCIDADE_MEDIA 50
 #define VELOCIDADE_ALTA 65
+#define VELOCIDADE_ALTISSIMA 90
 
 #define PRETO 1
 #define VERDE 3
@@ -98,7 +99,7 @@ OUT_REGMODE_SPEED, 0, OUT_RUNSTATE_RUNNING, 0)
 
 #define CORRECAO 0.051
 
-int passageiros = 0, direcoes[6] = {1, 1, 1, 1, 1, 1}; //achei mais prático criar um vetor de 6 posiçoes e usar as constantes como o valor do índice
+int passageiros = 0, direcoes[6] = {1, 1, 1, 1, 1, 1}, maximo = 40; //achei mais prático criar um vetor de 6 posiçoes e usar as constantes como o valor do índice
 
 sub BTCheck(){
      if (!BluetoothStatus(CONEXAO)==NO_ERR){
@@ -725,8 +726,8 @@ void retinho(int velocidade) // se dif == 1: realizar função enquanto não for
 {
 	float gyro1, gyro2, erro, velo1 = velocidade, velo2 = velocidade;
 	gyro1 = SensorHTGyro(SENSOR_GYRO);
-	OnFwdSync(AMBOS_MOTORES, -velocidade, 5);
-	Wait(100);
+	OnFwdSync(AMBOS_MOTORES, -velocidade, -12);
+	Wait(50);
 	while(gyro2 >= -0.5 && gyro2 <= 0.5){
 		gyro2 = SensorHTGyro(SENSOR_GYRO);
 	}
@@ -739,7 +740,7 @@ void retinho(int velocidade) // se dif == 1: realizar função enquanto não for
 	else if (velo2 < -90) velo2 = -90;
 	OnRev(MOTOR_DIREITA, velo1);
 	OnRev(MOTOR_ESQUERDA, velo2);
-	Wait(250);
+	Wait(150);
 }
 
 void reto(int cor) //robo move ate que os dois sensores parem de ver a cor
@@ -992,10 +993,10 @@ void modo_plaza ()
 	ResetRotationCount(MOTOR_ESQUERDA);
 	distancia_reto(VELOCIDADE_MEDIA, VELOCIDADE_ALTA, 10);
 	reto(BRANCO);
-	while (sensor_cor(SENSOR_COR_DIREITA) !=PRETO && sensor_cor(SENSOR_COR_ESQUERDA) !=PRETO) retinho(VELOCIDADE_MEDIA);
+	while (sensor_cor(SENSOR_COR_DIREITA) !=PRETO && sensor_cor(SENSOR_COR_ESQUERDA) !=PRETO) retinho(VELOCIDADE_ALTISSIMA);
 	distancia_reto(VELOCIDADE_MEDIA, VELOCIDADE_ALTA, 10);
-	while (sensor_cor(SENSOR_COR_DIREITA) !=PRETO && sensor_cor(SENSOR_COR_ESQUERDA) !=PRETO) retinho(VELOCIDADE_MEDIA);
-	distancia_reto(VELOCIDADE_MEDIA, VELOCIDADE_ALTA, 30);
+	while (sensor_cor(SENSOR_COR_DIREITA) !=PRETO && sensor_cor(SENSOR_COR_ESQUERDA) !=PRETO) retinho(VELOCIDADE_ALTISSIMA);
+	distancia_reto(VELOCIDADE_MEDIA, VELOCIDADE_ALTA, maximo);
 	giro(180);
 	aux = abs(MotorRotationCount(MOTOR_DIREITA));
 	ResetRotationCount(MOTOR_DIREITA);
@@ -1015,6 +1016,7 @@ void modo_plaza ()
 		Wait(50);
 		prev_motor = abs(MotorRotationCount(MOTOR_DIREITA));
 	}
+	if (maximo > 10) maximo -= 10;
 
 	
 
