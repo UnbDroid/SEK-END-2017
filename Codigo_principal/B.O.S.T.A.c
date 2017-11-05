@@ -54,18 +54,18 @@ struct type_cor
 {
 	type_INTERVAL red, green, blue;
 	type_INTERVAL white, black, out;
-}
-struct type_lado
+};
+struct type_LADO
 {
 	type_cor r, g, t;
-}
+};
 type_INTERVAL init_interval(int u, int d)
 {
 	type_INTERVAL new;
 	new.up 	 = u;
 	new.down = d;
 	return new;
-}
+};
 
 
 type_LADO L, R;
@@ -160,17 +160,17 @@ int sensor_cor(int sensor)
 	for(int i = 0; i < 1/OFFSET_COLOR; i++) //Acho que precisamos filtraro sensor assim
 	{
 		leitura += get_value_color(sensor)*OFFSET_COLOR;
-		Wait(10); 
+		Wait(10);
 	}
 	if (sensor == SENSOR_COR_ESQUERDA){
 		NumOut(0,0, leitura);
-	
+
 		if(leitura >= L.r.white.down){
 			return BRANCO;
 		} else if (leitura >= L.r.red.down){
 			return VERMELHO;
 		}/* else if (leitura <= BLACKUP_R){
-			return PRETO; 
+			return PRETO;
 		}*/else if (leitura <= L.r.blue.up){
 			return AZUL;
 		} else if (leitura <= L.r.green.up){
@@ -187,7 +187,7 @@ int sensor_cor(int sensor)
 		} else if (leitura >= R.r.red.down){
 			return VERMELHO;
 		} /*else if (leitura <= BLACKUP_R){
-			return PRETO; 
+			return PRETO;
 		}*/else if (leitura <= R.r.blue.up){
 			return AZUL;
 		} else if (leitura <= R.r.green.up){
@@ -205,7 +205,7 @@ int sensor_cor_verde(int sensor)
 	for(int i = 0; i < 1/OFFSET_COLOR; i++) //Acho que precisamos filtraro sensor assim
 	{
 		leitura += get_value_color(sensor)*OFFSET_COLOR;
-		Wait(10); 
+		Wait(10);
 	}
 	if (sensor == SENSOR_COR_ESQUERDA)
 	{
@@ -213,7 +213,7 @@ int sensor_cor_verde(int sensor)
 			return BRANCO;
 		if (leitura >= (L.g.green.down - DESVIO) && leitura <= (L.g.green.down + DESVIO))
 			return VERDE;
-		else 
+		else
 			return FORA;
 	}
 	if (sensor == SENSOR_COR_DIREITA)
@@ -222,7 +222,7 @@ int sensor_cor_verde(int sensor)
 			return BRANCO;
 		if (leitura >= (R.g.green.down - DESVIO) && leitura <= (R.g.green.down + DESVIO))
 			return VERDE;
-		else 
+		else
 			return FORA;
 	}
 }
@@ -264,15 +264,15 @@ int trata_leitura(int leitura, int sensor)
 	int cor;
 	if (sensor == SENSOR_COR_ESQUERDA)
 	{
-		if (leitura <= L_BLACKUP){
+		if (leitura <= L.t.black.up){
 			cor = PRETO;
-		}else if (leitura <= L_BLUEUP){
+		}else if (leitura <= L.t.blue.up){
 			cor = AZUL;
-		}else if (leitura <= L_GREENUP){
+		}else if (leitura <= L.t.green.up){
 			cor = VERDE;
-		}else if (leitura <= L_FORAUP){
+		}else if (leitura <= L.t.fora.up){
 			cor = FORA;
-		}else if (leitura <= L_REDUP){
+		}else if (leitura <= L.t.red.up){
 			cor = VERMELHO;
 		}else{
 			cor = BRANCO;
@@ -280,15 +280,15 @@ int trata_leitura(int leitura, int sensor)
 	}
 	if (sensor == SENSOR_COR_DIREITA)
 	{
-		if (leitura <= R_BLACKUP){
+		if (leitura <= R.t.black.up){
 			cor = PRETO;
-		}else if (leitura <= R_BLUEUP){
+		}else if (leitura <= R.t.blue.up){
 			cor = AZUL;
-		}else if (leitura <= R_GREENUP){
+		}else if (leitura <= R.t.green.up){
 			cor = VERDE;
-		}else if (leitura <= R_FORAUP){
+		}else if (leitura <= R.t.fora.up){
 			cor = FORA;
-		}else if (leitura <= R_REDUP){
+		}else if (leitura <= R.t.red.up){
 			cor = VERMELHO;
 		}else{
 			cor = BRANCO;
@@ -478,7 +478,7 @@ void ajeitar(int cor) //arruma o robo pra ficar alinhado no quadrado da cor que 
 			left = sensor_cor(SENSOR_COR_ESQUERDA);
 		}
 		Off(AMBOS_MOTORES);
-		
+
 		contador = 0;
 		right = sensor_cor(SENSOR_COR_DIREITA);
 		if(left != cor)
@@ -492,7 +492,7 @@ void ajeitar(int cor) //arruma o robo pra ficar alinhado no quadrado da cor que 
 			Wait(100);
 			PlayTone(600, 100);
 			contador += 1;
-			right = sensor_cor(SENSOR_COR_DIREITA);	
+			right = sensor_cor(SENSOR_COR_DIREITA);
 		}
 	}
 	Off(MOTORES);*/
@@ -502,7 +502,7 @@ void ajeitar(int cor) //arruma o robo pra ficar alinhado no quadrado da cor que 
 		while(sensor_cor(SENSOR_COR_DIREITA) != cor || sensor_cor(SENSOR_COR_ESQUERDA) != cor) // Aqui ele comeca a ajeitar, para caso chegue torto, ele fique certo no final
 		{
 			Off(AMBOS_MOTORES);
-		
+
 			contador = 0;
 			while(sensor_cor(SENSOR_COR_ESQUERDA) != cor && contador < 3)
 			{ // Ajusta a roda esquerda para ficar em cima da linha.
@@ -529,7 +529,7 @@ void ajeitar(int cor) //arruma o robo pra ficar alinhado no quadrado da cor que 
 		while(sensor_cor_verde(SENSOR_COR_DIREITA) != cor || sensor_cor_verde(SENSOR_COR_ESQUERDA) != cor) // Aqui ele comeca a ajeitar, para caso chegue torto, ele fique certo no final
 		{
 			Off(AMBOS_MOTORES);
-		
+
 			contador = 0;
 			while(sensor_cor_verde(SENSOR_COR_ESQUERDA) != cor && contador < 3)
 			{ // Ajusta a roda esquerda para ficar em cima da linha.
@@ -645,7 +645,7 @@ void girar(float degrees) //função para mover o robo de acordo com o giro e gi
 		while(sensor_cor(SENSOR_COR_DIREITA) == FORA || sensor_cor(SENSOR_COR_ESQUERDA) == FORA) // Aqui ele comeca a ajeitar, para caso chegue torto, ele fique certo no final
 		{
 			Off(AMBOS_MOTORES);
-		
+
 			contador = 0;
 			while(sensor_cor(SENSOR_COR_ESQUERDA) == FORA && contador < 3)
 			{ // Ajusta a roda esquerda para ficar em cima da linha.
@@ -936,7 +936,7 @@ void reto(int cor) //robo move ate que os dois sensores parem de ver a cor
 		Wait(100);
 	}
 	Off(AMBOS_MOTORES);
-	
+
 	//alterei o laço para dentro da função recenbendo a cor como argumento
 }
 
@@ -1294,13 +1294,13 @@ task main () //por enquato a maior parte está só com a lógica, tem que altera
 	r = open_for_read(handle, CORES_SIZE, CORES_FILE);
 	if(r == 1) // Abriu o arquivo com sucesso
 	{
-		
+
 	}
 	if(r == 0)
 	{
-		
+
 	}
-	// Inicia lendo do arquivo direcoes 
+	// Inicia lendo do arquivo direcoes
 	r = open_for_read(handle, DIRECOES_SIZE, DIRECOES_FILE);
 	if(r == 1) // Abriu o arquivo com sucesso
 	{
