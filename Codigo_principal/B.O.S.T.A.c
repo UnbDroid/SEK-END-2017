@@ -39,6 +39,7 @@ OUT_REGMODE_SPEED, 0, OUT_RUNSTATE_RUNNING, 0)
 
 #define SENSIBILIDADE 0.9
 #define OFFSET_SAMPLES 2000
+#define DESVIO 15
 
 #define ESQUERDA 1
 #define DIREITA -1
@@ -49,10 +50,14 @@ struct type_INTERVAL
 {
 	int up, down;
 };
-struct type_LADO
+struct type_cor
 {
 	type_INTERVAL red, green, blue;
 	type_INTERVAL white, black, out;
+}
+struct type_lado
+{
+	type_cor r, g, t;
 }
 type_INTERVAL init_interval(int u, int d)
 {
@@ -64,19 +69,36 @@ type_INTERVAL init_interval(int u, int d)
 
 
 type_LADO L, R;
-L.red 	= init_interval(442, 447);
-L.green = init_interval(549, 558);
-L.blue	= init_interval(549, 558);
-L.white = init_interval(549, 558);
-L.black	= init_interval(549, 558);
-L.out	= init_interval(549, 558);
+L.r.red 	= init_interval(500, 555);
+L.r.green 	= init_interval(220, 290);
+L.r.blue	= init_interval(270, 285);
+L.r.white 	= init_interval(555, 605);
+//L.r.black	= init_interval(549, 558);
+//L.r.out		= init_interval(549, 558);
+R.r.red 	= init_interval(530, 550);
+R.r.green 	= init_interval(300, 340);
+R.r.blue	= init_interval(250, 285);
+R.r.white	= init_interval(551, 600);
+//R.r.black	= init_interval(549, 558);
+//R.r.out		= init_interval(549, 558);
 
-R.red 	= init_interval(549, 558);
-R.green = init_interval(549, 558);
-R.blue	= init_interval(549, 558);
-R.white = init_interval(549, 558);
-R.black	= init_interval(549, 558);
-R.out	= init_interval(549, 558);
+L.g.green 	= init_interval(510, 605);
+L.g.white 	= init_interval(549, 558);
+R.g.green 	= init_interval(365, 400);
+R.g.white 	= init_interval(520, 550);
+
+L.t.red 	= init_interval(438, 447);
+L.t.green 	= init_interval(320, 335);
+L.t.blue	= init_interval(265, 280);
+//L.t.white 	= init_interval(549, 558);
+L.t.black	= init_interval(215, 225);
+L.t.out		= init_interval(315, 330);
+R.t.red 	= init_interval(540, 585);
+R.t.green 	= init_interval(260, 315);
+R.t.blue	= init_interval(265, 281);
+//R.t.white 	= init_interval(549, 558);
+R.t.black	= init_interval(250, 260);
+R.t.out		= init_interval(300, 365);
 
 #define OFFSET_COLOR 1/9.0
 
@@ -143,15 +165,15 @@ int sensor_cor(int sensor)
 	if (sensor == SENSOR_COR_ESQUERDA){
 		NumOut(0,0, leitura);
 	
-		if(leitura >= L_WHITEDOWN_R){
+		if(leitura >= L.r.white.down){
 			return BRANCO;
-		} else if (leitura >= L_REDDOWN_R){
+		} else if (leitura >= L.r.red.down){
 			return VERMELHO;
 		}/* else if (leitura <= BLACKUP_R){
 			return PRETO; 
-		}*/else if (leitura <= L_BLUEUP_R){
+		}*/else if (leitura <= L.r.blue.up){
 			return AZUL;
-		} else if (leitura <= L_GREENUP_R){
+		} else if (leitura <= L.r.green.up){
 			return VERDE;
 		} else{
 			return FORA;
@@ -160,15 +182,15 @@ int sensor_cor(int sensor)
 	if (sensor == SENSOR_COR_DIREITA){
 		NumOut(0,40, leitura);
 
-		if(leitura >= R_WHITEDOWN_R){
+		if(leitura >= R.r.white.down){
 			return BRANCO;
-		} else if (leitura >= R_REDDOWN_R){
+		} else if (leitura >= R.r.red.down){
 			return VERMELHO;
 		} /*else if (leitura <= BLACKUP_R){
 			return PRETO; 
-		}*/else if (leitura <= L_BLUEUP_R){
+		}*/else if (leitura <= R.r.blue.up){
 			return AZUL;
-		} else if (leitura <= L_GREENUP_R){
+		} else if (leitura <= R.r.green.up){
 			return VERDE;
 		} else{
 			return FORA;
@@ -187,18 +209,18 @@ int sensor_cor_verde(int sensor)
 	}
 	if (sensor == SENSOR_COR_ESQUERDA)
 	{
-		if (leitura >= L_WHITEDOWN_G)
+		if (leitura >= L.g.white.down)
 			return BRANCO;
-		if (leitura >= (L_GREENDOWN_G - DESVIO) && leitura <= (L_GREENUP_G + DESVIO))
+		if (leitura >= (L.g.green.down - DESVIO) && leitura <= (L.g.green.down + DESVIO))
 			return VERDE;
 		else 
 			return FORA;
 	}
 	if (sensor == SENSOR_COR_DIREITA)
 	{
-		if (leitura >= R_WHITEDOWN_G)
+		if (leitura >= R.g.white.down)
 			return BRANCO;
-		if (leitura >= (R_GREENDOWN_G - DESVIO) && leitura <= (R_GREENUP_G + DESVIO))
+		if (leitura >= (R.g.green.down - DESVIO) && leitura <= (R.g.green.down + DESVIO))
 			return VERDE;
 		else 
 			return FORA;
@@ -331,8 +353,8 @@ void get_two_rgb(int &leitura_e, int &leitura_d )
 		left[i]  *= divide;
 		right[i] *= divide;
 	}
-	leitura_e = (4*left[0]+left[1]+2*left[2])/7;
-	leitura_d = (4*right[0]+right[1]+2*right[2])/7;
+	leitura_e = (9*left[0]+3*left[1]+1*left[2])/13;
+	leitura_d = (9*right[0]+3*right[1]+1*right[2])/13;
 }
 void teste_two_colors(int &left, int &right)
 {
