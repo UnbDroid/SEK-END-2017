@@ -4,7 +4,6 @@
 #define FILE_SIZE (RECORD_SIZE * RECORDS)
 
 #define TOUCH IN_4
-#define press Sensor(TOUCH)
 
 #define PRETO 1
 #define AZUL 2
@@ -140,12 +139,12 @@ task main()
 			}
 			left[i] = aux1;
 			right[i] = aux2;
-			l[i] = init_value((4*aux1.r.min+aux1.g.min+2*aux1.b.min)/7,
-							  (4*aux1.r.med+aux1.g.med+2*aux1.b.med)/7,
-							  (4*aux1.r.max+aux1.g.max+2*aux1.b.max)/7);
-			r[i] = init_value((4*aux2.r.min+aux2.g.min+2*aux2.b.min)/7,
-							  (4*aux2.r.med+aux2.g.med+2*aux2.b.med)/7,
-							  (4*aux2.r.max+aux2.g.max+2*aux2.b.max)/7);
+			l[i] = init_value((9*aux1.r.min+aux1.g.min+3*aux1.b.min)/13,
+							  (9*aux1.r.med+aux1.g.med+3*aux1.b.med)/13,
+							  (9*aux1.r.max+aux1.g.max+3*aux1.b.max)/13);
+			r[i] = init_value((9*aux2.r.min+aux2.g.min+3*aux2.b.min)/13,
+							  (9*aux2.r.med+aux2.g.med+3*aux2.b.med)/13,
+							  (9*aux2.r.max+aux2.g.max+3*aux2.b.max)/13);
 		}
 		while(1)
 		{
@@ -185,9 +184,9 @@ task main()
 							imprime_value(LINE[j], r[i/2]);
 					}
 				}
-				while(!press){
+				while(!ButtonPressed(BTNCENTER, false)){
 					Wait(100);
-				}while(press){
+				}while(ButtonPressed(BTNCENTER, false)){
 					Wait(100);
 				}
 			}
