@@ -18,8 +18,9 @@ OUT_REGMODE_SPEED, 0, OUT_RUNSTATE_RUNNING, 0)
 
 #define VELOCIDADE_BAIXINHA 15
 #define VELOCIDADE_BAIXA 35
-#define VELOCIDADE_MEDIA 45
-#define VELOCIDADE_ALTA 65
+#define VELOCIDADE_MEDIA 60
+#define VELOCIDADE_ALTA 70
+#define VELOCIDADE_ALTISSIMA 90
 
 #define PRETO 1
 #define VERDE 3
@@ -41,28 +42,28 @@ OUT_REGMODE_SPEED, 0, OUT_RUNSTATE_RUNNING, 0)
 //#define BLACKUP_R 250
 //#define FORAUP_R 450
 //#define FORADOWN_R 350
-#define L_WHITEDOWN_R 570
-#define L_REDDOWN_R 470
+#define L_WHITEDOWN_R 580
+#define L_REDDOWN_R 525
 #define L_BLUEUP_R 270
-#define L_GREENUP_R 255
+#define L_GREENUP_R 245
 #define R_WHITEDOWN_R 590
 #define R_REDDOWN_R 530
-#define R_BLUEUP_R 270
-#define R_GREENUP_R 310
+#define R_BLUEUP_R 265
+#define R_GREENUP_R 300
 
-#define L_GREENDOWN_G 270
-#define L_GREENUP_G 300
-#define L_WHITEDOWN_G 495
+#define L_GREENDOWN_G 280
+#define L_GREENUP_G 290
+#define L_WHITEDOWN_G 489
 #define R_GREENDOWN_G 330
-#define R_GREENUP_G 365
-#define R_WHITEDOWN_G 500
+#define R_GREENUP_G 340
+#define R_WHITEDOWN_G 530
 
-#define L_BLUEDOWN_B 240
-#define L_BLUEUP_B 265
-#define L_BLACKUP_B 180
-#define R_BLUEDOWN_B 290
-#define R_BLUEUP_B 310
-#define R_BLACKUP_B 180
+#define L_BLUEDOWN_B 215
+#define L_BLUEUP_B 225
+#define L_BLACKUP_B 140
+#define R_BLUEDOWN_B 270
+#define R_BLUEUP_B 285
+#define R_BLACKUP_B 160
 #define DESVIO 20
 
 //defines do teste cor
@@ -543,6 +544,14 @@ void ajeitar(int cor) //arruma o robo pra ficar alinhado no quadrado da cor que 
 	}
 	Off(MOTORES);*/
 	if (cor != VERDE){
+		if(sensor_cor(SENSOR_COR_DIREITA) == FORA )
+		{
+			while(sensor_cor(SENSOR_COR_DIREITA) == FORA ) OnRev(MOTOR_DIREITA, -VELOCIDADE_MEDIA);
+		}
+		if(sensor_cor(SENSOR_COR_ESQUERDA) == FORA)
+		{
+			while(sensor_cor(SENSOR_COR_ESQUERDA) == FORA) OnRev(MOTOR_ESQUERDA, -VELOCIDADE_MEDIA);
+		}
 		while(sensor_cor(SENSOR_COR_DIREITA) != cor && sensor_cor(SENSOR_COR_ESQUERDA) != cor)
 			OnRevSync(AMBOS_MOTORES, -VELOCIDADE_MEDIA, 0);
 		while(sensor_cor(SENSOR_COR_DIREITA) != cor || sensor_cor(SENSOR_COR_ESQUERDA) != cor) // Aqui ele comeca a ajeitar, para caso chegue torto, ele fique certo no final
@@ -570,6 +579,14 @@ void ajeitar(int cor) //arruma o robo pra ficar alinhado no quadrado da cor que 
 		Wait(100);
 		set_sensor_color(SENSOR_COR_ESQUERDA, VERDE);
 		Wait(100);
+		if(sensor_cor_verde(SENSOR_COR_DIREITA) == FORA )
+		{
+			while(sensor_cor_verde(SENSOR_COR_DIREITA) == FORA ) OnRev(MOTOR_DIREITA, -VELOCIDADE_MEDIA);
+		}
+		if(sensor_cor_verde(SENSOR_COR_ESQUERDA) == FORA)
+		{
+			while(sensor_cor_verde(SENSOR_COR_ESQUERDA) == FORA) OnRev(MOTOR_ESQUERDA, -VELOCIDADE_MEDIA);
+		}
 		while(sensor_cor_verde(SENSOR_COR_DIREITA) != cor && sensor_cor_verde(SENSOR_COR_ESQUERDA) != cor)
 			OnRevSync(AMBOS_MOTORES, -VELOCIDADE_MEDIA, 0);
 		while(sensor_cor_verde(SENSOR_COR_DIREITA) != cor || sensor_cor_verde(SENSOR_COR_ESQUERDA) != cor) // Aqui ele comeca a ajeitar, para caso chegue torto, ele fique certo no final
@@ -1253,46 +1270,46 @@ task main () //por enquato a maior parte está só com a lógica, tem que altera
  	Wait(200);
 	MOTOR(MOTOR_PORTA, 0);
 
-while (true){
-	reto(BRANCO);
-	if (sensor_cor(SENSOR_COR_ESQUERDA) == FORA && sensor_cor(SENSOR_COR_DIREITA) == FORA){
-		Off(AMBOS_MOTORES);
-		distancia_re(VELOCIDADE_BAIXA, VELOCIDADE_ALTA, 10);
-		if(direcoes[AZUL] != NADA && direcoes[VERDE] != NADA && direcoes[VERMELHO] != NADA) modo_plaza();
-		PlayTone(440, 200);
-		Wait(300);
-		PlayTone(440, 200);
-		Wait(300);
-	}
-	cor_achada = identifica_cor();
-	for(i = 0; i < 3; i++)
-	{
-		if(cor_achada == CORES[i])
+	while (true){
+		reto(BRANCO);
+		if (sensor_cor(SENSOR_COR_ESQUERDA) == FORA && sensor_cor(SENSOR_COR_DIREITA) == FORA){
+			Off(AMBOS_MOTORES);
+			distancia_re(VELOCIDADE_BAIXA, VELOCIDADE_ALTA, 10);
+			if(direcoes[AZUL] != NADA && direcoes[VERDE] != NADA && direcoes[VERMELHO] != NADA) modo_plaza();
+			PlayTone(440, 200);
+			Wait(300);
+			PlayTone(440, 200);
+			Wait(300);
+		}
+		cor_achada = identifica_cor();
+		for(i = 0; i < 3; i++)
 		{
-			switch(i)
+			if(cor_achada == CORES[i])
 			{
-				case 2:
-					PlayTone(440, 200);
-					Wait(300);
-				case 1:
-					PlayTone(440, 200);
-					Wait(300);
-				case 0:
-					PlayTone(440, 200);
+				switch(i)
+				{
+					case 2:
+						PlayTone(440, 200);
+						Wait(300);
+					case 1:
+						PlayTone(440, 200);
+						Wait(300);
+					case 0:
+						PlayTone(440, 200);
+				}
+				reto(CORES[i]);
+				ajeitar(CORES[i]);
+				if (direcoes [CORES[i]] == NADA)
+				{
+					ClearScreen();
+					TextOut(10,10, "NADA GRAVADO");
+					direcoes[CORES[i]] = testar_caminho(CORES[i], direcoes);
+				} else
+				{
+					seguir_direcao(CORES[i], direcoes);
+				}
+				break;
 			}
-			reto(CORES[i]);
-			ajeitar(CORES[i]);
-			if (direcoes [CORES[i]] == NADA)
-			{
-				ClearScreen();
-				TextOut(10,10, "NADA GRAVADO");
-				direcoes[CORES[i]] = testar_caminho(CORES[i], direcoes);
-			} else
-			{
-				seguir_direcao(CORES[i], direcoes);
-			}
-			break;
 		}
 	}
-}
 }
