@@ -18,7 +18,7 @@
 byte VERMELHO_r, VERDE_r, AZUL_r, BRANCO_r, num_r, color_r;
 
 // Função que tabela a saída dos sensores de luz para as cores lidas
-sub detect_colors(){ // Tabela a saída dos sensores de luz para as cores lidas
+int detect_colors(){ // Tabela a saída dos sensores de luz para as cores lidas
     ReadSensorHTColor2Active(R_COLOR, num_r, VERMELHO_r, VERDE_r, AZUL_r, BRANCO_r);
 
     /*Achei melhor if em vez de switch pois os valores lidos dependem da calibração*/
@@ -54,6 +54,8 @@ sub detect_colors(){ // Tabela a saída dos sensores de luz para as cores lidas
         color_r = VERMELHO;
     else if(num_r == 2)
         color_r = AZUL;
+
+    return color_r;
 
 }
 
