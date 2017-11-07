@@ -42,61 +42,6 @@ OUT_REGMODE_SPEED, 0, OUT_RUNSTATE_RUNNING, 0)
 #define FRENTE 0
 #define NADA 2
 
-#define WHITEUP_B 550
-#define WHITEDOWN_B 470
-#define	BLUEDOWN_B 260
-#define PRETODOWN_B 120
-#define FORAUP_B 380
-#define FORADOWN_B 310
-#define REDDOWN_B 310
-#define GREENDOWN_B 300
-#define WHITEUP_G 560
-#define WHITEDOWN_G 490
-#define	BLUEDOWN_G 220
-#define PRETODOWN_G 130
-#define REDDOWN_G 320
-#define GREENDOWN_G 370
-#define FORAUP_G 390
-#define FORADOWN_G 340
-#define WHITEUP_R 620
-#define PRETODOWN_R 190
-#define GREENDOWN_R 350
-
-//defines secundarios
-#define BLUEUP_B 320
-#define	PRETOUP_B 200
-#define	REDUP_B 250
-#define GREENUP_B 350
-#define BLUEUP_G 300
-#define	PRETOUP_G 220
-#define	REDUP_G 290
-#define GREENUP_G 450
-#define	REDUP_R 590
-#define GREENUP_R 390
-
-//defines mais importantes, separados pra facilitar quando tiver de mudar
-#define WHITEDOWN_R 590
-#define REDDOWN_R 550
-#define PRETOUP_R 250
-#define BLUEDOWN_R 220
-#define BLUEUP_R 310
-#define FORAUP_R 450
-#define FORADOWN_R 350
-#define DESVIO 20
-
-//defines do teste cor
-#define WHITEDOWN 579
-#define WHITEUP 595
-#define PRETOUP 259
-#define PRETODOWN 221
-#define REDUP 419
-#define REDDOWN 416
-#define GREENUP 378
-#define GREENDOWN 351
-#define BLUEUP 276
-#define BLUEDOWN 273
-#define FORAUP 360
-#define FORADOWN 304
 #define OFFSET_COLOR 1/9.0
 
 #define CORRECAO 0.051
@@ -119,15 +64,15 @@ void ligar_sensores() //testada
 	SetSensorHTGyro(SENSOR_GYRO);
 	SetSensorUltrasonic(SENSOR_US_ESQUERDA);
 	SetSensorUltrasonic(SENSOR_US_DIREITA);
-    SetSensorLowspeed(L_COLOR);
-    SetSensorLowspeed(R_COLOR);
-    SetHTColor2Mode(L_COLOR, HT_CMD_COLOR2_ACTIVE);
-    SetHTColor2Mode(R_COLOR, HT_CMD_COLOR2_ACTIVE);
+    SetSensorLowspeed(SENSOR_COR_ESQUERDA);
+    SetSensorLowspeed(SENSOR_COR_DIREITA);
+    SetHTColor2Mode(SENSOR_COR_ESQUERDA, HT_CMD_COLOR2_ACTIVE);
+    SetHTColor2Mode(SENSOR_COR_DIREITA, HT_CMD_COLOR2_ACTIVE);
 }
 
 sub detect_colors(){ // Tabela a saída dos sensores de luz para as cores lidas
-    ReadSensorHTColor2Active(R_COLOR, num_r, VERMELHO_r, VERDE_r, AZUL_r, BRANCO_r);
-    ReadSensorHTColor2Active(L_COLOR, num_l, VERMELHO_l, VERDE_l, AZUL_l, BRANCO_l);
+    ReadSensorHTColor2Active(SENSOR_COR_DIREITA, num_r, VERMELHO_r, VERDE_r, AZUL_r, BRANCO_r);
+    ReadSensorHTColor2Active(SENSOR_COR_ESQUERDA, num_l, VERMELHO_l, VERDE_l, AZUL_l, BRANCO_l);
 
     /*Achei melhor if em vez de switch pois os valores lidos dependem da calibração*/
     if(num_r == 14)
@@ -195,31 +140,7 @@ sub detect_colors(){ // Tabela a saída dos sensores de luz para as cores lidas
         color_l = VERMELHO;
     else if(num_l == 2)
         color_l = AZUL;
-}
-
-int sensor_cor(int sensor)
-{
-	int leitura = get_value_color(sensor);
-
-	if (sensor == SENSOR_COR_ESQUERDA)
-		NumOut(0,0, leitura);
-	if(sensor == SENSOR_COR_DIREITA)
-		NumOut(0,40, leitura);
-
-	if(leitura >= WHITEDOWN_R){
-		return BRANCO;
-	}
-	else if (leitura >= REDDOWN_R - DESVIO){
-		return VERMELHO;
-	} else if (leitura <= PRETOUP_R){
-		return PRETO;
-	} else if (leitura >= (BLUEDOWN_R - DESVIO) && leitura <= (BLUEUP_R + DESVIO)){
-		return AZUL;
-	} else{
-		return FORA;
-	}
-}
-// Locomoção
+}// Locomoção
 
 void distancia_reto(int low_speed, int high_speed, int distancia){//função do kaynã
 	
@@ -509,115 +430,6 @@ int agarrar()//testada
 	return confirma_que_pegou;
 }
 
-void reto(int cor) //robo move ate que os dois sensores parem de ver a cor
-{
-	if (cor != VERDE){
-		while (color_r == cor || color_l == cor)
-		{
-			while (color_r == cor && color_l == cor) OnFwdSync(AMBOS_MOTORES, -VELOCIDADE_MEDIA, -6);
-			Off(AMBOS_MOTORES);
-			while(color_l == FORA && color_r == cor)
-			{
-				OnRevSync(MOTORES, - VELOCIDADE_BAIXA, 0); // Da uma pequena re
-				Wait(200);
-				Off(MOTORES);
-				OnFwd(MOTOR_ESQUERDA, -VELOCIDADE_MEDIA);
-				OnRev(MOTOR_DIREITA,  -VELOCIDADE_BAIXA);
-				ClearScreen();
-				//PlayTone(400, 100);
-				TextOut(50,50, "E:P");
-			}
-			while(color_r == FORA && color_l == cor)
-			{
-				OnRevSync(MOTORES, - VELOCIDADE_BAIXA, 0); // Da uma pequena re
-				Wait(200);
-				Off(MOTORES);
-				OnFwd(MOTOR_DIREITA, -VELOCIDADE_MEDIA);
-				OnRev(MOTOR_ESQUERDA, -VELOCIDADE_BAIXA);
-				ClearScreen();
-				//PlayTone(800, 100);
-				TextOut(50,50, "D:P");
-			}
-			ClearScreen();
-			if (cor == BRANCO){
-				procura_boneco();
-			}
-		}
-	} else{ //andar reto no verde com o sensor verde
-		set_sensor_color(SENSOR_COR_DIREITA, VERDE);
-		Wait(100);
-		set_sensor_color(SENSOR_COR_ESQUERDA, VERDE);
-		while (sensor_cor_verde(SENSOR_COR_DIREITA) == cor || sensor_cor_verde(SENSOR_COR_ESQUERDA) == cor)
-		{
-			OnFwdSync(MOTORES, -VELOCIDADE_MEDIA, 0);
-			while(sensor_cor_verde(SENSOR_COR_ESQUERDA) == FORA && sensor_cor_verde(SENSOR_COR_DIREITA) == cor)
-			{
-				OnRevSync(MOTORES, - VELOCIDADE_BAIXA, 0); // Da uma pequena re
-				Wait(200);
-				Off(MOTORES);
-				OnFwd(MOTOR_ESQUERDA, -VELOCIDADE_MEDIA);
-				OnRev(MOTOR_DIREITA,  -VELOCIDADE_BAIXA);
-				ClearScreen();
-				PlayTone(400, 100);
-				TextOut(50,50, "E:P");
-			}
-			while(sensor_cor_verde(SENSOR_COR_DIREITA) == FORA && sensor_cor_verde(SENSOR_COR_ESQUERDA) == cor)
-			{
-				OnRevSync(MOTORES, - VELOCIDADE_BAIXA, 0); // Da uma pequena re
-				Wait(200);
-				Off(MOTORES);
-				OnFwd(MOTOR_DIREITA, -VELOCIDADE_MEDIA);
-				OnRev(MOTOR_ESQUERDA, -VELOCIDADE_BAIXA);
-				ClearScreen();
-				PlayTone(800, 100);
-				TextOut(50,50, "D:P");
-			}
-			ClearScreen();
-		}
-		Off(MOTORES);
-		set_sensor_color(SENSOR_COR_DIREITA, VERMELHO);
-		Wait(100);
-		set_sensor_color(SENSOR_COR_ESQUERDA, VERMELHO);
-		Wait(100);
-	}
-	Off(MOTORES);
-	
-	//alterei o laço para dentro da função recenbendo a cor como argumento
-}
-
-bool verificar_direcao(int cor)
-{
-	int cor_d, cor_e;
-	reto(cor);
-	distancia_reto(VELOCIDADE_MEDIA, VELOCIDADE_ALTA, 1.5);
-	reto(BRANCO);
-	distancia_reto(VELOCIDADE_MEDIA, VELOCIDADE_ALTA, 2);
-
-	cor_d = teste_cor(SENSOR_COR_DIREITA);
-	cor_e = teste_cor(SENSOR_COR_ESQUERDA);
-
-	if (cor_e != PRETO && cor_d != PRETO)//se os dois nao veem preto entao o robo acertou o caminho
-	{
-		TextOut(10,10, "caminho certo");
-		Wait(2000);
-		return true;
-	}
-	TextOut(10, 10, "Caminho errado");
-	Wait(2000);
-	return false;
-}
-
-void voltar(int cor)//voltar para o quadrado de origem visto que errou o caminho
-{
-	ajeitar(BRANCO);
-	girar(180);
-	reto(BRANCO);
-	PlayTone(880, 500);
-	distancia_reto(VELOCIDADE_MEDIA, VELOCIDADE_ALTA, 1.5);
-	reto(cor);
-	ajeitar(cor);
-}
-
 void modo_plaza (int direcoes[])
 {
 	int aux, prev_motor; //Essa ultima constante é para armazenar o ultimo parâmetro do Sync
@@ -632,49 +444,13 @@ void modo_plaza (int direcoes[])
 
 	ResetRotationCount(MOTOR_DIREITA);
 	ResetRotationCount(MOTOR_ESQUERDA);
-	OnFwdSync(AMBOS_MOTORES, -VELOCIDADE_ALTA, 0);
-	while (((abs(MotorRotationCount(MOTOR_DIREITA)) + abs(MotorRotationCount(MOTOR_ESQUERDA))) / 2.0) < 2160.0/*2160: rotação necessária para andar 94cm*/)
-	{
-		detect_colors();
-		if ((color_r == BRANCO) && (color_l == BRANCO))
-		{
-			ClearScreen();
-			TextOut(0, LCD_LINE4, "RETO");
-			OnFwdSync(AMBOS_MOTORES, -VELOCIDADE_ALTISSIMA, -6);
-			Wait(300);
-		}
-
-		else if ((color_r == PRETO) && (color_l == BRANCO))
-		{
-			ClearScreen();
-			TextOut(0, LCD_LINE4, "DIREITA");
-			OnFwd(MOTOR_DIREITA, -VELOCIDADE_ALTISSIMA);
-			OnFwd(MOTOR_ESQUERDA, -VELOCIDADE_ALTA);
-			Wait(300);
-		}
-
-		else if ((color_r == BRANCO) && (color_l == PRETO))
-		{
-			ClearScreen();
-			TextOut(0, LCD_LINE4, "ESQUERDA");
-			OnFwd(MOTOR_ESQUERDA, -VELOCIDADE_ALTISSIMA);
-			OnFwd(MOTOR_DIREITA, -VELOCIDADE_ALTA);
-			Wait(300);
-		}
-
-	}
-
+	OnFwdSync(AMBOS_MOTORES, -VELOCIDADE_ALTA, -6);
+	
 	PlayTone(880, 500);
 
 	while (color_r !=PRETO && color_l !=PRETO)
 	{
 		OnFwdSync(AMBOS_MOTORES, -VELOCIDADE_MEDIA, -6);
-		detect_colors();
-	}
-	distancia_reto(VELOCIDADE_MEDIA, VELOCIDADE_ALTA, 10);
-	while (color_r !=PRETO && color_l !=PRETO)
-	{
-		OnFwdSync(AMBOS_MOTORES, -VELOCIDADE_ALTISSIMA, -6);
 		detect_colors();
 	}
 	distancia_reto(VELOCIDADE_MEDIA, VELOCIDADE_ALTA, maximo);
@@ -691,9 +467,9 @@ void modo_plaza (int direcoes[])
 	MOTOR(MOTOR_PORTA, 0);
 	giro(-180);
 	
+    OnFwdSync(AMBOS_MOTORES, -VELOCIDADE_MEDIA, -6);
 	while(prev_motor < aux)
 	{
-    	OnFwdSync(AMBOS_MOTORES, -VELOCIDADE_MEDIA, -6);
 		Wait(50);
 		prev_motor = abs(MotorRotationCount(MOTOR_DIREITA));
 	}
@@ -721,8 +497,9 @@ task main ()
 
 
 	OnFwdSync(AMBOS_MOTORES, -VELOCIDADE_MEDIA, 0);
-	while(color_l != FORA && color_r != FORA) detect_colors();
-	Off(AMBOS_MOTORES);
-	distancia_re(VELOCIDADE_BAIXA, VELOCIDADE_ALTA, 10);
-	if(direcoes[AZUL] != 2 && direcoes[VERDE] != 2 && direcoes[VERMELHO] != 2) modo_plaza(direcoes);
+	detect_colors();
+	while(color_l != VERMELHO && color_r != VERMELHO) detect_colors();
+	distancia_reto(VELOCIDADE_MEDIA, VELOCIDADE_ALTA, 2);
+	detect_colors();
+	if((color_l == AZUL || color_r == AZUL) || (color_l == VERDE || color_r == VERDE)) modo_plaza(direcoes);
 }
