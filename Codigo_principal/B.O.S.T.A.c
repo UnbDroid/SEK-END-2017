@@ -19,8 +19,8 @@ OUT_REGMODE_SPEED, 0, OUT_RUNSTATE_RUNNING, 0)
 #define VELOCIDADE_BAIXINHA 15
 #define VELOCIDADE_BAIXA 35
 #define VELOCIDADE_MEDIA 60
-#define VELOCIDADE_ALTA 70
-#define VELOCIDADE_ALTISSIMA 90
+#define VELOCIDADE_ALTA 65
+#define VELOCIDADE_ALTISSIMA 70
 
 #define PRETO 1
 #define VERDE 3
@@ -42,12 +42,12 @@ OUT_REGMODE_SPEED, 0, OUT_RUNSTATE_RUNNING, 0)
 //#define BLACKUP_R 250
 //#define FORAUP_R 450
 //#define FORADOWN_R 350
-#define L_WHITEDOWN_R 580
-#define L_REDDOWN_R 525
+#define L_WHITEDOWN_R 600
+#define L_REDDOWN_R 5535
 #define L_BLUEUP_R 270
 #define L_GREENUP_R 245
-#define R_WHITEDOWN_R 590
-#define R_REDDOWN_R 530
+#define R_WHITEDOWN_R 610
+#define R_REDDOWN_R 555
 #define R_BLUEUP_R 265
 #define R_GREENUP_R 300
 
@@ -293,68 +293,7 @@ int get_leitura_rgb(int sensor)
 	return FORA; // Se quisermos o valor entr 100 e 700
 }
 
-/*int trata_leitura(int sensor, int leitura)
-{
-	int cor;
-	if (sensor == SENSOR_COR_ESQUERDA)
-	{
-		if (leitura <= L_BLACKUP){
-			cor = PRETO;
-		}else if (leitura <= L_BLUEUP){
-			cor = AZUL;
-		}else if (leitura <= L_GREENUP){
-			cor = VERDE;
-		}else if (leitura <= L_FORAUP){
-			cor = FORA;
-		}else if (leitura <= L_REDUP){
-			cor = VERMELHO;
-		}else{
-			cor = BRANCO;
-		}
-	}
-	if (sensor == SENSOR_COR_DIREITA)
-	{
-		if (leitura <= R_BLACKUP){
-			cor = PRETO;
-		}else if (leitura <= R_BLUEUP){
-			cor = AZUL;
-		}else if (leitura <= R_GREENUP){
-			cor = VERDE;
-		}else if (leitura <= R_FORAUP){
-			cor = FORA;
-		}else if (leitura <= R_REDUP){
-			cor = VERMELHO;
-		}else{
-			cor = BRANCO;
-		}
-	}
-	// Toca os sons
-	int wait = 200, duration = 100, frequency = 1000;
-	switch(cor)
-	{
-		case VERMELHO:
-			PlayTone(frequency, duration);
-			Wait(wait);
-		case VERDE:
-			PlayTone(frequency, duration);
-			Wait(wait);
-		case AZUL:
-			PlayTone(frequency, duration);
-			Wait(wait);
-			Wait(wait);
-		case BRANCO:
-			PlayTone(frequency, duration);
-			Wait(wait);
-		case PRETO:
-			PlayTone(frequency, duration);
-			Wait(wait);
-		case FORA:
-			PlayTone(frequency, duration);
-			Wait(wait);
-	}
-	return cor;		// Se quisermos o valor entre 1 e 7
-}
-*/
+
 int teste_cor(int sensor)
 {
 	int cor, leitura;
@@ -503,60 +442,14 @@ void ajeitar(int cor) //arruma o robo pra ficar alinhado no quadrado da cor que 
 	ClearScreen();
 	TextOut(0,0,"ajeitando");
 	NumOut(10,10, cor);
-	/*Wait(1000);
-	left = sensor_cor(SENSOR_COR_DIREITA);
-	right = sensor_cor(SENSOR_COR_ESQUERDA);
-	while( left != cor || right != cor) // Aqui ele comeca a ajeitar, para caso chegue torto, ele fique certo no final
-	{
-		Off(AMBOS_MOTORES);
-		contador = 0;
-		left = sensor_cor(SENSOR_COR_ESQUERDA);
-		if(left != cor)
-		{
-			OnRev(MOTOR_ESQUERDA, (-1)*VELOCIDADE_MEDIA);
-			Wait(100);
-			PlayTone(600, 100);
-		}
-		while(left != cor && contador < 3)
-		{ // Ajusta a roda esquerda para ficar em cima da linha.
-			Wait(100);
-			PlayTone(600, 100);
-			contador += 1;
-			left = sensor_cor(SENSOR_COR_ESQUERDA);
-		}
-		Off(AMBOS_MOTORES);
-		
-		contador = 0;
-		right = sensor_cor(SENSOR_COR_DIREITA);
-		if(left != cor)
-		{
-			OnRev(MOTOR_DIREITA,  (-1)*VELOCIDADE_MEDIA);
-			Wait(100);
-			PlayTone(600, 100);
-		}
-		while(right != cor && contador < 3)
-		{ // Ajusta a roda esquerda para ficar em cima da linha.
-			Wait(100);
-			PlayTone(600, 100);
-			contador += 1;
-			right = sensor_cor(SENSOR_COR_DIREITA);	
-		}
-	}
-	Off(MOTORES);*/
 	if (cor != VERDE){
-		if(sensor_cor(SENSOR_COR_DIREITA) == FORA )
-		{
-			while(sensor_cor(SENSOR_COR_DIREITA) == FORA ) OnRev(MOTOR_DIREITA, -VELOCIDADE_MEDIA);
-		}
-		if(sensor_cor(SENSOR_COR_ESQUERDA) == FORA)
-		{
-			while(sensor_cor(SENSOR_COR_ESQUERDA) == FORA) OnRev(MOTOR_ESQUERDA, -VELOCIDADE_MEDIA);
-		}
-		while(sensor_cor(SENSOR_COR_DIREITA) != cor && sensor_cor(SENSOR_COR_ESQUERDA) != cor)
-			OnRevSync(AMBOS_MOTORES, -VELOCIDADE_MEDIA, 0);
+		while(sensor_cor(SENSOR_COR_DIREITA) != cor && sensor_cor(SENSOR_COR_ESQUERDA) != cor) OnRevSync(AMBOS_MOTORES, -VELOCIDADE_MEDIA, 0);
+
 		while(sensor_cor(SENSOR_COR_DIREITA) != cor || sensor_cor(SENSOR_COR_ESQUERDA) != cor) // Aqui ele comeca a ajeitar, para caso chegue torto, ele fique certo no final
 		{
 			Off(AMBOS_MOTORES);
+			while(sensor_cor(SENSOR_COR_ESQUERDA) == FORA) OnFwd(MOTOR_ESQUERDA, -VELOCIDADE_MEDIA);
+			while(sensor_cor(SENSOR_COR_DIREITA) == FORA ) OnFwd(MOTOR_DIREITA, -VELOCIDADE_MEDIA);
 		
 			contador = 0;
 			while(sensor_cor(SENSOR_COR_ESQUERDA) != cor && contador < 3)
@@ -579,20 +472,14 @@ void ajeitar(int cor) //arruma o robo pra ficar alinhado no quadrado da cor que 
 		Wait(100);
 		set_sensor_color(SENSOR_COR_ESQUERDA, VERDE);
 		Wait(100);
-		if(sensor_cor_verde(SENSOR_COR_DIREITA) == FORA )
-		{
-			while(sensor_cor_verde(SENSOR_COR_DIREITA) == FORA ) OnRev(MOTOR_DIREITA, -VELOCIDADE_MEDIA);
-		}
-		if(sensor_cor_verde(SENSOR_COR_ESQUERDA) == FORA)
-		{
-			while(sensor_cor_verde(SENSOR_COR_ESQUERDA) == FORA) OnRev(MOTOR_ESQUERDA, -VELOCIDADE_MEDIA);
-		}
-		while(sensor_cor_verde(SENSOR_COR_DIREITA) != cor && sensor_cor_verde(SENSOR_COR_ESQUERDA) != cor)
-			OnRevSync(AMBOS_MOTORES, -VELOCIDADE_MEDIA, 0);
+		while(sensor_cor_verde(SENSOR_COR_DIREITA) != cor && sensor_cor_verde(SENSOR_COR_ESQUERDA) != cor) OnRevSync(AMBOS_MOTORES, -VELOCIDADE_MEDIA, 0);
+
 		while(sensor_cor_verde(SENSOR_COR_DIREITA) != cor || sensor_cor_verde(SENSOR_COR_ESQUERDA) != cor) // Aqui ele comeca a ajeitar, para caso chegue torto, ele fique certo no final
 		{
 			Off(AMBOS_MOTORES);
-		
+			while(sensor_cor_verde(SENSOR_COR_DIREITA) == FORA ) OnFwd(MOTOR_DIREITA, -VELOCIDADE_MEDIA);
+			while(sensor_cor_verde(SENSOR_COR_ESQUERDA) == FORA) OnFwd(MOTOR_ESQUERDA, -VELOCIDADE_MEDIA);
+
 			contador = 0;
 			while(sensor_cor_verde(SENSOR_COR_ESQUERDA) != cor && contador < 3)
 			{ // Ajusta a roda esquerda para ficar em cima da linha.
@@ -1266,7 +1153,7 @@ task main () //por enquato a maior parte está só com a lógica, tem que altera
 	BTCheck();
 	ligar_sensores();
  	Wait(1000);
- 	MOTOR(MOTOR_PORTA, -20);
+ 	MOTOR(MOTOR_PORTA, -10);
  	Wait(200);
 	MOTOR(MOTOR_PORTA, 0);
 
