@@ -24,71 +24,86 @@ sub detect_colors(){ // Tabela a saída dos sensores de luz para as cores lidas
     ReadSensorHTColor2Active(L_COLOR, num_l, VERMELHO_l, VERDE_l, AZUL_l, BRANCO_l);
 
     /*Achei melhor if em vez de switch pois os valores lidos dependem da calibração*/
-    if(num_r == 14)
-        if(BRANCO_r > 217)
-            color_r = BRANCO;
-        else
-            color_r = FORA;
-    else if(num_r == 12)
-        if(BRANCO_r > 217)
-            color_r = BRANCO;
-        else
-            color_r = PRETO;
-    else if(num_r == 17)
-        if(BRANCO_r > 217)
-            color_r = BRANCO;
-        else if(BRANCO_r < 90)
-            color_r = PRETO;
-        else
-            color_r = FORA;
-    else if(num_r == 13)
-        color_r = BRANCO;
-    else if(num_r == 3 || num_r == 4)
-        color_r = VERDE;
-    else if(num_r == 5 || num_r == 6)
-        color_r = AMARELO;
-    else if(num_r == 7)
-        if(VERDE_r > 130)
-            color_r = AMARELO;
-        else
-            color_r = VERMELHO;
-    else if(num_r > 7 && num_r <= 10)
-        color_r = VERMELHO;
-    else if(num_r == 2)
-        color_r = AZUL;
+if (num_l >= 1 && num_l <= 4)
+{
+	if (AZUL_l > 150){
+		color_l = AZUL;
+	} 
+	else{
+		color_l = VERDE;
+	} 	
+}  
+else if (num_l >= 5 && num_l <= 8)
+{
+	if (VERDE_l > 140){
+		color_l = AMARELO;
+	}
+	else{
+		color_l = VERMELHO;
+	} 
+}
+else if (num_l >= 9 && num_l <= 12 )
+{
+	color_l = VERMELHO;
+}
+else if (num_l >= 13 && num_l <= 15)
+{
+	color_l = BRANCO;
+}
+else if (num_l == 17)
+{
+	if (BRANCO_l > 110){
+		color_l = PRETO;
+	}
+	else{
+		color_l = FORA;
+	} 		
+} 
+else
+{
+	color_l = FORA;
+}
 
-    if(num_l == 14)
-        if(BRANCO_l > 217)
-            color_l = BRANCO;
-        else
-            color_l = FORA;
-    else if(num_l == 12)
-        if(BRANCO_l > 217)
-            color_l = BRANCO;
-        else
-            color_l = PRETO;
-    else if(num_l == 17)
-        if(BRANCO_l > 217)
-            color_l = BRANCO;
-        else if(BRANCO_l < 90)
-            color_l = PRETO;
-        else
-            color_l = FORA;
-    else if(num_l == 13)
-        color_l = BRANCO;
-    else if(num_l == 3 || num_l == 4)
-        color_l = VERDE;
-    else if(num_l == 5 || num_l == 6)
-        color_l = AMARELO;
-    else if(num_l == 7)
-        if(VERDE_l > 130)
-            color_l = AMARELO;
-        else
-            color_l = VERMELHO;
-    else if(num_l > 7 && num_l <= 10)
-        color_l = VERMELHO;
-    else if(num_l == 2)
-        color_l = AZUL;
+if (num_r >= 1 && num_r <= 4)
+{
+	if (AZUL_r > 120){
+		color_r = AZUL;
+	} 
+	else{
+		color_r = VERDE;
+	}
+}
+else if (num_r >= 5 && num_r <= 8)
+{
+	if (VERDE_r > 110){
+		color_r = AMARELO;
+	}
+	else{
+		color_r = VERMELHO;
+	}
+}
+else if (num_r >= 9 && num_r <= 12 )
+{
+	color_r = VERMELHO;
+}
+else if (num_r >= 13 && num_r <= 15)
+{
+	color_r = BRANCO;
+}
+else if (num_r == 17)
+{
+	if (BRANCO_r > 60){ //SE DER MERDA E AQUI, calibrar melhor
+		color_r = PRETO;
+	}
+	else{
+		color_r = FORA;
+    }
+}
+else{
+	color_r = FORA;
+}
+
+
 }
 
 task main(){
