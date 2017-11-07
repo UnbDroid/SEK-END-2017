@@ -5,6 +5,7 @@
 #define MOTOR_GARRA OUT_B
 #define SENSOR_US_ESQUERDA IN_3
 #define SENSOR_US_DIREITA IN_4
+#define SENSOR_GYRO IN_1
 
 #define VELOCIDADE_BAIXINHA 15
 #define VELOCIDADE_BAIXA 35
@@ -17,6 +18,8 @@
 #define DIREITA -1
 #define FRENTE 0
 #define NADA 2
+
+#define OFFSET_SAMPLES 2000
 
 int passageiros = 0;
 
@@ -114,6 +117,125 @@ int agarrar()//testada
 
 
 	return confirma_que_pegou;
+}
+
+float getGyroOffset()
+{
+    float gyro_sum = 0, i;
+
+    for(i = 0; i < OFFSET_SAMPLES; ++i)
+    {
+       gyro_sum += SensorHTGyro(SENSOR_GYRO);
+    }
+
+    return gyro_sum/OFFSET_SAMPLES;
+}
+
+void giro(float degrees) // Algoritimo usado pela sek do ano passado //testada
+{
+
+	SetSensorHTGyro(SENSOR_GYRO);
+
+	float angle = 0, gyro = 0;
+	unsigned long time = CurrentTick(), prev_time;
+
+	Off(AMBOS_MOTORES);
+
+	degrees = -degrees;
+
+	float offset = getGyroOffset();
+
+	if(degrees > 0) {
+
+
+		while(angle < degrees)
+		{
+			OnFwd(MOTOR_ESQUERDA, -VELOCIDADE_ALTA);
+			OnRev(MOTOR_DIREITA, -VELOCIDADE_ALTA);
+			prev_time = time;
+			time = CurrentTick();
+			gyro = SensorHTGyro(SENSOR_GYRO);
+			angle += (gyro - offset) * (time - prev_time)/1000.0;
+			ClearLine(LCD_LINE1);
+			TextOut(0, LCD_LINE1, "ANGLE:");
+			NumOut(48, LCD_LINE1, angle);
+			Wait(100); //MUDAR OS VALORES DOS WAITS PARA ALTERAR AS POSIÇÕES DAS RODAS
+			Off(AMBOS_MOTORES);
+			OnRev(MOTOR_ESQUERDA, -VELOCIDADE_ALTA);
+			OnRev(MOTOR_DIREITA, -VELOCIDADE_ALTA);
+			Wait(20); //USANDO 100 E 20 AS RODAS E AS CASTER BALLS ESTÃO FICANDO DENTRO DO QUADRADO, SWEET, DUDE !
+			Off(AMBOS_MOTORES);
+		}
+	} else {
+
+
+		while(angle > degrees)
+		{
+			OnFwd(MOTOR_DIREITA, -VELOCIDADE_ALTA);
+			OnRev(MOTOR_ESQUERDA, -VELOCIDADE_ALTA);
+			prev_time = time;
+			time = CurrentTick();
+			gyro = SensorHTGyro(SENSOR_GYRO);
+			angle += (gyro - offset) * (time - prev_time)/1000.0;
+			ClearLine(LCD_LINE1);
+			TextOut(0, LCD_LINE1, "ANGLE:");
+			NumOut(48, LCD_LINE1, angle);
+		  	Wait(100);
+			Off(AMBOS_MOTORES);
+			OnFwd(MOTOR_ESQUERDA, -VELOCIDADE_ALTA);
+			OnFwd(MOTOR_DIREITA, -VELOCIDADE_ALTA);
+		  	Wait(20);
+			Off(AMBOS_MOTORES);
+		}
+	}
+
+	Off(AMBOS_MOTORES);
+}
+
+void distancia_reto(int low_speed, int high_speed, int distancia){//função do kaynã
+	
+	int count_A =  MotorRotationCount(MOTOR_ESQUERDA);
+	int count_C =  MotorRotationCount(MOTOR_DIREITA);
+	OnRev(AMBOS_MOTORES, high_speed);
+	do{
+		if (count_A - MotorRotationCount(MOTOR_ESQUERDA) > count_C - MotorRotationCount(MOTOR_DIREITA))
+		{
+			OnRev(MOTOR_ESQUERDA, low_speed);
+			until ((count_C - MotorRotationCount(MOTOR_DIREITA)) >  (count_A - MotorRotationCount(MOTOR_ESQUERDA)));
+			OnRev(MOTOR_ESQUERDA, high_speed);
+		}
+		else
+		{
+			OnRev(MOTOR_DIREITA, low_speed);
+			until ( (count_A - MotorRotationCount(MOTOR_ESQUERDA)) > (count_C - MotorRotationCount(MOTOR_DIREITA)));
+			OnRev(MOTOR_DIREITA, high_speed);
+		}
+	}while((count_A - MotorRotationCount(MOTOR_ESQUERDA))*6*PI/360 <= distancia);
+	Off(AMBOS_MOTORES);
+}
+
+void distancia_re(int low_speed, int high_speed, int distancia){//função do Kaynã
+	//dist(low_speed, high_speed, (-1)*distancia);
+
+	int count_A =  MotorRotationCount(MOTOR_ESQUERDA);
+	int count_C =  MotorRotationCount(MOTOR_DIREITA);
+	OnFwd(AMBOS_MOTORES, high_speed);
+	do{
+		if (MotorRotationCount(MOTOR_ESQUERDA) - count_A > MotorRotationCount(MOTOR_DIREITA) - count_C)
+		{
+			OnFwd(MOTOR_ESQUERDA, low_speed);
+			until ((MotorRotationCount(MOTOR_DIREITA) - count_C) >  (MotorRotationCount(MOTOR_ESQUERDA) - count_A));
+			OnFwd(MOTOR_ESQUERDA, high_speed);
+		}
+		else
+		{
+			OnFwd(MOTOR_DIREITA, low_speed);
+			until ( (MotorRotationCount(MOTOR_ESQUERDA) - count_A) > (MotorRotationCount(MOTOR_DIREITA) - count_C));
+			OnFwd(MOTOR_DIREITA, high_speed);
+		}
+	}while((MotorRotationCount(MOTOR_ESQUERDA) - count_A)*6*PI/360 <= distancia);
+	Off(AMBOS_MOTORES);
+
 }
 
 int pegar_passageiro ( int lado) //testado, mas precisa mudar a função gira para o robô girar no centro dele

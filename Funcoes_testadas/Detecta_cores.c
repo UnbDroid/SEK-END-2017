@@ -28,28 +28,28 @@ sub detect_colors(){ // Tabela a saída dos sensores de luz para as cores lidas
         if(BRANCO_r > 217)
             color_r = BRANCO;
         else
-            color_r = OUT;
+            color_r = FORA;
     else if(num_r == 12)
         if(BRANCO_r > 217)
             color_r = BRANCO;
         else
-            color_r = BLACK;
+            color_r = PRETO;
     else if(num_r == 17)
         if(BRANCO_r > 217)
             color_r = BRANCO;
         else if(BRANCO_r < 90)
-            color_r = BLACK;
+            color_r = PRETO;
         else
-            color_r = OUT;
+            color_r = FORA;
     else if(num_r == 13)
         color_r = BRANCO;
     else if(num_r == 3 || num_r == 4)
         color_r = VERDE;
     else if(num_r == 5 || num_r == 6)
-        color_r = YELLOW;
+        color_r = AMARELO;
     else if(num_r == 7)
         if(VERDE_r > 130)
-            color_r = YELLOW;
+            color_r = AMARELO;
         else
             color_r = VERMELHO;
     else if(num_r > 7 && num_r <= 10)
@@ -61,28 +61,28 @@ sub detect_colors(){ // Tabela a saída dos sensores de luz para as cores lidas
         if(BRANCO_l > 217)
             color_l = BRANCO;
         else
-            color_l = OUT;
+            color_l = FORA;
     else if(num_l == 12)
         if(BRANCO_l > 217)
             color_l = BRANCO;
         else
-            color_l = BLACK;
+            color_l = PRETO;
     else if(num_l == 17)
         if(BRANCO_l > 217)
             color_l = BRANCO;
         else if(BRANCO_l < 90)
-            color_l = BLACK;
+            color_l = PRETO;
         else
-            color_l = OUT;
+            color_l = FORA;
     else if(num_l == 13)
         color_l = BRANCO;
     else if(num_l == 3 || num_l == 4)
         color_l = VERDE;
     else if(num_l == 5 || num_l == 6)
-        color_l = YELLOW;
+        color_l = AMARELO;
     else if(num_l == 7)
         if(VERDE_l > 130)
-            color_l = YELLOW;
+            color_l = AMARELO;
         else
             color_l = VERMELHO;
     else if(num_l > 7 && num_l <= 10)
