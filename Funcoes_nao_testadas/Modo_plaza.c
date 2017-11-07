@@ -16,8 +16,8 @@ OUT_REGMODE_SPEED, 0, OUT_RUNSTATE_RUNNING, 0)
 #define SENSOR_US_GARRA IN_4 /*teste*/
 #define VELOCIDADE_BAIXA 35
 #define VELOCIDADE_MEDIA 50
-#define VELOCIDADE_ALTA 65
-#define VELOCIDADE_ALTISSIMA 90
+#define VELOCIDADE_ALTA 60
+#define VELOCIDADE_ALTISSIMA 70
 #define PRETO 1
 #define VERDE 3
 #define BRANCO 6
@@ -80,7 +80,7 @@ OUT_REGMODE_SPEED, 0, OUT_RUNSTATE_RUNNING, 0)
 #define CORRECAO 0.051
 
 
-int direcoes[6] = {1, 1, 1, 1, 1, 1};
+int passageiros = 0;
 
 sub BTCheck(){
      if (!BluetoothStatus(CONEXAO)==NO_ERR){
@@ -114,11 +114,13 @@ int get_value_color(char porta)
      return params.RawValue;
 }
 
-void ligar_sensores()
+void ligar_sensores() //testada
 {
 	SetSensorHTGyro(SENSOR_GYRO);
+	SetSensorUltrasonic(SENSOR_US_ESQUERDA);
+	SetSensorUltrasonic(SENSOR_US_DIREITA);
 	set_sensor_color(SENSOR_COR_ESQUERDA, VERMELHO);
-	Wait(50);
+	Wait(100);
 	set_sensor_color(SENSOR_COR_DIREITA, VERMELHO);
 }
 
@@ -314,7 +316,7 @@ void retinho(int velocidade) // se dif == 1: realizar função enquanto não for
 	Wait(150);
 }
 
-void modo_plaza ()
+void modo_plaza (int direcoes[])
 {
 	int aux, prev_motor; //Essa ultima constante é para armazenar o ultimo parâmetro do Sync
 	SetSensorHTGyro(SENSOR_GYRO);
@@ -376,11 +378,13 @@ void modo_plaza ()
 	{
 		direcoes[i] = -direcoes[i];
 	}
+	passageiros = 0;
 }
 
 
 task main ()
 {
+	int direcoes[6] = {1, 1, 1, 1, 1, 1};
 	BTCheck();
 
  	ligar_sensores();
@@ -394,5 +398,5 @@ task main ()
 	while(sensor_cor(SENSOR_COR_ESQUERDA) != FORA && sensor_cor(SENSOR_COR_DIREITA) != FORA);
 	Off(AMBOS_MOTORES);
 	distancia_re(VELOCIDADE_BAIXA, VELOCIDADE_ALTA, 10);
-	if(direcoes[AZUL] != 2 && direcoes[VERDE] != 2 && direcoes[VERMELHO] != 2) modo_plaza();
+	if(direcoes[AZUL] != 2 && direcoes[VERDE] != 2 && direcoes[VERMELHO] != 2) modo_plaza(direcoes);
 }

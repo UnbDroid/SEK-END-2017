@@ -101,7 +101,7 @@ OUT_REGMODE_SPEED, 0, OUT_RUNSTATE_RUNNING, 0)
 
 #define CORRECAO 0.051
 
-int passageiros = 0, direcoes[6] = {1, 1, 1, 1, 1, 1}, maximo = 40; //achei mais prático criar um vetor de 6 posiçoes e usar as constantes como o valor do índice
+int passageiros = 0, maximo = 40; //achei mais prático criar um vetor de 6 posiçoes e usar as constantes como o valor do índice
 
 sub BTCheck(){
      if (!BluetoothStatus(CONEXAO)==NO_ERR){
@@ -856,54 +856,7 @@ void voltar(int cor)//voltar para o quadrado de origem visto que errou o caminho
 	ajeitar(cor);
 }
 
-int testar_caminho(int cor)//testa as direções verificando se ja há alguma cor com a direção
-{
-	if (direcoes[AZUL] != ESQUERDA && direcoes[VERMELHO] != ESQUERDA && direcoes[VERDE] != ESQUERDA)
-	{
-		TextOut(10,10, "teste esquerda");
-		Wait(2000);
-		ClearScreen();
-		girar(90);
-		ClearScreen();
 
-		if (verificar_direcao(cor))
-		{
-			return ESQUERDA;
-		}
-		voltar(cor);
-
-		if (direcoes[AZUL] != FRENTE && direcoes[VERMELHO] != FRENTE && direcoes[VERDE] != FRENTE)
-		{
-			girar(90);
-
-			if (verificar_direcao(cor))
-			{
-				return FRENTE;
-			}
-			voltar(cor);
-			girar(90);
-			verificar_direcao(cor);
-			return DIREITA;
-		} else
-		{
-			verificar_direcao(cor);
-			return DIREITA;
-		}
-	}
-	if (direcoes[AZUL] != FRENTE && direcoes[VERMELHO] != FRENTE && direcoes[VERDE] != FRENTE)
-	{
-		if (verificar_direcao(cor))
-		{
-			return FRENTE;
-		}
-		voltar(cor);
-		girar(90);
-		verificar_direcao(cor);
-		return DIREITA;
-	}
-	verificar_direcao(cor);
-	return DIREITA;
-}
 
 /*void afaga_bonecos(int passageiros, char abre_ou_fecha) //o char determina se o usuario quer apertar ou soltar os bonecos 'a' == abrir 'f' == fechar
 {
@@ -974,83 +927,7 @@ int testar_caminho(int cor)//testa as direções verificando se ja há alguma co
 
 }*/
 
-
-void seguir_direcao(int cor)//função que sera usada quando a cor ja tiver uma direção definida
-{
-	if (direcoes[cor] == ESQUERDA)
-	{
-		girar(90);
-	}
-	if (direcoes[cor] == DIREITA)
-	{
-		girar(-90);
-	}
-	reto(cor);
-	distancia_reto(VELOCIDADE_MEDIA, VELOCIDADE_ALTA, 3);
-}
-
-void girar_sem_re(float degrees) // Algoritimo usado pela sek do ano passado //testada
-{
-
-	SetSensorHTGyro(SENSOR_GYRO);
-
-	float angle = 0, gyro = 0;
-	unsigned long time = CurrentTick(), prev_time;
-
-	Off(AMBOS_MOTORES);
-
-	degrees = -degrees;
-
-	float offset = getGyroOffset();
-
-	if(degrees > 0) {
-
-
-		while(angle < degrees)
-		{
-			OnFwd(MOTOR_ESQUERDA, -VELOCIDADE_ALTA);
-			OnRev(MOTOR_DIREITA, -VELOCIDADE_ALTA);
-			prev_time = time;
-			time = CurrentTick();
-			gyro = SensorHTGyro(SENSOR_GYRO);
-			angle += (gyro - offset) * (time - prev_time)/1000.0;
-			//ClearLine(LCD_LINE1);
-			//TextOut(0, LCD_LINE1, "ANGLE:");
-			//NumOut(48, LCD_LINE1, angle);
-			Wait(100); //MUDAR OS VALORES DOS WAITS PARA ALTERAR AS POSIÇÕES DAS RODAS
-			Off(AMBOS_MOTORES);
-			OnRev(MOTOR_ESQUERDA, -VELOCIDADE_ALTA);
-			OnRev(MOTOR_DIREITA, -VELOCIDADE_ALTA);
-			Wait(20); //USANDO 100 E 20 AS RODAS E AS CASTER BALLS ESTÃO FICANDO DENTRO DO QUADRADO, SWEET, DUDE !
-			Off(AMBOS_MOTORES);
-		}
-	} else {
-
-
-		while(angle > degrees)
-		{
-			OnFwd(MOTOR_DIREITA, -VELOCIDADE_ALTA);
-			OnRev(MOTOR_ESQUERDA, -VELOCIDADE_ALTA);
-			prev_time = time;
-			time = CurrentTick();
-			gyro = SensorHTGyro(SENSOR_GYRO);
-			angle += (gyro - offset) * (time - prev_time)/1000.0;
-			//ClearLine(LCD_LINE1);
-			//TextOut(0, LCD_LINE1, "ANGLE:");
-			//NumOut(48, LCD_LINE1, angle);
-		  	Wait(100);
-			Off(AMBOS_MOTORES);
-			OnFwd(MOTOR_ESQUERDA, -VELOCIDADE_ALTA);
-			OnFwd(MOTOR_DIREITA, -VELOCIDADE_ALTA);
-		  	Wait(20);
-			Off(AMBOS_MOTORES);
-		}
-	}
-
-	Off(AMBOS_MOTORES);
-}
-
-void modo_plaza ()
+void modo_plaza (int direcoes[])
 {
 	int aux, prev_motor; //Essa ultima constante é para armazenar o ultimo parâmetro do Sync
 	SetSensorHTGyro(SENSOR_GYRO);
@@ -1064,7 +941,8 @@ void modo_plaza ()
 
 	ResetRotationCount(MOTOR_DIREITA);
 	ResetRotationCount(MOTOR_ESQUERDA);
-	while (((abs(MotorRotationCount(MOTOR_DIREITA)) + abs(MotorRotationCount(MOTOR_ESQUERDA))) / 2.0) < 9999999999 /*4320.0*/)
+	OnFwdSync(AMBOS_MOTORES, -VELOCIDADE_ALTA, 0);
+	while (((abs(MotorRotationCount(MOTOR_DIREITA)) + abs(MotorRotationCount(MOTOR_ESQUERDA))) / 2.0) < 2160.0/*2160: rotação necessária para andar 94cm*/)
 	{
 		if ((preto_branco(SENSOR_COR_DIREITA) == BRANCO) && (preto_branco(SENSOR_COR_ESQUERDA) == BRANCO))
 		{
@@ -1121,65 +999,18 @@ void modo_plaza ()
 	}
 	if (maximo > 10) maximo -= 10;
 
-	
-
-
-	/*distancia_re(VELOCIDADE_MEDIA, VELOCIDADE_ALTA, 5);
-	girar(180);
-	PlayTone(880, 500);
-
-
-	//OnRevSync(AMBOS_MOTORES, -VELOCIDADE_ALTA, 0);
-	OnFwdSync(AMBOS_MOTORES, -VELOCIDADE_ALTA, -20);
-	Wait(500);
-	OnFwdSync(AMBOS_MOTORES, -VELOCIDADE_ALTA, 0);
-	Wait(300);
-	OnFwdSync(AMBOS_MOTORES, -VELOCIDADE_ALTA, 18);
-	Wait(600);
-	Off(AMBOS_MOTORES);
-	Wait(500);
-	ResetRotationCount(MOTOR_DIREITA);
-	ResetRotationCount(MOTOR_ESQUERDA);
-	prev_time = time;
-	time = CurrentTick();
-	gyro = SensorHTGyro(SENSOR_GYRO);
-	angle_inicial = (gyro - offset) * (time - prev_time)/1000.0;
-	while (sensor_cor(SENSOR_COR_ESQUERDA) != PRETO && sensor_cor(SENSOR_COR_DIREITA) != PRETO) retinho(-VELOCIDADE_ALTISSIMA);
-	OnRevSync(AMBOS_MOTORES, -VELOCIDADE_ALTA, 0);
-	Wait(3000);
-	Off(AMBOS_MOTORES);
-	while (sensor_cor(SENSOR_COR_ESQUERDA) != PRETO && sensor_cor(SENSOR_COR_DIREITA) != PRETO) retinho(-VELOCIDADE_ALTISSIMA);
-	PlayTone(880, 500);
-	aux = abs(MotorRotationCount(MOTOR_DIREITA));
-
-	distancia_re(VELOCIDADE_MEDIA, VELOCIDADE_ALTA, 15);
- 	MOTOR(MOTOR_PORTA, VELOCIDADE_BAIXA);
-	Wait(400);
-	MOTOR(MOTOR_PORTA, 0);
-	distancia_reto(VELOCIDADE_MEDIA, VELOCIDADE_ALTA, 30);
-	MOTOR(MOTOR_PORTA, -VELOCIDADE_BAIXA);
-	Wait(400);
-	MOTOR(MOTOR_PORTA, 0);
-
-	ResetRotationCount(MOTOR_DIREITA);
-	Wait(50);
-	PlayTone(880, 500);
-	while(prev_motor < aux)
-	{
-    	OnFwdSync(AMBOS_MOTORES, -VELOCIDADE_ALTA, 0);
-		Wait(50);
-		prev_motor = abs(MotorRotationCount(MOTOR_DIREITA));
-	}*/
 	Off(AMBOS_MOTORES);
 	for (int i = 0; i < 5; ++i)
 	{
 		direcoes[i] = -direcoes[i];
 	}
+	passageiros = 0;
 }
 
 
 task main ()
 {
+	int direcoes[6] = {1, 1, 1, 1, 1, 1};
 	BTCheck();
 
  	ligar_sensores();
@@ -1193,5 +1024,5 @@ task main ()
 	while(sensor_cor(SENSOR_COR_ESQUERDA) != FORA && sensor_cor(SENSOR_COR_DIREITA) != FORA);
 	Off(AMBOS_MOTORES);
 	distancia_re(VELOCIDADE_BAIXA, VELOCIDADE_ALTA, 10);
-	if(direcoes[AZUL] != 2 && direcoes[VERDE] != 2 && direcoes[VERMELHO] != 2) modo_plaza();
+	if(direcoes[AZUL] != 2 && direcoes[VERDE] != 2 && direcoes[VERMELHO] != 2) modo_plaza(direcoes);
 }
