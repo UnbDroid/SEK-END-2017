@@ -1,9 +1,7 @@
 #define FILE_NAME "cores.dat"
 #define RECORDS 2*6 // Pois sao 6 intervalos de cores para cada sensor
-#define RECORD_SIZE 12 // Pois sao 3 inteiros(4 bytes) 
+#define RECORD_SIZE 12 // Pois sao 3 inteiros(4 bytes)
 #define FILE_SIZE (RECORD_SIZE * RECORDS)
-
-#define TOUCH IN_4
 
 #define PRETO 1
 #define AZUL 2
@@ -19,16 +17,20 @@
 #define COL4 55
 
 
-int handle = 0;
-
 struct type_value
 {
 	int min, med, max;
 };
 
-struct type_COR
+struct type_cor
 {
-   type_value r, g, b; // red, green, blue
+   type_value r, g, b, t; // red, green, blue
+};
+
+struct type_lado
+{
+	type_cor red, green, blue;
+	type_cor white, black, out;
 };
 
 type_value init_value(int minimo, int media, int maximo)
@@ -40,9 +42,9 @@ type_value init_value(int minimo, int media, int maximo)
 	return color;
 }
 
-type_COR init_COR(type_value red, type_value green, type_value blue)
+type_cor init_cor(type_value red, type_value green, type_value blue)
 {
-	type_COR color;
+	type_cor color;
 	color.r = red;
 	color.g = green;
 	color.b = blue;
@@ -59,7 +61,7 @@ int alerta(int frequency)
 	}
 }
 
-void shutdown(const int delay)
+void shutdown(int &handle, const int delay)
 {
    if (handle) CloseFile(handle);
    // Get user's attention.
@@ -68,7 +70,7 @@ void shutdown(const int delay)
    Stop(true);
 }
 
-int open_for_read()
+int open_for_read(int &handle)
 {
    unsigned int file_size = FILE_SIZE;
    handle = 0;
@@ -81,20 +83,26 @@ int open_for_read()
    return 1;
 }
 
-int read_two_colors(type_COR & left, type_COR & right)
+int read_cor(int &handle, type_cor &color)
 {
-
-	unsigned int p[2];
-	p[0] = Read(handle, left);
-	p[1] = Read(handle, right);
-	// rtn_code_out(rtn_code);
-	// Return code handling
-	if (p[0] == LDR_SUCCESS && p[1] == LDR_SUCCESS)
-		return 1;
-	return 0;
+	unsigned int p;
+	type_value temp;
+	p = Read(handle, temp);
+	if (p != LDR_SUCCESS)
+		return 0;
+	color.r = temp;
+	p = Read(handle, temp);
+	if (p != LDR_SUCCESS)
+		return 0;
+	color.g = temp;
+	p = Read(handle, temp);
+	if (p != LDR_SUCCESS)
+		return 0;
+	color.b = temp;
+	return 1;
 }
 
-void imprime_cor(int x, int y, int color)
+void imprime_texto_cor(int x, int y, int color)
 {
 	if(color == VERMELHO){
 		TextOut(x, y, "VERMELHO");
@@ -118,71 +126,147 @@ void imprime_value(int LINE, type_value color)
 	NumOut( 50, LINE, color.max);
 }
 
+int le_lado(type_lado &lado)
+{
+	byte CORES[6] = {VERMELHO, VERDE, AZUL, BRANCO, PRETO, FORA};
+	int i, p;
+	for(i = 0; i < 6; i++)
+	{
+		if(CORES[i] == VERMELHO)
+			p = read_cor(lado.red);
+		else if(CORES[i] == VERDE)
+			p = read_cor(lado.green);
+		else if(CORES[i] == AZUL)
+			p = read_cor(lado.blue);
+		else if(CORES[i] == BRANCO)
+			p = read_cor(lado.white);
+		else if(CORES[i] == PRETO)
+			p = read_cor(lado.black);
+		else if(CORES[i] == FORA)
+			p = read_cor(lado.out);
+		if(p == 0)
+			return 0;
+		PlayTone(500, 100);
+		Wait(500);
+	}
+	Wait(2000);
+	return 1;
+
+}
+
+void calcula_cor(type_cor &color)
+{
+	const int pesos[3] = {5, 3, 1};
+	const int soma = pesos[0]+pesos[1]+pesos[2];
+	color.t = init_value((pesos[0]*color.r.min+pesos[1]*color.g.min+pesos[2]*color.b.min)/soma,
+						 (pesos[0]*color.r.med+pesos[1]*color.g.med+pesos[2]*color.b.med)/soma,
+						 (pesos[0]*color.r.max+pesos[1]*color.g.max+pesos[2]*color.b.max)/soma);
+}
+void calcula_lado(type_lado &lado)
+{
+	byte CORES[6] = {VERMELHO, VERDE, AZUL, BRANCO, PRETO, FORA};
+	int i;
+	for(i = 0; i < 6; i++)
+	{
+		if(CORES[i] == VERMELHO)
+			calcula_cor(lado.red);
+		else if(CORES[i] == VERDE)
+			calcula_cor(lado.green);
+		else if(CORES[i] == AZUL)
+			calcula_cor(lado.blue);
+		else if(CORES[i] == BRANCO)
+			calcula_cor(lado.white);
+		else if(CORES[i] == PRETO)
+			calcula_cor(lado.black);
+		else if(CORES[i] == FORA)
+			calcula_cor(lado.out);
+	}
+}
+
+void imprime_valores_cor(type_cor &valores)
+{
+	int LINE[4] = {LCD_LINE5, LCD_LINE6, LCD_LINE7, LCD_LINE8};
+	int j;
+	for(j = 0; j < 4; j++)
+	{
+		if(j == 0){
+			TextOut(COL1, LINE[j], "R");
+			imprime_value(LINE[j], valores.r);
+		}else if(j == 1){
+			TextOut(COL1, LINE[j], "G");
+			imprime_value(LINE[j], valores.g);
+		}else if(j == 2){
+			TextOut(COL1, LINE[j], "B");
+			imprime_value(LINE[j], valores.b);
+		}else{
+			TextOut(COL1, LINE[j], "T");
+			imprime_value(LINE[j], valores.t);
+		}
+	}
+}
+
 task main()
 {
 	int i, j, p;
-	int CORES[6] = {VERMELHO, VERDE, AZUL, BRANCO, PRETO, FORA};
-	int LINE[4] = {LCD_LINE5, LCD_LINE6, LCD_LINE7, LCD_LINE8};
-	type_COR left[6], right[6], aux1, aux2;
-	type_value l[6], r[6];
-	SetSensorTouch(TOUCH); // Liga o sensor touch
-	p = open_for_read();
+	type_lado L, R;
+	int handle = 0;
+	byte CORES[6] = {VERMELHO, VERDE, AZUL, BRANCO, PRETO, FORA};
+	// type_lado, type_cor, type_value
+	p = open_for_read(handle);
 	if(p == 1)
 	{
-		for(i = 0; i < 6; i++)
+		p = le_lado(handle, L);
+		if(p == 0)
 		{
-			p = read_two_colors(aux1, aux2);
-			if(p == 0)
-			{
-				alerta(1000);
-				shutdown(SEC_1);
-			}
-			left[i] = aux1;
-			right[i] = aux2;
-			l[i] = init_value((9*aux1.r.min+aux1.g.min+3*aux1.b.min)/13,
-							  (9*aux1.r.med+aux1.g.med+3*aux1.b.med)/13,
-							  (9*aux1.r.max+aux1.g.max+3*aux1.b.max)/13);
-			r[i] = init_value((9*aux2.r.min+aux2.g.min+3*aux2.b.min)/13,
-							  (9*aux2.r.med+aux2.g.med+3*aux2.b.med)/13,
-							  (9*aux2.r.max+aux2.g.max+3*aux2.b.max)/13);
+			alerta(1000);
+			shutdown(SEC_1);
 		}
+		PlayTone(1000, 500);
+		calcula_lado(L);
+		p = le_lado(handle, R);
+		if(p == 0)
+		{
+			alerta(1000);
+			shutdown(SEC_1);
+		}
+		calcula_lado(R);
 		while(1)
 		{
 			for(i = 0; i < 12; i++)
 			{
 				ClearScreen();
-				if( i % 2)
-					TextOut(COL1, LCD_LINE1, "RIGHT:");
-				else
-					TextOut(COL1, LCD_LINE1, "LEFT:");
-				imprime_cor(35, LCD_LINE1, CORES[i/2]);
-				for(j = 0; j < 4; j++)
+				imprime_texto_cor(35, LCD_LINE1, CORES[i/2]);
+				if(i%2)
 				{
-					if(j == 0){
-						TextOut(COL1, LINE[j], "R");
-						if( i % 2)
-							imprime_value(LINE[j], right[i/2].r);
-						else
-							imprime_value(LINE[j], left[i/2].r);	
-					}else if(j == 1){
-						TextOut(COL1, LINE[j], "G");
-						if( i % 2)
-							imprime_value(LINE[j], right[i/2].g);
-						else
-							imprime_value(LINE[j], left[i/2].g);
-					}else if(j == 2){
-						TextOut(COL1, LINE[j], "B");
-						if( i % 2)
-							imprime_value(LINE[j], right[i/2].b);
-						else
-							imprime_value(LINE[j], left[i/2].b);
-					}else{
-						TextOut(COL1, LINE[j], "T");
-						if( i % 2)
-							imprime_value(LINE[j], l[i/2]);
-						else
-							imprime_value(LINE[j], r[i/2]);
-					}
+					TextOut(COL1, LCD_LINE1, "RIGHT:");
+					if(CORES[i/2] == VERMELHO)
+						imprime_valores_cor(L.red);
+					else if(CORES[i/2] == VERDE)
+						imprime_valores_cor(L.green);
+					else if(CORES[i/2] == AZUL)
+						imprime_valores_cor(L.blue);
+					else if(CORES[i/2] == BRANCO)
+						imprime_valores_cor(L.white);
+					else if(CORES[i/2] == PRETO)
+						imprime_valores_cor(L.black);
+					else if(CORES[i/2] == FORA)
+						imprime_valores_cor(L.out);
+				}
+				else
+				{
+					TextOut(COL1, LCD_LINE1, "LEFT:");
+					if(CORES[i/2] == VERMELHO)
+						imprime_valores_cor(R.red);
+					else if(CORES[i/2] == VERDE)
+						imprime_valores_cor(R.green);
+					else if(CORES[i/2] == AZUL)
+						imprime_valores_cor(R.blue);
+					else if(CORES[i/2] == BRANCO)
+						imprime_valores_cor(R.white);
+					else if(CORES[i/2] == PRETO)
+						imprime_valores_cor(R.black);
+					else if(CORES[i/2] == FORA)
+						imprime_valores_cor(R.out);
 				}
 				while(!ButtonPressed(BTNCENTER, false)){
 					Wait(100);
