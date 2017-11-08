@@ -8,7 +8,7 @@
 #define VELOCIDADE_MEDIA 45
 #define VELOCIDADE_ALTA 65
 
-#define CORRECAO 0.051
+#define CORRECAO 0.052
 
 void ligar_sensores()
 {
@@ -21,9 +21,9 @@ void retinho(int velocidade)
 {
 	float gyro1, gyro2, erro, velo1 = velocidade, velo2 = velocidade;
 	gyro1 = SensorHTGyro(SENSOR_GYRO);
-	OnFwdSync(AMBOS_MOTORES, -velocidade, -18);
+	OnFwdSync(AMBOS_MOTORES, -velocidade, -14);
 	Wait(50);
-	while(gyro2 >= -0.5 && gyro2 <= 0.5){
+	while(gyro2 >= -0.65 && gyro2 <= 0.65){
 		gyro2 = SensorHTGyro(SENSOR_GYRO);
 	}
 	erro = gyro2 - gyro1;
