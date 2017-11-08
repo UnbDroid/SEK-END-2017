@@ -19,7 +19,7 @@ void ligar_sensores()
 
 void retinho(int velocidade)
 {
-	float gyro1, gyro2, erro, velo1 = velocidade, velo2 = velocidade;
+	float gyro1, gyro2, erro, velo1 = 0, velo2 = 0;
 	gyro1 = SensorHTGyro(SENSOR_GYRO);
 	OnFwdSync(AMBOS_MOTORES, -velocidade, -14);
 	Wait(50);
@@ -29,12 +29,9 @@ void retinho(int velocidade)
 	erro = gyro2 - gyro1;
 	velo1 = velocidade + CORRECAO * erro;
 	velo2 = velocidade - CORRECAO * erro;
-	if (velo1 > 90) velo1 = 90;
-	else if (velo1 < -90) velo1 = -90;
-	if (velo2 > 90) velo2 = 90;
-	else if (velo2 < -90) velo2 = -90;
-	OnRev(MOTOR_DIREITA, velo1);
-	OnRev(MOTOR_ESQUERDA, velo2);
+	if (velo1 > 20) velo1 = 20;
+	else if (velo1 < -20) velo1 = -20;
+	OnRevSync(MOTOR_DIREITA, VELOCIDADE_MEDIA, velo1);
 	Wait(50);
 }
 
