@@ -177,13 +177,13 @@ void distancia_reto(int low_speed, int high_speed, int distancia){//função do 
 		if (count_A - MotorRotationCount(MOTOR_ESQUERDA) > count_C - MotorRotationCount(MOTOR_DIREITA))
 		{
 			OnRev(MOTOR_ESQUERDA, low_speed);
-			until ((count_C - MotorRotationCount(MOTOR_DIREITA)) >  (count_A - MotorRotationCount(MOTOR_ESQUERDA)));
+			until ((count_C - MotorRotationCount(MOTOR_DIREITA)) >  (count_A - MotorRotationCount(MOTOR_ESQUERDA)) && ((count_A - MotorRotationCount(MOTOR_ESQUERDA))*6*PI/360 <= distancia));
 			OnRev(MOTOR_ESQUERDA, high_speed);
 		}
 		else
 		{
 			OnRev(MOTOR_DIREITA, low_speed);
-			until ( (count_A - MotorRotationCount(MOTOR_ESQUERDA)) > (count_C - MotorRotationCount(MOTOR_DIREITA)));
+			until ( (count_A - MotorRotationCount(MOTOR_ESQUERDA)) > (count_C - MotorRotationCount(MOTOR_DIREITA)) && ((count_C - MotorRotationCount(MOTOR_DIREITA))*6*PI/360 <= distancia));
 			OnRev(MOTOR_DIREITA, high_speed);
 		}
 	}while((count_A - MotorRotationCount(MOTOR_ESQUERDA))*6*PI/360 <= distancia);
@@ -200,16 +200,16 @@ void distancia_re(int low_speed, int high_speed, int distancia){//função do Ka
 		if (MotorRotationCount(MOTOR_ESQUERDA) - count_A > MotorRotationCount(MOTOR_DIREITA) - count_C)
 		{
 			OnFwd(MOTOR_ESQUERDA, low_speed);
-			until ((MotorRotationCount(MOTOR_DIREITA) - count_C) >  (MotorRotationCount(MOTOR_ESQUERDA) - count_A));
+			until (((MotorRotationCount(MOTOR_DIREITA) - count_C) >  (MotorRotationCount(MOTOR_ESQUERDA) - count_A)) && ((MotorRotationCount(MOTOR_ESQUERDA) - count_A)*6*PI/360 <= distancia));
 			OnFwd(MOTOR_ESQUERDA, high_speed);
 		}
 		else
 		{
 			OnFwd(MOTOR_DIREITA, low_speed);
-			until ( (MotorRotationCount(MOTOR_ESQUERDA) - count_A) > (MotorRotationCount(MOTOR_DIREITA) - count_C));
+			until ( ((MotorRotationCount(MOTOR_ESQUERDA) - count_A) > (MotorRotationCount(MOTOR_DIREITA) - count_C)) && ((MotorRotationCount(MOTOR_DIREITA) - count_C)*6*PI/360 <= distancia));
 			OnFwd(MOTOR_DIREITA, high_speed);
 		}
-	}while((MotorRotationCount(MOTOR_ESQUERDA) - count_A)*6*PI/360 <= distancia);
+	}while(((MotorRotationCount(MOTOR_ESQUERDA) - count_A)*6*PI/360 <= distancia) && ((MotorRotationCount(MOTOR_ESQUERDA) - count_A)*6*PI/360 <= distancia));
 	Off(AMBOS_MOTORES);
 
 }
@@ -543,33 +543,63 @@ void procura_boneco()
 	//NumOut(10, 10, d);
 }
 
+void retinho(int velocidade)
+{
+	float gyro1, gyro2, erro, velo1 = velocidade, velo2 = velocidade;
+	gyro1 = SensorHTGyro(SENSOR_GYRO);
+	OnFwdSync(AMBOS_MOTORES, -velocidade, -14);
+	Wait(50);
+	while(gyro2 >= -0.65 && gyro2 <= 0.65){
+		gyro2 = SensorHTGyro(SENSOR_GYRO);
+	}
+	erro = gyro2 - gyro1;
+	velo1 = velocidade + CORRECAO * erro;
+	velo2 = velocidade - CORRECAO * erro;
+	if (velo1 > 90) velo1 = 90;
+	else if (velo1 < -90) velo1 = -90;
+	if (velo2 > 90) velo2 = 90;
+	else if (velo2 < -90) velo2 = -90;
+	OnRev(MOTOR_DIREITA, velo1);
+	OnRev(MOTOR_ESQUERDA, velo2);
+	Wait(50);
+}
+
 void reto(int cor) //robo move ate que os dois sensores parem de ver a cor
 {
 		while (sensor_cor(SENSOR_COR_DIREITA) == cor || sensor_cor(SENSOR_COR_ESQUERDA) == cor)
 		{
 			OnFwdSync(AMBOS_MOTORES, -VELOCIDADE_ALTA, -6);
-			
-			while(sensor_cor(SENSOR_COR_ESQUERDA) == FORA && sensor_cor(SENSOR_COR_DIREITA) == cor)
+			if (cor =! BRANCO)
 			{
-				OnRevSync(AMBOS_MOTORES, - VELOCIDADE_BAIXA, 0); // Da uma pequena re
-				Wait(200);
-				Off(AMBOS_MOTORES);
-				OnFwd(MOTOR_ESQUERDA, -VELOCIDADE_MEDIA);
-				OnRev(MOTOR_DIREITA,  -VELOCIDADE_BAIXA);
-				ClearScreen();
-				//PlayTone(400, 100);
-				TextOut(50,50, "E:P");
+				while(sensor_cor(SENSOR_COR_ESQUERDA) == cor && sensor_cor(SENSOR_COR_DIREITA) == cor)
+				{
+					retinho(VELOCIDADE_ALTA);
+				}
 			}
-			while(sensor_cor(SENSOR_COR_DIREITA) == FORA && sensor_cor(SENSOR_COR_ESQUERDA) == cor)
-			{
-				OnRevSync(AMBOS_MOTORES, - VELOCIDADE_BAIXA, 0); // Da uma pequena re
-				Wait(200);
-				Off(AMBOS_MOTORES);
-				OnFwd(MOTOR_DIREITA, -VELOCIDADE_MEDIA);
-				OnRev(MOTOR_ESQUERDA, -VELOCIDADE_BAIXA);
-				ClearScreen();
-				//PlayTone(800, 100);
-				TextOut(50,50, "D:P");
+			
+			if (cor == BRANCO){
+				while(sensor_cor(SENSOR_COR_ESQUERDA) == FORA && sensor_cor(SENSOR_COR_DIREITA) == cor)
+				{
+					OnRevSync(AMBOS_MOTORES, - VELOCIDADE_BAIXA, 0); // Da uma pequena re
+					Wait(200);
+					Off(AMBOS_MOTORES);
+					OnFwd(MOTOR_ESQUERDA, -VELOCIDADE_MEDIA);
+					OnRev(MOTOR_DIREITA,  -VELOCIDADE_BAIXA);
+					ClearScreen();
+					//PlayTone(400, 100);
+					TextOut(50,50, "E:P");
+				}
+				while(sensor_cor(SENSOR_COR_DIREITA) == FORA && sensor_cor(SENSOR_COR_ESQUERDA) == cor)
+				{
+					OnRevSync(AMBOS_MOTORES, - VELOCIDADE_BAIXA, 0); // Da uma pequena re
+					Wait(200);
+					Off(AMBOS_MOTORES);
+					OnFwd(MOTOR_DIREITA, -VELOCIDADE_MEDIA);
+					OnRev(MOTOR_ESQUERDA, -VELOCIDADE_BAIXA);
+					ClearScreen();
+					//PlayTone(800, 100);
+					TextOut(50,50, "D:P");
+				}
 			}
 			ClearScreen();
 			if (cor == BRANCO){
@@ -577,8 +607,7 @@ void reto(int cor) //robo move ate que os dois sensores parem de ver a cor
 			}
 		}
 	Off(AMBOS_MOTORES);
-	ajeitar(cor);
-	
+	ajeitar(cor);		
 	//alterei o laço para dentro da função recenbendo a cor como argumento
 }
 
@@ -647,9 +676,13 @@ bool verificar_direcao(int cor)
 
 	if (sensor_cor(SENSOR_COR_ESQUERDA) != PRETO && sensor_cor(SENSOR_COR_DIREITA) != PRETO)//se os dois nao veem preto entao o robo acertou o caminho
 	{
+		PlayTone(220, 300);
 		TextOut(10,10, "caminho certo");
 		return true;
 	}
+	PlayTone(220, 300);
+	Wait(300);
+	PlayTone(220, 300);
 	TextOut(10, 10, "Caminho errado");
 	return false;
 }
@@ -667,7 +700,33 @@ void voltar(int cor)//voltar para o quadrado de origem visto que errou o caminho
 }
 
 int testar_caminho(int cor, int direcoes[])//testa as direções verificando se ja há alguma cor com a direção
-{
+{	
+	if (direcoes[AMARELO] != FRENTE && direcoes[VERMELHO] != FRENTE && direcoes[VERDE] != FRENTE)
+	{
+		TextOut(10,10, "teste frente");
+		if (verificar_direcao(cor))
+		{
+			return FRENTE;
+		}
+		voltar(cor);
+		if (direcoes[AMARELO] != ESQUERDA && direcoes[VERMELHO] != ESQUERDA && direcoes[VERDE] != ESQUERDA)
+		{
+			girar(-90);
+			if (verificar_direcao(cor))
+			{
+				return ESQUERDA;
+			}
+			voltar(cor);
+			verificar_direcao(cor);
+			return DIREITA;
+		}
+		else
+		{
+			girar(90);
+			verificar_direcao(cor);
+			return DIREITA;
+		}
+	}
 	if (direcoes[AMARELO] != ESQUERDA && direcoes[VERMELHO] != ESQUERDA && direcoes[VERDE] != ESQUERDA)
 	{
 		TextOut(10,10, "teste esquerda");
@@ -680,37 +739,11 @@ int testar_caminho(int cor, int direcoes[])//testa as direções verificando se 
 			return ESQUERDA;
 		}
 		voltar(cor);
-
-		if (direcoes[AMARELO] != FRENTE && direcoes[VERMELHO] != FRENTE && direcoes[VERDE] != FRENTE)
-		{
-			girar(90);
-
-			if (verificar_direcao(cor))
-			{
-				return FRENTE;
-			}
-			voltar(cor);
-			girar(90);
-			verificar_direcao(cor);
-			return DIREITA;
-		} else
-		{
-			verificar_direcao(cor);
-			return DIREITA;
-		}
-	}
-	if (direcoes[AMARELO] != FRENTE && direcoes[VERMELHO] != FRENTE && direcoes[VERDE] != FRENTE)
-	{
-		TextOut(10,10, "teste frente");
-		if (verificar_direcao(cor))
-		{
-			return FRENTE;
-		}
-		voltar(cor);
-		girar(90);
 		verificar_direcao(cor);
 		return DIREITA;
+		
 	}
+	girar(-90);
 	TextOut(10,10, "teste direita");
 	verificar_direcao(cor);
 	return DIREITA;
