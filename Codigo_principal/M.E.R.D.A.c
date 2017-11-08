@@ -177,13 +177,13 @@ void distancia_reto(int low_speed, int high_speed, int distancia){//função do 
 		if (count_A - MotorRotationCount(MOTOR_ESQUERDA) > count_C - MotorRotationCount(MOTOR_DIREITA))
 		{
 			OnRev(MOTOR_ESQUERDA, low_speed);
-			until ((count_C - MotorRotationCount(MOTOR_DIREITA)) >  (count_A - MotorRotationCount(MOTOR_ESQUERDA)) && ((count_A - MotorRotationCount(MOTOR_ESQUERDA))*6*PI/360 <= distancia));
+			until ((count_C - MotorRotationCount(MOTOR_DIREITA)) >  (count_A - MotorRotationCount(MOTOR_ESQUERDA)) || ((count_A - MotorRotationCount(MOTOR_ESQUERDA))*6*PI/360 <= distancia));
 			OnRev(MOTOR_ESQUERDA, high_speed);
 		}
 		else
 		{
 			OnRev(MOTOR_DIREITA, low_speed);
-			until ( (count_A - MotorRotationCount(MOTOR_ESQUERDA)) > (count_C - MotorRotationCount(MOTOR_DIREITA)) && ((count_C - MotorRotationCount(MOTOR_DIREITA))*6*PI/360 <= distancia));
+			until ( (count_A - MotorRotationCount(MOTOR_ESQUERDA)) > (count_C - MotorRotationCount(MOTOR_DIREITA)) || ((count_C - MotorRotationCount(MOTOR_DIREITA))*6*PI/360 <= distancia));
 			OnRev(MOTOR_DIREITA, high_speed);
 		}
 	}while((count_A - MotorRotationCount(MOTOR_ESQUERDA))*6*PI/360 <= distancia);
@@ -200,13 +200,13 @@ void distancia_re(int low_speed, int high_speed, int distancia){//função do Ka
 		if (MotorRotationCount(MOTOR_ESQUERDA) - count_A > MotorRotationCount(MOTOR_DIREITA) - count_C)
 		{
 			OnFwd(MOTOR_ESQUERDA, low_speed);
-			until (((MotorRotationCount(MOTOR_DIREITA) - count_C) >  (MotorRotationCount(MOTOR_ESQUERDA) - count_A)) && ((MotorRotationCount(MOTOR_ESQUERDA) - count_A)*6*PI/360 <= distancia));
+			until (((MotorRotationCount(MOTOR_DIREITA) - count_C) >  (MotorRotationCount(MOTOR_ESQUERDA) - count_A)) || ((MotorRotationCount(MOTOR_ESQUERDA) - count_A)*6*PI/360 <= distancia));
 			OnFwd(MOTOR_ESQUERDA, high_speed);
 		}
 		else
 		{
 			OnFwd(MOTOR_DIREITA, low_speed);
-			until ( ((MotorRotationCount(MOTOR_ESQUERDA) - count_A) > (MotorRotationCount(MOTOR_DIREITA) - count_C)) && ((MotorRotationCount(MOTOR_DIREITA) - count_C)*6*PI/360 <= distancia));
+			until ( ((MotorRotationCount(MOTOR_ESQUERDA) - count_A) > (MotorRotationCount(MOTOR_DIREITA) - count_C)) || ((MotorRotationCount(MOTOR_DIREITA) - count_C)*6*PI/360 <= distancia));
 			OnFwd(MOTOR_DIREITA, high_speed);
 		}
 	}while(((MotorRotationCount(MOTOR_ESQUERDA) - count_A)*6*PI/360 <= distancia) && ((MotorRotationCount(MOTOR_ESQUERDA) - count_A)*6*PI/360 <= distancia));
