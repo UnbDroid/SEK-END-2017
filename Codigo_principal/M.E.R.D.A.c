@@ -847,44 +847,43 @@ void modo_plaza (int direcoes[])
 	unsigned long time = CurrentTick(), prev_time;
 	float offset = getGyroOffset();
 
-
 	PlayTone(880, 500);
-
 
 	ResetRotationCount(MOTOR_DIREITA);
-	ResetRotationCount(MOTOR_ESQUERDA);
-	OnFwdSync(AMBOS_MOTORES, -VELOCIDADE_ALTA, -6);
-	
-	PlayTone(880, 500);
+	ResetRotationCount(MOTOR_ESQUERDA);  // Checkpoint 1 do rotation count
 
 	while (color_r !=PRETO && color_l !=PRETO)
 	{
-		OnFwdSync(AMBOS_MOTORES, -VELOCIDADE_MEDIA, -6);
-		detect_colors();
+		retinho(VELOCIDADE_ALTA);
 	}
-	distancia_reto(VELOCIDADE_MEDIA, VELOCIDADE_ALTA, maximo);
-	giro(180);
-	aux = abs(MotorRotationCount(MOTOR_DIREITA));
-	ResetRotationCount(MOTOR_DIREITA);
-	ResetRotationCount(MOTOR_ESQUERDA);
-	//MOTOR(MOTOR_PORTA, VELOCIDADE_BAIXA);
-	Wait(400);
-	//MOTOR(MOTOR_PORTA, 0);
+
 	distancia_reto(VELOCIDADE_MEDIA, VELOCIDADE_ALTA, 30);
-	//MOTOR(MOTOR_PORTA, -VELOCIDADE_BAIXA);
+
+	aux = abs(MotorRotationCount(MOTOR_DIREITA));
+
+	giro(180);
+
+	ResetRotationCount(MOTOR_DIREITA);
+	ResetRotationCount(MOTOR_ESQUERDA);  // Checkpoint 2 do rotation count
+
+	MOTOR(MOTOR_PORTA, VELOCIDADE_BAIXA);
 	Wait(400);
-	//MOTOR(MOTOR_PORTA, 0);
-	giro(-180);
-	
-    OnFwdSync(AMBOS_MOTORES, -VELOCIDADE_MEDIA, -6);
+	MOTOR(MOTOR_PORTA, 0);
+	distancia_reto(VELOCIDADE_MEDIA, VELOCIDADE_ALTA, 30);
+	MOTOR(MOTOR_PORTA, -VELOCIDADE_BAIXA);
+	Wait(400);
+	MOTOR(MOTOR_PORTA, 0);
+
+    retinho(VELOCIDADE_ALTA);
+
 	while(prev_motor < aux)
 	{
 		Wait(50);
 		prev_motor = abs(MotorRotationCount(MOTOR_DIREITA));
 	}
-	if (maximo > 10) maximo -= 10;
 
 	Off(AMBOS_MOTORES);
+	
 	for (int i = 0; i < 5; ++i)
 	{
 		direcoes[i] = -direcoes[i];
