@@ -1,4 +1,6 @@
 #define BT_CONN 1
+#define INBOX 1
+#define OUTBOX 5
 
 #define MOTOR_ESQUERDA OUT_C
 #define MOTOR_DIREITA OUT_A
@@ -33,23 +35,29 @@ OUT_REGMODE_SPEED, 0, OUT_RUNSTATE_RUNNING, 0)
 
 #define SENSIBILIDADE 0.9
 #define OFFSET_SAMPLES 2000
+#define POT_MAX 90
+
+#define CORRECAO 0.01
+#define RAZAO 1.286
 
 #define ESQUERDA 1
 #define DIREITA -1
 #define FRENTE 0
 #define NADA 2
-#define NAO_FRENTE 3
-#define NAO_FRENTE_ESQUERDA 4
+#define NAO_ESQUERDA 3
+#define NAO_DIREITA 4
+#define INVERTER 5
+#define NORMAL 6
 
 #define OFFSET_COLOR 1/9.0
 
-#define CORRECAO 0.051
+#define SIZE 3*4 // 3 inteiros
+#define NAME "direcoes.dat"
 
-
-int ultimo_fora = 0;
 int passageiros = 0; 
 int maximo = 40;
 byte VERMELHO_r, VERDE_r, AZUL_r, BRANCO_r, num_r, VERMELHO_l, VERDE_l, AZUL_l, BRANCO_l, num_l, color_r, color_l;
+int handle = 0;
 
 sub BTCheck(){
      if (!BluetoothStatus(CONEXAO)==NO_ERR){
@@ -58,6 +66,124 @@ sub BTCheck(){
           Wait(1000);
           Stop(true);
       }
+}
+
+int alerta(int frequency)
+{
+	int i;
+	for(i = 0; i < 20; i++)
+	{
+		PlayTone(frequency, 100);
+		Wait(150);
+	}
+}
+
+void shutdown( const int delay)
+{
+   if (handle) CloseFile(handle);
+   // Get user's attention.
+   // Give the user time to read screen messages.
+   Wait(delay);
+   Stop(true);
+}
+
+int open_for_write()
+{
+	unsigned int file_size = SIZE;
+	handle = 0;
+	// Start with the assumptions the file doesn't exist and needs to be created.
+	unsigned int rtn_code = CreateFile(NAME, file_size, handle);
+	// If the file already exists, open it with the intent of adding to the data
+	// that is already there.
+	if (rtn_code == LDR_FILEEXISTS)
+	{
+		rtn_code = DeleteFile(NAME);
+		if(rtn_code == LDR_SUCCESS)
+		{
+			rtn_code = CreateFile(NAME, file_size, handle);
+		}
+		else
+		{
+			// Deu algum erro, acho que nunca vai entrar aqui
+		}
+	}
+	// Return code handling
+	switch (rtn_code)
+	{
+		case LDR_SUCCESS:
+			return 1;
+		case LDR_FILEISFULL:
+			// Acho que nunca vai entrar nesse caso, pois o arquivo sempre é criado novamente
+			TextOut(0, LCD_LINE1, "file is full    ");
+			break;
+		default:
+			// Unanticipated exception.
+			TextOut(0, LCD_LINE1, "write open      ");
+			break;
+	}
+	alerta(800);
+	shutdown(SEC_1);
+}
+
+int write_direcoes(int direcoes[]) // Retorna 1 caso consiga gravar
+{
+	byte CORES[3] = {VERMELHO, VERDE, AZUL};
+	unsigned int p; //Problem
+	int i;
+	int d;
+
+	for(i = 0; i < 3; i++) // Pois sao 3 cores para gravar as direcoes
+	{
+		d = direcoes[CORES[i]];
+		p = Write(handle, d);
+		if (p != LDR_SUCCESS)
+		{
+			if (handle) CloseFile(handle);
+			return 0;
+		}
+	}
+	if (handle) CloseFile(handle);
+	return 1;
+}
+
+
+
+int open_for_read()
+{
+   unsigned int file_size = SIZE;
+   handle = 0;
+   unsigned int rtn_code = OpenFileRead(NAME, file_size, handle);
+   // Return code handling
+   if (rtn_code != LDR_SUCCESS)
+   {
+      return 0;
+   }
+   return 1;
+}
+
+int read_direcoes(int &d1, int &d2, int &d3)
+{
+	int i;
+	int d;
+	unsigned int p;
+	for(i = 0; i < 3; i++)
+	{
+		p = Read(handle, d);
+		if (p != LDR_SUCCESS)
+		{
+			d1 = NADA;
+			d2 = NADA;
+			d3 = NADA;
+			return 0;
+		}
+		if(i == 0)
+			d1 = d;
+		else if(i == 1)
+			d2 = d;
+		else if(i == 2)
+			d3 = d;
+	}
+	return 1;
 }
 
 
@@ -248,6 +374,39 @@ void distancia_re(int low_speed, int high_speed, int distancia){//função do Ka
 
 }
 
+void ajeitar_frente_branco()//ajeita na cor em frente ao branco
+{
+	int contador = 0;	
+	{
+		while((sensor_cor(SENSOR_COR_DIREITA) != BRANCO || sensor_cor(SENSOR_COR_ESQUERDA) != BRANCO)) // Aqui ele comeca a ajeitar, para caso chegue torto, ele fique certo no final
+		{
+			Off(AMBOS_MOTORES);
+			//while(sensor_cor(SENSOR_COR_ESQUERDA) == FORA) OnFwd(MOTOR_ESQUERDA, -VELOCIDADE_MEDIA);
+			//while(sensor_cor(SENSOR_COR_DIREITA) == FORA ) OnFwd(MOTOR_DIREITA, -VELOCIDADE_MEDIA);
+			
+			Off(AMBOS_MOTORES);
+			contador = 0;
+			while(sensor_cor(SENSOR_COR_DIREITA) != BRANCO && contador < 10)
+			{ // Ajusta a roda esquerda para ficar em cima da linha.
+				OnFwd(MOTOR_DIREITA,  (-1)*VELOCIDADE_MEDIA);
+				Wait(10);
+				contador += 1;
+			}
+			Off(AMBOS_MOTORES);
+			contador = 0;
+			while(sensor_cor(SENSOR_COR_ESQUERDA) != BRANCO && contador < 10)
+			{ // Ajusta a roda esquerda para ficar em cima da linha.
+				OnFwd(MOTOR_ESQUERDA, (-1)*VELOCIDADE_MEDIA);
+				Wait(10);
+				contador += 1;
+			}
+			
+		}
+	}
+	Off(AMBOS_MOTORES);
+	Wait(500);
+}
+
 void ajeitar_frente()//ajeita na cor em frente ao branco
 {
 	int contador = 0;	
@@ -321,8 +480,6 @@ void ajeitar(int cor) //arruma o robo pra ficar alinhado no quadrado da cor que 
 		}
 	Off(AMBOS_MOTORES);
 	Wait(500);
-
-	ultimo_fora = 0;
 }
 
 float getGyroOffset()
@@ -336,7 +493,6 @@ float getGyroOffset()
 
     return gyro_sum/OFFSET_SAMPLES;
 }
-
 void giro(float degrees) // Algoritimo usado pela sek do ano passado //testada
 {
 
@@ -397,7 +553,6 @@ void giro(float degrees) // Algoritimo usado pela sek do ano passado //testada
 
 	Off(AMBOS_MOTORES);
 }
-
 void girar(float degrees) //função para mover o robo de acordo com o giro e girar, valores de acordo com testes
 {
 	int contador = 0;
@@ -432,6 +587,7 @@ void girar(float degrees) //função para mover o robo de acordo com o giro e gi
 				Wait(50);
 				contador += 1;
 			}
+			Off(AMBOS_MOTORES);
 		}
 
 		while(sensor_cor(SENSOR_COR_DIREITA) == FORA){
@@ -445,7 +601,7 @@ void girar(float degrees) //função para mover o robo de acordo com o giro e gi
 		}
 		Off(MOTOR_ESQUERDA);
 
-		distancia_re(VELOCIDADE_MEDIA, VELOCIDADE_ALTA, 5);
+		distancia_re(VELOCIDADE_MEDIA, VELOCIDADE_ALTA, 9);
 		giro(90);
 	}
 	if (degrees != 90 && degrees != -90 && degrees != 180)
@@ -453,7 +609,7 @@ void girar(float degrees) //função para mover o robo de acordo com o giro e gi
 }
 
 
-float ultrassom_filtrado(int sensor) //testada
+/*float ultrassom_filtrado(int sensor) //testada
 {
 	float valor = SensorUS(sensor);
 	float aux;
@@ -463,6 +619,26 @@ float ultrassom_filtrado(int sensor) //testada
 		valor = valor * SENSIBILIDADE + aux * (1-SENSIBILIDADE); // Algoritimo passado pelo B.Andreguetti da aula de SisMed
 	}
 	return valor;
+}*/
+
+int achou_boneco()
+{
+	// Retorna 0 caso nao tenha achado nenhum boneco nas laterais
+	// Retorna 1 caso ache o boneco pela esquerda
+	// Retorna 2 caso ache o boneco pela direita
+	// Retorna 3 caso ache o boneco nos dois lados
+	int found, num = 0;
+    found = -2; /* Significa que nao existe entrada, esse valor porque eu quis */
+	SendRemoteNumber(CONEXAO, OUTBOX, 0xFF); // Esse valor porque eu vi na internet
+	until(found != -2)
+	{
+		until(ReceiveRemoteNumber(INBOX,true,found) == NO_ERR); // Deve retornar entre 0 e 3
+		num += 1;
+		NumOut(25, LCD_LINE2, num);
+	}
+	NumOut(25, LCD_LINE2, found);
+
+	return found;
 }
 
 void levantar_garra() //testada
@@ -549,12 +725,12 @@ int agarrar()//testada
 	return confirma_que_pegou;
 }
 
-int pegar_passageiro (/*int lado*/) //testado, mas precisa mudar a função gira para o robô girar no centro dele
+int pegar_passageiro (int lado) //testado, mas precisa mudar a função gira para o robô girar no centro dele
 {
 
 	int confirma_que_pegou = 0;
 
-	/*if(lado == DIREITA && passageiros < 3){ //Ainda é necessário adaptar a função agarrar() pra depois de ela agarrar, ela voltar para a
+	if(lado == DIREITA && passageiros < 3){ //Ainda é necessário adaptar a função agarrar() pra depois de ela agarrar, ela voltar para a
 															   //posição que o robô estava antes. Além disso, colocar para verificar se pegou o boneco
 		Off(AMBOS_MOTORES);
 		Wait(500);
@@ -579,9 +755,9 @@ int pegar_passageiro (/*int lado*/) //testado, mas precisa mudar a função gira
 		confirma_que_pegou = agarrar();
 		distancia_re(VELOCIDADE_MEDIA, VELOCIDADE_ALTA, 20);
 		giro(-80);
-	}*/
+	}
 
-	if(passageiros < 3){
+	/*if(passageiros < 3){
 
 		Off(AMBOS_MOTORES);
 		Wait(500);
@@ -593,7 +769,7 @@ int pegar_passageiro (/*int lado*/) //testado, mas precisa mudar a função gira
 		confirma_que_pegou = agarrar();
 		distancia_re(VELOCIDADE_MEDIA, VELOCIDADE_ALTA, 20);
 		giro(-80);
-	}
+	}*/
 
 	if (confirma_que_pegou == 1)
 	{
@@ -605,15 +781,15 @@ int pegar_passageiro (/*int lado*/) //testado, mas precisa mudar a função gira
 
 void procura_boneco()
 {
-	int l = ultrassom_filtrado(SENSOR_US_ESQUERDA);
+	int l = achou_boneco();
 	//int d = ultrassom_filtrado(SENSOR_US_DIREITA);
 	/*if (d <= 15)
 	{
 		pegar_passageiro(DIREITA);
 	} */
-	if(l <= 15)
+	if(l != 0)
 	{
-		pegar_passageiro();
+		pegar_passageiro(l);
 	}
 	//ClearScreen();
 	//NumOut(10, 30, l);
@@ -701,85 +877,32 @@ void corrige_intersecao(int cor)
 		}
 		Off(AMBOS_MOTORES);
 	}
-	//correçao do fora
-	if(sensor_cor(SENSOR_COR_ESQUERDA) == cor && sensor_cor(SENSOR_COR_DIREITA) == FORA)
-	{
-		Off(AMBOS_MOTORES);
-		Wait(100);
-		OnRevSync(AMBOS_MOTORES, -VELOCIDADE_MEDIA, 0);
-		while (sensor_cor(SENSOR_COR_DIREITA) == FORA)
-		{ 
-			OnRevSync(AMBOS_MOTORES, -VELOCIDADE_MEDIA, 0);
-		}
-		Wait(250);
-		Off(AMBOS_MOTORES);
-		contador = 0;
-		while (sensor_cor(SENSOR_COR_DIREITA) == cor && contador < 25)
-		{
-			OnFwd(MOTOR_DIREITA,  -VELOCIDADE_MEDIA);
-			contador++;
-			Wait(10);
-		}
-		if (sensor_cor(SENSOR_COR_DIREITA) == FORA)
-		{
-			Off(AMBOS_MOTORES);
-			while (sensor_cor(SENSOR_COR_DIREITA) == cor || sensor_cor(SENSOR_COR_ESQUERDA) == cor)
-			{
-				while(sensor_cor(SENSOR_COR_ESQUERDA) == cor)
-				{
-					OnFwd(MOTOR_ESQUERDA, -VELOCIDADE_MEDIA);
-				}
-				Off(AMBOS_MOTORES);
-				while(sensor_cor(SENSOR_COR_DIREITA) == cor)
-				{
-					OnFwd(MOTOR_DIREITA, -VELOCIDADE_MEDIA);
-				}
-				Off(AMBOS_MOTORES);
-			}
-		}
-		Off(AMBOS_MOTORES);
+}
+
+void retinho(int velocidadeR)
+{
+	float erro;
+	int velo1 = 0, velo2 = 0, velocidadeL = velocidadeR * RAZAO;
+
+	if(velocidadeL > POT_MAX) velocidadeL = POT_MAX;
+	if(velocidadeL < -POT_MAX) velocidadeL = -POT_MAX;
+	if(velocidadeR > POT_MAX) velocidadeR = POT_MAX;
+	if(velocidadeR < -POT_MAX) velocidadeR = -POT_MAX;
+	OnFwd(MOTOR_DIREITA, -velocidadeR);
+	OnFwd(MOTOR_ESQUERDA, -velocidadeL);
+	Wait(100);
+	while(erro > -0.5 && erro < 0.5){
+		erro = SensorHTGyro(SENSOR_GYRO);
 	}
-				
-	ClearScreen();
-	if(sensor_cor(SENSOR_COR_ESQUERDA) == FORA && sensor_cor(SENSOR_COR_DIREITA) == cor)
-	{
-		Off(AMBOS_MOTORES);
-		Wait(100);
-		OnRevSync(AMBOS_MOTORES, -VELOCIDADE_MEDIA, 0);
-		while (sensor_cor(SENSOR_COR_ESQUERDA) == FORA)
-		{
-			OnRevSync(AMBOS_MOTORES, -VELOCIDADE_MEDIA, 0);
-		}
-		Wait(250);
-		Off(AMBOS_MOTORES);
-		Wait(100);
-		contador = 0;
-		while (sensor_cor(SENSOR_COR_ESQUERDA) == cor && contador < 25)
-		{
-			OnFwd(MOTOR_ESQUERDA,  -VELOCIDADE_MEDIA);
-			contador++;
-			Wait(10);
-		}
-		Off(AMBOS_MOTORES);
-		if (sensor_cor(SENSOR_COR_ESQUERDA) == FORA)
-		{
-			Off(AMBOS_MOTORES);
-			while (sensor_cor(SENSOR_COR_DIREITA) == cor || sensor_cor(SENSOR_COR_ESQUERDA) == cor)
-			{
-				while(sensor_cor(SENSOR_COR_DIREITA) == cor)
-				{
-					OnFwd(MOTOR_DIREITA, -VELOCIDADE_MEDIA);
-				}
-				Off(AMBOS_MOTORES);
-				while(sensor_cor(SENSOR_COR_ESQUERDA) == cor)
-				{
-					OnFwd(MOTOR_ESQUERDA, -VELOCIDADE_MEDIA);
-				}
-				Off(AMBOS_MOTORES);
-			}
-		}
-		Off(AMBOS_MOTORES);
-	}
+	velo1 = velocidadeR - CORRECAO * erro;
+	velo2 = velocidadeL + CORRECAO * erro;
+	if (velo1 > POT_MAX) velo1 = POT_MAX;
+	else if (velo1 < -POT_MAX) velo1 = -POT_MAX;
+	if (velo2 > POT_MAX) velo2 = POT_MAX;
+	else if (velo2 < -POT_MAX) velo2 = -POT_MAX;
+	Off(AMBOS_MOTORES);
+	OnFwd(MOTOR_DIREITA, -velo1);
+	OnFwd(MOTOR_ESQUERDA, -velo2);
 }
 
 void reto(int cor) //robo move ate que os dois sensores parem de ver a cor
@@ -790,6 +913,7 @@ void reto(int cor) //robo move ate que os dois sensores parem de ver a cor
 		while (sensor_cor(SENSOR_COR_DIREITA) == cor || sensor_cor(SENSOR_COR_ESQUERDA) == cor)
 		{
 			OnFwdSync(AMBOS_MOTORES, -VELOCIDADE_ALTA, -6);
+			retinho(VELOCIDADE_ALTA);
 			
 			while(sensor_cor(SENSOR_COR_ESQUERDA) == FORA && sensor_cor(SENSOR_COR_DIREITA) == BRANCO)
 			{
@@ -801,7 +925,6 @@ void reto(int cor) //robo move ate que os dois sensores parem de ver a cor
 				ClearScreen();
 				//PlayTone(400, 100);
 				TextOut(50,50, "E:P");
-				ultimo_fora = ESQUERDA;
 			}
 			while(sensor_cor(SENSOR_COR_DIREITA) == FORA && sensor_cor(SENSOR_COR_ESQUERDA) == BRANCO)
 			{
@@ -813,7 +936,6 @@ void reto(int cor) //robo move ate que os dois sensores parem de ver a cor
 				ClearScreen();
 				//PlayTone(800, 100);
 				TextOut(50,50, "D:P");
-				ultimo_fora = DIREITA;
 			}
 			while(sensor_cor(SENSOR_COR_ESQUERDA) != BRANCO && sensor_cor(SENSOR_COR_ESQUERDA) != FORA && sensor_cor(SENSOR_COR_DIREITA) == BRANCO)
 			{
@@ -835,6 +957,7 @@ void reto(int cor) //robo move ate que os dois sensores parem de ver a cor
 		while (sensor_cor(SENSOR_COR_DIREITA) == cor || sensor_cor(SENSOR_COR_ESQUERDA) == cor)
 		{
 			OnFwdSync(AMBOS_MOTORES, -VELOCIDADE_ALTA, -6);
+			retinho(VELOCIDADE_ALTA);
 			corrige_intersecao(cor);				
 			ClearScreen();
 			//PlayTone(400, 100);
@@ -847,7 +970,7 @@ void reto(int cor) //robo move ate que os dois sensores parem de ver a cor
 	//alterei o laço para dentro da função recenbendo a cor como argumento
 }
 
-void modo_plaza (int direcoes[])
+int modo_plaza (int direcoes[])
 {
 	int aux, prev_motor; //Essa ultima constante é para armazenar o ultimo parâmetro do Sync
 	SetSensorHTGyro(SENSOR_GYRO);
@@ -855,59 +978,57 @@ void modo_plaza (int direcoes[])
 	unsigned long time = CurrentTick(), prev_time;
 	float offset = getGyroOffset();
 
+
 	PlayTone(880, 500);
 
+
 	ResetRotationCount(MOTOR_DIREITA);
-	ResetRotationCount(MOTOR_ESQUERDA);  // Checkpoint 1 do rotation count
+	ResetRotationCount(MOTOR_ESQUERDA);
+	OnFwdSync(AMBOS_MOTORES, -VELOCIDADE_ALTA, -6);
+	
+	PlayTone(880, 500);
 
 	while (color_r !=PRETO && color_l !=PRETO)
 	{
-		retinho(VELOCIDADE_ALTA);
+		OnFwdSync(AMBOS_MOTORES, -VELOCIDADE_MEDIA, -6);
+		detect_colors();
 	}
-
-	distancia_reto(VELOCIDADE_MEDIA, VELOCIDADE_ALTA, 30);
-
-	aux = abs(MotorRotationCount(MOTOR_DIREITA));
-
+	distancia_reto(VELOCIDADE_MEDIA, VELOCIDADE_ALTA, maximo);
 	giro(180);
-
+	aux = abs(MotorRotationCount(MOTOR_DIREITA));
 	ResetRotationCount(MOTOR_DIREITA);
-	ResetRotationCount(MOTOR_ESQUERDA);  // Checkpoint 2 do rotation count
-
-	MOTOR(MOTOR_PORTA, VELOCIDADE_BAIXA);
+	ResetRotationCount(MOTOR_ESQUERDA);
+	//MOTOR(MOTOR_PORTA, VELOCIDADE_BAIXA);
 	Wait(400);
-	MOTOR(MOTOR_PORTA, 0);
+	//MOTOR(MOTOR_PORTA, 0);
 	distancia_reto(VELOCIDADE_MEDIA, VELOCIDADE_ALTA, 30);
-	MOTOR(MOTOR_PORTA, -VELOCIDADE_BAIXA);
+	//MOTOR(MOTOR_PORTA, -VELOCIDADE_BAIXA);
 	Wait(400);
-	MOTOR(MOTOR_PORTA, 0);
-
-    retinho(VELOCIDADE_ALTA);
-
+	//MOTOR(MOTOR_PORTA, 0);
+	giro(-180);
+	
+    OnFwdSync(AMBOS_MOTORES, -VELOCIDADE_MEDIA, -6);
 	while(prev_motor < aux)
 	{
 		Wait(50);
 		prev_motor = abs(MotorRotationCount(MOTOR_DIREITA));
 	}
+	if (maximo > 10) maximo -= 10;
 
 	Off(AMBOS_MOTORES);
-	
-	for (int i = 0; i < 5; ++i)
-	{
-		direcoes[i] = -direcoes[i];
-	}
 	passageiros = 0;
+
+	return INVERTER;
 }
 
 bool verificar_direcao(int cor)
 {
 	int cor_d, cor_e;
 	reto(cor);
-	ajeitar(cor);
-	distancia_reto(VELOCIDADE_MEDIA, VELOCIDADE_ALTA, 5);
+	ajeitar_frente_branco();
 	reto(BRANCO);
 	ajeitar(BRANCO);
-	distancia_reto(VELOCIDADE_MEDIA, VELOCIDADE_ALTA, 5);
+	ajeitar_frente();
 
 	if (sensor_cor(SENSOR_COR_ESQUERDA) != PRETO && sensor_cor(SENSOR_COR_DIREITA) != PRETO)//se os dois nao veem preto entao o robo acertou o caminho
 	{
@@ -920,19 +1041,8 @@ bool verificar_direcao(int cor)
 
 void voltar(int cor)//voltar para o quadrado de origem visto que errou o caminho
 {
-	ajeitar(BRANCO);
-	if (ultimo_fora == ESQUERDA)
-	{
-		girar_sem_tempo(170); //se a ultima que o sensor saiu foi pela esquerda, o robo gira pela direita, ou seja, argumento positivo
-	}
-	else if (ultimo_fora == DIREITA)
-	{
-		girar_sem_tempo(-170); //estamos girando 170 para que a caster ball não saia da arena
-	}
-	else
-	{
-		girar_sem_tempo(170);
-	}
+	//ajeitar(BRANCO);
+	girar(180);
 	reto(BRANCO);
 	PlayTone(880, 500);
 	ajeitar(BRANCO);
@@ -943,36 +1053,22 @@ void voltar(int cor)//voltar para o quadrado de origem visto que errou o caminho
 
 int testar_caminho(int cor, int direcoes[])//testa as direções verificando se ja há alguma cor com a direção
 {	
-	if (direcoes[AMARELO] != FRENTE && direcoes[VERMELHO] != FRENTE && direcoes[VERDE] != FRENTE && direcoes[cor] != NAO_FRENTE && direcoes[cor] != NAO_FRENTE_ESQUERDA)
+	if (cor == VERMELHO)
 	{
-		TextOut(10,10, "teste frente");
-		if (verificar_direcao(cor))
-		{
-			return FRENTE;
-		}
-		// alteração do vetor direção
-		//ESCREVER NO ARQUIVO: direcao[cor] = NAO_FRENTE
-		voltar(cor);
-		if (direcoes[AMARELO] != ESQUERDA && direcoes[VERMELHO] != ESQUERDA && direcoes[VERDE] != ESQUERDA && direcoes[cor] != NAO_FRENTE_ESQUERDA)
-		{
-			girar(-90);
-			if (verificar_direcao(cor))
-			{
-				return ESQUERDA;
-			}
-			//ESCREVER NO ARQUIVO[]
-			voltar(cor);
-			verificar_direcao(cor);
-			return DIREITA;
-		}
-		else
-		{
-			girar(90);
-			verificar_direcao(cor);
-			return DIREITA;
-		}
+		distancia_reto(VELOCIDADE_MEDIA, VELOCIDADE_ALTA, 5);
 	}
-	if (direcoes[AMARELO] != ESQUERDA && direcoes[VERMELHO] != ESQUERDA && direcoes[VERDE] != ESQUERDA && direcoes[cor] == NAO_FRENTE_ESQUERDA)
+	if (cor == VERMELHO && (sensor_cor(SENSOR_COR_ESQUERDA) == AZUL || sensor_cor(SENSOR_COR_ESQUERDA) == VERDE))
+	{
+		return modo_plaza(direcoes);
+	}
+	else if (cor == VERMELHO && (sensor_cor(SENSOR_COR_DIREITA) == AZUL || sensor_cor(SENSOR_COR_DIREITA) == VERDE))
+	{
+		return modo_plaza(direcoes);
+	} else if (cor == VERMELHO)
+	{
+		ajeitar(VERMELHO);
+	}
+	if (direcoes[AZUL] != ESQUERDA && direcoes[VERMELHO] != ESQUERDA && direcoes[VERDE] != ESQUERDA && direcoes[cor] != NAO_ESQUERDA)
 	{
 		TextOut(10,10, "teste esquerda");
 		ClearScreen();
@@ -983,28 +1079,76 @@ int testar_caminho(int cor, int direcoes[])//testa as direções verificando se 
 		{
 			return ESQUERDA;
 		}
+		direcoes[cor] = NAO_ESQUERDA;
+		open_for_write();
+		write_direcoes(direcoes);
 		voltar(cor);
-		verificar_direcao(cor);
-		return DIREITA;
-		
+
+		if (direcoes[AZUL] != DIREITA && direcoes[VERMELHO] != DIREITA && direcoes[VERDE] != DIREITA && direcoes[cor] != NAO_DIREITA)
+		{
+			if (verificar_direcao(cor))
+			{
+				return DIREITA;
+			}
+			direcoes[cor] = FRENTE;
+			open_for_write();
+			write_direcoes(direcoes); 
+			voltar(cor);
+			girar(-90);
+			verificar_direcao(cor);
+			return DIREITA;
+		} else
+		{
+			direcoes[cor] = DIREITA;
+			open_for_write();
+			write_direcoes(direcoes);
+			girar(90);
+			verificar_direcao(cor);
+			return FRENTE;
+		}
 	}
-	girar(90);
-	TextOut(10,10, "teste direita");
+	if (direcoes[AZUL] != DIREITA && direcoes[VERMELHO] != DIREITA && direcoes[VERDE] != DIREITA && direcoes[cor] != NAO_DIREITA)
+	{
+		TextOut(10,10, "teste direita");
+		girar(-90);
+		if (verificar_direcao(cor))
+		{
+			return DIREITA;
+		}
+		direcoes[cor] = FRENTE;
+		open_for_write();
+		write_direcoes(direcoes);
+		voltar(cor);
+		girar(90);
+		verificar_direcao(cor);
+		return FRENTE;
+	}
+	TextOut(10,10, "teste frente");
+	direcoes[cor] = FRENTE;
+	open_for_write();
+	write_direcoes(direcoes);
 	verificar_direcao(cor);
-	return DIREITA;
+	return FRENTE;
 }
 
 
-void seguir_direcao(int cor, int direcoes[])//função que sera usada quando a cor ja tiver uma direção definida
+int seguir_direcao(int cor, int direcoes[])//função que sera usada quando a cor ja tiver uma direção definida
 {
-	distancia_reto(VELOCIDADE_MEDIA, VELOCIDADE_ALTA, 5);
-	if (sensor_cor(SENSOR_COR_ESQUERDA) == AZUL || sensor_cor(SENSOR_COR_ESQUERDA) == VERDE)
+	if (cor == VERMELHO)
 	{
-		modo_plaza(direcoes);
+		distancia_reto(VELOCIDADE_MEDIA, VELOCIDADE_ALTA, 5);
 	}
-	else if (sensor_cor(SENSOR_COR_DIREITA) == AZUL || sensor_cor(SENSOR_COR_DIREITA) == VERDE)
+	if (cor == VERMELHO && (sensor_cor(SENSOR_COR_ESQUERDA) == AZUL || sensor_cor(SENSOR_COR_ESQUERDA) == VERDE))
 	{
-		modo_plaza(direcoes);
+		return modo_plaza(direcoes);
+	}
+	else if (cor == VERMELHO && (sensor_cor(SENSOR_COR_DIREITA) == AZUL || sensor_cor(SENSOR_COR_DIREITA) == VERDE))
+	{
+		return modo_plaza(direcoes);
+	} 
+	else if (cor == VERMELHO)
+	{
+		ajeitar(VERMELHO);
 	}
 	if (direcoes[cor] == ESQUERDA)
 	{
@@ -1015,8 +1159,8 @@ void seguir_direcao(int cor, int direcoes[])//função que sera usada quando a c
 		girar(-90);
 	}
 	reto(cor);
-	ajeitar(cor);
 	distancia_reto(VELOCIDADE_MEDIA, VELOCIDADE_ALTA, 5);
+	return NORMAL;
 }
 
 void girar_sem_tempo(float degrees) // Algoritimo usado pela sek do ano passado //testada
@@ -1069,7 +1213,6 @@ void girar_sem_tempo(float degrees) // Algoritimo usado pela sek do ano passado 
 
 	Off(AMBOS_MOTORES);
 }
-
 int identifica_cor()
 {
 	int cor_e, cor_d, i = 0;
@@ -1092,13 +1235,26 @@ int identifica_cor()
 
 task main () //por enquato a maior parte está só com a lógica, tem que alterar as funções pra ele conseguir andar certinho e girar
 {
-	int cor_achada;
+	int cor_achada, auxiliar;
 	int CORES[3] = {AMARELO, VERMELHO, VERDE};
 	int direcoes[6] = {NADA, NADA, NADA, NADA, NADA, NADA};
 	int i;
 	//BTCheck();
 	ligar_sensores();
  	Wait(1000);
+ 	int d1, d2, d3;
+	int handle = 0;
+	int r;
+	// Comeca a leitura das direcoes
+	r = open_for_read();
+	if(r == 1) // Conseguiu abrir o arquivo
+	{
+		r = read_direcoes(d1, d2, d3);
+		direcoes[CORES[0]] = d1;
+		direcoes[CORES[1]] = d2;
+		direcoes[CORES[2]] = d3;
+	}
+	if (handle) CloseFile(handle);
  	//MOTOR(MOTOR_PORTA, -10);
  	Wait(200);
 	//MOTOR(MOTOR_PORTA, 0);
@@ -1122,16 +1278,34 @@ task main () //por enquato a maior parte está só com a lógica, tem que altera
 						PlayTone(440, 200);
 				}
 				reto(CORES[i]);
-				ajeitar(CORES[i]);
 				if (direcoes [CORES[i]] == NADA)
 				{
 					ClearScreen();
 					TextOut(10,10, "NADA GRAVADO");
-					direcoes[CORES[i]] = testar_caminho(CORES[i], direcoes);
-					//ESCREVER NO ARQUIVO: direcoes[CORES[i]]
+					auxiliar = testar_caminho(CORES[i], direcoes);
+					if (auxiliar = INVERTER)
+					{
+						for (int i = 0; i < 5; ++i)
+						{
+							direcoes[i] = -direcoes[i];
+						}
+					} 
+					else
+					{
+						direcoes[CORES[i]] = auxiliar;	
+						open_for_write();
+						write_direcoes(direcoes);
+					}
 				} else
 				{
-					seguir_direcao(CORES[i], direcoes);
+					auxiliar = seguir_direcao(CORES[i], direcoes);
+					if (auxiliar = INVERTER)
+					{
+						for (int i = 0; i < 5; ++i)
+						{
+							direcoes[i] = -direcoes[i];
+						}
+					}
 				}
 				break;
 			}
