@@ -332,6 +332,7 @@ float getGyroOffset()
 
     return gyro_sum/OFFSET_SAMPLES;
 }
+
 void giro(float degrees) // Algoritimo usado pela sek do ano passado //testada
 {
 
@@ -392,6 +393,7 @@ void giro(float degrees) // Algoritimo usado pela sek do ano passado //testada
 
 	Off(AMBOS_MOTORES);
 }
+
 void girar(float degrees) //função para mover o robo de acordo com o giro e girar, valores de acordo com testes
 {
 	int contador = 0;
@@ -1050,6 +1052,7 @@ void girar_sem_tempo(float degrees) // Algoritimo usado pela sek do ano passado 
 
 	Off(AMBOS_MOTORES);
 }
+
 int identifica_cor()
 {
 	int cor_e, cor_d, i = 0;
