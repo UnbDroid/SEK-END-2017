@@ -21,18 +21,18 @@ void retinho(int velocidade)
 {
 	float gyro1, gyro2, erro, velo1 = velocidade, velo2 = velocidade;
 	gyro1 = SensorHTGyro(SENSOR_GYRO);
-	OnFwdSync(AMBOS_MOTORES, -velocidade, -14);
+	OnFwdSync(AMBOS_MOTORES, -velocidade, -16);
 	Wait(50);
-	while(gyro2 >= -0.65 && gyro2 <= 0.65){
+	while(gyro2 > -0.3 && gyro2 < 0.3){
 		gyro2 = SensorHTGyro(SENSOR_GYRO);
 	}
 	erro = gyro2 - gyro1;
 	velo1 = velocidade + CORRECAO * erro;
 	velo2 = velocidade - CORRECAO * erro;
-	if (velo1 > 90) velo1 = 90;
-	else if (velo1 < -90) velo1 = -90;
-	if (velo2 > 90) velo2 = 90;
-	else if (velo2 < -90) velo2 = -90;
+	if (velo1 > 80) velo1 = 80;
+	else if (velo1 < -80) velo1 = -80;
+	if (velo2 > 80) velo2 = 80;
+	else if (velo2 < -80) velo2 = -80;
 	OnRev(MOTOR_DIREITA, velo1);
 	OnRev(MOTOR_ESQUERDA, velo2);
 	Wait(50);
@@ -43,6 +43,11 @@ task main()
 	ligar_sensores();
 	while(1)
 	{
-		retinho(VELOCIDADE_ALTA);
+		for (int i = 0; i <= 5; ++i)
+		{
+			retinho(VELOCIDADE_ALTA);
+		}
+		Off(AMBOS_MOTORES);
+		Wait(100);
 	}
 }

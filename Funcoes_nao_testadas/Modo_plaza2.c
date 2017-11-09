@@ -47,7 +47,7 @@ OUT_REGMODE_SPEED, 0, OUT_RUNSTATE_RUNNING, 0)
 #define CORRECAO 0.051
 
 byte VERMELHO_r, VERDE_r, AZUL_r, BRANCO_r, num_r, VERMELHO_l, VERDE_l, AZUL_l, BRANCO_l, num_l, color_r, color_l;
-int passageiros = 0, maximo = 40; //achei mais prático criar um vetor de 6 posiçoes e usar as constantes como o valor do índice
+int passageiros = 0; //achei mais prático criar um vetor de 6 posiçoes e usar as constantes como o valor do índice
 
 sub BTCheck(){
      if (!BluetoothStatus(CONEXAO)==NO_ERR){
@@ -70,7 +70,7 @@ void ligar_sensores() //testada
     SetHTColor2Mode(SENSOR_COR_DIREITA, HT_CMD_COLOR2_ACTIVE);
 }
 
-sub detect_colors(){ // Tabela a saída dos sensores de luz para as cores lidas
+sub sensor_cor(){ // Tabela a saída dos sensores de luz para as cores lidas
     ReadSensorHTColor2Active(SENSOR_COR_DIREITA, num_r, VERMELHO_r, VERDE_r, AZUL_r, BRANCO_r);
     ReadSensorHTColor2Active(SENSOR_COR_ESQUERDA, num_l, VERMELHO_l, VERDE_l, AZUL_l, BRANCO_l);
 
@@ -439,21 +439,16 @@ void modo_plaza (int direcoes[])
 	float offset = getGyroOffset();
 
 
-	PlayTone(880, 500);
-
-
 	ResetRotationCount(MOTOR_DIREITA);
 	ResetRotationCount(MOTOR_ESQUERDA);
 	OnFwdSync(AMBOS_MOTORES, -VELOCIDADE_ALTA, -6);
 	
 	PlayTone(880, 500);
-
-	while (color_r !=PRETO && color_l !=PRETO)
-	{
-		OnFwdSync(AMBOS_MOTORES, -VELOCIDADE_MEDIA, -6);
-		detect_colors();
-	}
-	distancia_reto(VELOCIDADE_MEDIA, VELOCIDADE_ALTA, maximo);
+	sensor_cor();
+	while (color_r !=PRETO && color_l !=PRETO) sensor_cor();
+	distancia_reto(VELOCIDADE_ALTA, VELOCIDADE_ALTISSIMA, 10);
+	while (color_r !=PRETO && color_l !=PRETO) sensor_cor();
+	distancia_reto(VELOCIDADE_MEDIA, VELOCIDADE_ALTA, 30);
 	giro(180);
 	aux = abs(MotorRotationCount(MOTOR_DIREITA));
 	ResetRotationCount(MOTOR_DIREITA);
@@ -497,9 +492,9 @@ task main ()
 
 
 	OnFwdSync(AMBOS_MOTORES, -VELOCIDADE_MEDIA, 0);
-	detect_colors();
-	while(color_l != VERMELHO && color_r != VERMELHO) detect_colors();
+	sensor_cor();
+	while(color_l != VERMELHO && color_r != VERMELHO) sensor_cor();
 	distancia_reto(VELOCIDADE_MEDIA, VELOCIDADE_ALTA, 2);
-	detect_colors();
+	sensor_cor();
 	if((color_l == AZUL || color_r == AZUL) || (color_l == VERDE || color_r == VERDE)) modo_plaza(direcoes);
 }
