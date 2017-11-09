@@ -56,6 +56,7 @@ OUT_REGMODE_SPEED, 0, OUT_RUNSTATE_RUNNING, 0)
 
 int passageiros = 0; 
 int maximo = 40;
+int ultimo_fora = 0;
 byte VERMELHO_r, VERDE_r, AZUL_r, BRANCO_r, num_r, VERMELHO_l, VERDE_l, AZUL_l, BRANCO_l, num_l, color_r, color_l;
 int handle = 0;
 
@@ -480,6 +481,7 @@ void ajeitar(int cor) //arruma o robo pra ficar alinhado no quadrado da cor que 
 		}
 	Off(AMBOS_MOTORES);
 	Wait(500);
+	ultimo_fora = 0;
 }
 
 float getGyroOffset()
@@ -925,6 +927,7 @@ void reto(int cor) //robo move ate que os dois sensores parem de ver a cor
 				ClearScreen();
 				//PlayTone(400, 100);
 				TextOut(50,50, "E:P");
+				ultimo_fora = ESQUERDA;
 			}
 			while(sensor_cor(SENSOR_COR_DIREITA) == FORA && sensor_cor(SENSOR_COR_ESQUERDA) == BRANCO)
 			{
@@ -936,6 +939,7 @@ void reto(int cor) //robo move ate que os dois sensores parem de ver a cor
 				ClearScreen();
 				//PlayTone(800, 100);
 				TextOut(50,50, "D:P");
+				ultimo_fora = DIREITA;
 			}
 			while(sensor_cor(SENSOR_COR_ESQUERDA) != BRANCO && sensor_cor(SENSOR_COR_ESQUERDA) != FORA && sensor_cor(SENSOR_COR_DIREITA) == BRANCO)
 			{
@@ -1042,7 +1046,19 @@ bool verificar_direcao(int cor)
 void voltar(int cor)//voltar para o quadrado de origem visto que errou o caminho
 {
 	//ajeitar(BRANCO);
-	girar(180);
+	if (ultimo_fora == ESQUERDA)
+	{
+		girar_sem_tempo(170); //se a ultima que o sensor saiu foi pela esquerda, o robo gira pela direita, ou seja, argumento positivo
+	}
+	else if (ultimo_fora == DIREITA)
+	{
+		girar_sem_tempo(-170); //estamos girando 170 para que a caster ball não saia da arena
+	}
+	else
+	{
+		girar_sem_tempo(170);
+	}
+	ultimo_fora = 0;
 	reto(BRANCO);
 	PlayTone(880, 500);
 	ajeitar(BRANCO);
