@@ -14,6 +14,7 @@ sub BTCheck(int conn){
 
 #define US_LEFT IN_1
 #define US_RIGHT IN_2
+#define PORTAO OUT_B
 
 #define SENSIBILIDADE 0.9
 
@@ -75,6 +76,50 @@ int achou_boneco()
 	if(right)
 		soma += 2;
 	return soma;
+}
+
+void abre_porta()
+{
+	int prev_motor;
+	int inicial_motor;
+	
+	// aqui cabe uma função para movimentar o robô até que o sensor ultrassônico ache o boneco
+	// valor de teste, mas já é uma distância que a garra consegue pegar o boneco
+
+	inicial_motor = MotorRotationCount(MOTOR_GARRA);
+
+	OnFwd(PORTAO, -VELOCIDADE_BAIXINHA);
+	Wait(50);
+	while (MotorRotationCount(PORTAO) != prev_motor)
+	{
+		prev_motor = MotorRotationCount(PORTAO);
+		Wait(50);
+	}
+
+	Off(PORTAO);
+	
+}
+
+void fecha_porta()
+{
+	int prev_motor;
+	int inicial_motor;
+	
+	// aqui cabe uma função para movimentar o robô até que o sensor ultrassônico ache o boneco
+	// valor de teste, mas já é uma distância que a garra consegue pegar o boneco
+
+	inicial_motor = MotorRotationCount(MOTOR_GARRA);
+
+	OnRev(PORTAO, -VELOCIDADE_BAIXINHA);
+	Wait(50);
+	while (MotorRotationCount(PORTAO) != prev_motor)
+	{
+		prev_motor = MotorRotationCount(PORTAO);
+		Wait(50);
+	}
+
+	Off(PORTAO);
+	
 }
 
 
@@ -139,8 +184,13 @@ task main(){
         found = achou_boneco();
         NumOut(0,LCD_LINE8, found);
         ClearLine(LCD_LINE3);
+        temp = -2;
         if (ReceiveRemoteNumber(INBOX,true,temp) != STAT_MSG_EMPTY_MAILBOX)
         {
+        	if(temp == 1)
+        		abre_porta();
+        	else if(temp == 2)
+        		fecha_porta();
         	NumOut(60,LCD_LINE8, found);
             TextOut(10,LCD_LINE3,"Enviando");
             SendResponseNumber(OUTBOX, found);
