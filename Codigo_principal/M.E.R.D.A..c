@@ -89,7 +89,7 @@ int alerta(int frequency)
    Wait(delay);
    Stop(true);
 }*/
-
+/*
 void imprime_erro(int p)
 {
 	ClearScreen();
@@ -158,13 +158,14 @@ void imprime_erro(int p)
 	else
 		TextOut(10, LCD_LINE1, "NENHUM");
 	Wait(1500);
-}
+} */
 
 int write_direcoes(int direcoes[]) // Retorna 1 caso consiga gravar
 {
 	byte CORES[3] = {VERMELHO, VERDE, AMARELO};
 	unsigned int file_size = SIZE;
-	int p, i, d, handle = 0;
+	int i, d, handle = 0;
+	unsigned int p;
 
 	// Start with the assumptions the file doesn't exist and needs to be created.
 	p = CreateFile(NAME, file_size, handle);
@@ -180,7 +181,7 @@ int write_direcoes(int direcoes[]) // Retorna 1 caso consiga gravar
 			{
 				return 2;
 			}
-			
+
 		}
 		else
 		{
@@ -190,9 +191,9 @@ int write_direcoes(int direcoes[]) // Retorna 1 caso consiga gravar
 	}
 	for(i = 0; i < 3; i++) // Pois sao 3 cores para gravar as direcoes
 	{
-		PlayTone(880, 300);
-		Wait(500);
-		PlayTone(880,300);
+		//PlayTone(880, 300);
+		//Wait(500);
+		//PlayTone(880,300);
 		d = direcoes[CORES[i]];
 		p = Write(handle, d);
 		if (p != LDR_SUCCESS)
@@ -203,7 +204,7 @@ int write_direcoes(int direcoes[]) // Retorna 1 caso consiga gravar
 	if (handle)
 		CloseFile(handle);
 	if(p != LDR_SUCCESS){
-		imprime_erro(p);
+		//imprime_erro(p);
 		return 0;
 	}
 	return 1;
@@ -214,27 +215,28 @@ int write_direcoes(int direcoes[]) // Retorna 1 caso consiga gravar
 
 int read_direcoes(int &d1, int &d2, int &d3)
 {
-	int p, i, d, handle = 0;
+	int i, d, handle = 0;
+	unsigned int p;
 	const int file_size = SIZE;
 	p = OpenFileRead(NAME, file_size, handle);
 	// Return code handling
 	ClearScreen();
-	NumOut(30, 20, p);
-	NumOut(40,30,LDR_SUCCESS);
-	Wait(1000);
+	//NumOut(30, 20, p);
+	//NumOut(40,30,LDR_SUCCESS);
+	//Wait(1000);
 	if (p != LDR_SUCCESS)
 	{
-		PlayTone(220,500);
+		//PlayTone(220,500);
 		return 0;
 	}
 	for(i = 0; i < 3; i++)
 	{
-		
+
 
 		p = Read(handle, d);
 		if (p != LDR_SUCCESS)
 		{
-			PlayTone(500,1500);
+			//PlayTone(500,1500);
 			d1 = NADA;
 			d2 = NADA;
 			d3 = NADA;
@@ -254,17 +256,17 @@ int read_direcoes(int &d1, int &d2, int &d3)
 void printf_arquivo(int direcoes[])
 {
 	ClearScreen();
-	int CORES[3] = {AMARELO, VERMELHO, VERDE};
+	int CORES[3] = {VERMELHO, VERDE, AMARELO};
 	int d1, d2, d3;
 	read_direcoes(d1, d2, d3);
 	direcoes[CORES[0]] = d1;
 	direcoes[CORES[1]] = d2;
 	direcoes[CORES[2]] = d3;
-	TextOut(0, 0, "AMARELO: ");
+	TextOut(0, 0, "VERMELHO: ");
 	NumOut(35, 0, direcoes[CORES[0]]);
-	TextOut(0, 15, "VERMELHO: ");
+	TextOut(0, 15, "VERDE: ");
 	NumOut(35,15, direcoes[CORES[1]]);
-	TextOut(0,30, "VERDE");
+	TextOut(0,30, "AMARELO");
 	NumOut(35,30, direcoes[CORES[2]]);
 }
 
@@ -779,7 +781,7 @@ float ultrassom_filtrado_ponderado(int sensor) //testada
 
 		else
 		{
-			
+
 			valor = valor * SENSIBILIDADE + aux * (1-SENSIBILIDADE); // Algoritimo passado pelo B.Andreguetti da aula de SisMed
 
 		}
@@ -1046,7 +1048,7 @@ void reto(int cor) //robo move ate que os dois sensores parem de ver a cor
 		{
 			OnFwdSync(AMBOS_MOTORES, -VELOCIDADE_ALTA, -6);
 			retinho(VELOCIDADE_ALTA);
-		
+
 			while((sensor_cor(SENSOR_COR_ESQUERDA) == FORA || sensor_cor(SENSOR_COR_ESQUERDA) == PRETO) && sensor_cor(SENSOR_COR_DIREITA) == BRANCO)
 			{
 				OnRevSync(AMBOS_MOTORES, - VELOCIDADE_BAIXA, 0); // Da uma pequena re
@@ -1082,9 +1084,9 @@ void reto(int cor) //robo move ate que os dois sensores parem de ver a cor
 				OnFwd(MOTOR_ESQUERDA, -VELOCIDADE_MEDIA);
 			}
 			ClearScreen();
-			
+
 			verifica_boneco();
-			
+
 		}
 	} else
 	{
@@ -1185,15 +1187,19 @@ bool verificar_direcao(int cor, int tentativa, int direcoes[])
 			direcoes[cor] = FRENTE;
 		}
 	}
+	direcoes[cor] = tentativa;
+	write_direcoes(direcoes);
 	ajeitar(BRANCO);
 	ajeitar_frente();
 
 	if ((cor_e == PRETO || cor_e == FORA) && (cor_d == PRETO || cor_d == FORA))//se os dois nao veem preto entao o robo acertou o caminho
 	{
 		TextOut(10,10, "caminho errado");
+		Wait(1000);
 		return false;
 	}
 	TextOut(10, 10, "Caminho certo");
+	Wait(1000);
 	return true;
 }
 
@@ -1222,7 +1228,7 @@ void voltar(int cor)//voltar para o quadrado de origem visto que errou o caminho
 	reto(BRANCO);
 	PlayTone(880, 500);
 	ajeitar(BRANCO);
-	distancia_reto(VELOCIDADE_MEDIA, VELOCIDADE_ALTA, 5);
+	ajeitar_frente();
 	reto(cor);
 	ajeitar(cor);
 }
@@ -1247,6 +1253,7 @@ int testar_caminho(int cor, int direcoes[])//testa as direções verificando se 
 	if (direcoes[AZUL] != ESQUERDA && direcoes[VERMELHO] != ESQUERDA && direcoes[VERDE] != ESQUERDA && direcoes[cor] != NAO_ESQUERDA)
 	{
 		TextOut(10,10, "teste esquerda");
+		Wait(2000);
 		ClearScreen();
 		girar(90);
 		ClearScreen();
@@ -1369,7 +1376,7 @@ bool existe_arquivo()
 task main () //por enquato a maior parte está só com a lógica, tem que alterar as funções pra ele conseguir andar certinho e girar
 {
 	int cor_achada, auxiliar;
-	int CORES[3] = {AMARELO, VERMELHO, VERDE};
+	int CORES[3] = {VERMELHO, VERDE, AMARELO};
 	int direcoes[6] = {NADA, NADA, NADA, NADA, NADA, NADA};
 	int i;
 	BTCheck();
@@ -1391,7 +1398,7 @@ task main () //por enquato a maior parte está só com a lógica, tem que altera
 		direcoes[CORES[1]] = d2;
 		direcoes[CORES[2]] = d3;
 	}
-	direcoes[VERDE]= DIREITA;
+	/*direcoes[VERDE]= DIREITA;
 	ClearScreen();
 	r = write_direcoes(direcoes);
 	NumOut(50,10, r);
@@ -1400,15 +1407,17 @@ task main () //por enquato a maior parte está só com a lógica, tem que altera
 	r = read_direcoes(d1, d2, d3);
 	NumOut(50,20, r);
 	Wait(1500);
-	
+
 	NumOut(10,10, d1);
 	NumOut(20,20, d2);
 	NumOut(30,30, d3);
+	Wait(3000);*/
+	printf_arquivo(direcoes);
 	Wait(3000);
 
-	
 
-	 
+
+
  	MOTOR(MOTOR_PORTA, -10);
  	Wait(200);
 	MOTOR(MOTOR_PORTA, 0);
@@ -1433,7 +1442,11 @@ task main () //por enquato a maior parte está só com a lógica, tem que altera
 						PlayTone(440, 200);
 				}
 				reto(CORES[i]);
-				if (direcoes [CORES[i]] == NADA)
+				read_direcoes(d1, d2, d3);
+				direcoes[CORES[0]] = d1;
+				direcoes[CORES[1]] = d2;
+				direcoes[CORES[2]] = d3;
+				if (direcoes [CORES[i]] == NADA || direcoes[CORES[i]] == NAO_ESQUERDA)
 				{
 					ClearScreen();
 					TextOut(10,10, "NADA GRAVADO");
